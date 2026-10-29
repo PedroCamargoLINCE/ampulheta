@@ -37,3 +37,13 @@ O JSON publicado traz S(t) avaliada em meses inteiros (0, 1, 2, …), não nos t
 de evento originais. Perde-se um pouco de resolução, ganha-se um contrato simples:
 o navegador calcula P(sentença nos próximos h meses | tramita há t) como
 1 − S(t+h)/S(t) com interpolação linear, sem nenhuma biblioteca.
+
+## ADR-008 — Brutos compactados versionados enquanto o recorte for pequeno (2026-10-29)
+A API do DataJud responde em 40 a 50 s por requisição e recusa boa parte delas em
+horário de pico, então uma coleta leva horas e precisa ser retomável de qualquer máquina
+(inclusive sessões na nuvem, que começam de um checkout limpo). As páginas brutas passam a
+ser gravadas em `.jsonl.gz` (cerca de 0,7 KB por processo; as nove varas de Sorocaba cabem em
+uns 30 MB) e entram no git junto com o `manifest.json`. Isso complementa a ADR-002: o
+Parquet continua sendo o produto, e agora o estágio 2 também é reproduzível. Quando um
+recorte passar de ~100 MB compactados, os brutos voltam a ficar fora do git e só o
+manifesto é versionado, como previa o plano original.
