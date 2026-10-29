@@ -21,6 +21,8 @@ export interface Curva {
   sobrevivencia: number[];
   ic_inferior: number[];
   ic_superior: number[];
+  /** Opcional desde 1.1.0: σ²(t) = Σ d/(n(n−d)) de Greenwood na grade. */
+  greenwood_acumulado?: number[];
   quantis_meses: { p50: number | null; p80: number | null; p90: number | null };
 }
 
