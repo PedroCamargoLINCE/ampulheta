@@ -53,6 +53,16 @@ export function html(tag: string, classe: string, texto?: string): HTMLElement {
   return n;
 }
 
+/** Bancada: coluna de controles à esquerda, folha impressa à direita. */
+export function criarBancada(painel: HTMLElement): { controles: HTMLElement; folha: HTMLElement } {
+  const bancada = html('div', 'bancada');
+  const controles = html('div', 'coluna-controles');
+  const folha = html('div', 'folha');
+  bancada.append(controles, folha);
+  painel.appendChild(bancada);
+  return { controles, folha };
+}
+
 export const AVISO_PASSADO =
   'O modelo descreve o passado: mostra como processos parecidos tramitaram até a data do snapshot. ' +
   'Mudança de juiz, de sistema ou de lei pode tornar o futuro diferente. Não substitui a avaliação de um advogado.';

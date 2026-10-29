@@ -34,7 +34,8 @@ Com a fixture, o site mostra uma faixa de "dado sintético" no topo.
   PageUp/PageDown, Home/End), anuncia os valores em região `aria-live` e traz os
   mesmos números numa tabela.
 
-Sem dependência em produção, sem serviço externo, sem telemetria.
+Sem dependência em produção e sem telemetria. O único recurso externo são as fontes
+(Hanken Grotesk, Newsreader e IBM Plex Mono), carregadas do Google Fonts.
 
 ## Organização
 

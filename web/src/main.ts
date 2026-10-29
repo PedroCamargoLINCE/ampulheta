@@ -1,4 +1,3 @@
-import './estilo.css';
 import { carregar, type Contrato } from './dados';
 import { montarExplorar } from './explorar';
 import { montarMeuProcesso } from './meu-processo';
@@ -9,25 +8,48 @@ const ABAS = [
   { id: 'meu-processo', titulo: 'Meu processo', montar: montarMeuProcesso },
 ] as const;
 
+function grau(doc: Contrato): string {
+  return doc.grau === 'G1' ? '1º grau' : '2º grau';
+}
+
+function linhaDefinicao(lista: HTMLDListElement, termo: string, valor: string | Node, classe = ''): void {
+  const dt = document.createElement('dt');
+  dt.textContent = termo;
+  const dd = document.createElement('dd');
+  if (classe) dd.className = classe;
+  dd.append(valor);
+  lista.append(dt, dd);
+}
+
+/** A edição datada no cabeçalho: de onde e de quando são os números. */
+function edicao(doc: Contrato): void {
+  const alvo = document.getElementById('edicao') as HTMLDListElement;
+  alvo.replaceChildren();
+  linhaDefinicao(alvo, 'Recorte', `${doc.tribunal}, ${grau(doc)}`);
+  linhaDefinicao(alvo, 'Snapshot', dataIso(doc.snapshot), 'num');
+}
+
 function rodape(doc: Contrato): void {
   const alvo = document.getElementById('rodape')!;
   alvo.replaceChildren();
   const citacao = document.createElement('p');
+  citacao.className = 'citacao';
   citacao.textContent = doc.fonte.citacao;
-  const detalhe = document.createElement('p');
+
+  const colofao = document.createElement('dl');
+  colofao.className = 'colofao';
   const link = document.createElement('a');
   link.href = doc.fonte.url;
   link.textContent = doc.fonte.nome;
-  detalhe.append(
-    'Fonte: ',
-    link,
-    `. Snapshot de ${dataIso(doc.snapshot)} · ${doc.tribunal}, ${doc.grau === 'G1' ? '1º grau' : '2º grau'} · ` +
-      `evento: ${doc.evento.charAt(0).toLowerCase()}${doc.evento.slice(1)}.`,
-  );
+  linhaDefinicao(colofao, 'Fonte', link);
+  linhaDefinicao(colofao, 'Snapshot', dataIso(doc.snapshot));
+  linhaDefinicao(colofao, 'Recorte', `${doc.tribunal}, ${grau(doc)}`);
+  linhaDefinicao(colofao, 'Evento', `${doc.evento.charAt(0).toLowerCase()}${doc.evento.slice(1)}`);
+
   const limites = document.createElement('p');
   limites.textContent =
-    '"Sentença" aqui é o fim do 1º grau, não do processo: recursos podem estender bastante o tempo total.';
-  alvo.append(citacao, detalhe, limites);
+    '“Sentença” aqui é o fim do 1º grau, não do processo: recursos podem estender bastante o tempo total.';
+  alvo.append(citacao, colofao, limites);
 }
 
 function faixaSintetica(doc: Contrato): void {
@@ -35,9 +57,12 @@ function faixaSintetica(doc: Contrato): void {
   const faixa = document.createElement('div');
   faixa.className = 'faixa-sintetica';
   faixa.setAttribute('role', 'note');
-  faixa.innerHTML =
+  const interno = document.createElement('p');
+  interno.className = 'container';
+  interno.innerHTML =
     '<strong>Dado sintético.</strong> Estas curvas foram geradas para desenvolvimento do site e não ' +
     'representam nenhum processo real. Não use os números para decisão alguma.';
+  faixa.appendChild(interno);
   document.body.prepend(faixa);
 }
 
@@ -63,9 +88,6 @@ function montarAbas(doc: Contrato): void {
     painel.setAttribute('role', 'tabpanel');
     painel.setAttribute('aria-labelledby', botao.id);
     painel.tabIndex = 0;
-    const titulo = document.createElement('h2');
-    titulo.textContent = aba.titulo;
-    painel.appendChild(titulo);
     aba.montar(painel, doc);
     principal.appendChild(painel);
     paineis.push(painel);
@@ -105,13 +127,15 @@ async function iniciar(): Promise<void> {
   try {
     const doc = await carregar();
     faixaSintetica(doc);
+    edicao(doc);
     rodape(doc);
     montarAbas(doc);
   } catch (erro) {
     const principal = document.getElementById('conteudo')!;
     const p = document.createElement('p');
     p.className = 'aviso';
-    p.textContent = `Não foi possível carregar os dados: ${(erro as Error).message}.`;
+    p.setAttribute('role', 'alert');
+    p.textContent = `Não foi possível carregar os dados: ${(erro as Error).message}. Recarregue a página; se persistir, o arquivo curvas.json não foi publicado.`;
     principal.replaceChildren(p);
     document.getElementById('rodape')!.textContent =
       'Fonte: CNJ/DataJud. Os dados não carregaram, então a data do snapshot não está disponível.';

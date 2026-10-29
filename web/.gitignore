@@ -1,2 +1,5 @@
 # Cópia gerada por scripts/preparar-dados.mjs a cada dev/build
 public/curvas.json
+
+# Capturas e registros locais do linter de design
+.hallmark/

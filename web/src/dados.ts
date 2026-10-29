@@ -68,5 +68,6 @@ export function nomeClasse(doc: Contrato, codigo: string | null): string {
 }
 
 export function rotuloCurva(doc: Contrato, c: Pick<Curva, 'vara' | 'classe'>): string {
-  return `${nomeVara(doc, c.vara)} · ${nomeClasse(doc, c.classe)}`;
+  const classe = c.classe === null ? 'todas as classes' : nomeClasse(doc, c.classe);
+  return `${nomeVara(doc, c.vara)}, ${classe}`;
 }
