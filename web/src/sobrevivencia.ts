@@ -10,6 +10,14 @@ export type Probabilidade =
   | { tipo: 'sobrevivencia-zero' }
   | { tipo: 'fora-do-horizonte'; horizonte: number };
 
+export interface Intervalo {
+  inferior: number;
+  superior: number;
+}
+
+/** Quantil 0,975 da normal padrão: IC de 95%. */
+const Z_95 = 1.959963984540054;
+
 /** Último mês coberto pela grade. */
 export function horizonte(grade: Grade): number {
   const ultimo = grade[grade.length - 1];
@@ -56,6 +64,34 @@ export function probabilidadeSentenca(grade: Grade, serie: Serie, t: number, h: 
   const sth = interpolar(grade, serie, t + h)!;
   const valor = 1 - sth / st;
   return { tipo: 'ok', valor: Math.min(1, Math.max(0, valor)) };
+}
+
+/**
+ * IC 95% de P(sentença nos próximos h meses | tramita há t meses), na escala log(−log)
+ * como os `ic_*` do contrato. Para R = S(t+h)/S(t), a soma de Greenwood dá
+ * Var(log R) = σ²(t+h) − σ²(t), com σ² vindo de `greenwood_acumulado` (contrato 1.1.0)
+ * interpolada como S. Os limites de R são R^exp(±z·√Var/|log R|); os de P = 1 − R saem
+ * trocados. `null` quando a probabilidade não tem número ou o intervalo não se define:
+ * R = 1 (nenhuma sentença no trecho), R = 0 (todos sentenciados) ou variância nula.
+ */
+export function intervaloSentenca(
+  grade: Grade,
+  serie: Serie,
+  greenwood: Serie,
+  t: number,
+  h: number,
+): Intervalo | null {
+  const p = probabilidadeSentenca(grade, serie, t, h);
+  if (p.tipo !== 'ok') return null;
+  conferir(grade, greenwood);
+  const r = 1 - p.valor;
+  if (r <= 0 || r >= 1) return null;
+  const variancia = interpolar(grade, greenwood, t + h)! - interpolar(grade, greenwood, t)!;
+  if (!(variancia > 0)) return null;
+  const a = (Z_95 * Math.sqrt(variancia)) / -Math.log(r);
+  const rInferior = Math.pow(r, Math.exp(a));
+  const rSuperior = Math.pow(r, Math.exp(-a));
+  return { inferior: 1 - rSuperior, superior: 1 - rInferior };
 }
 
 /**

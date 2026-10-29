@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   curvaCondicional,
+  intervaloSentenca,
   interpolar,
   probabilidadeSentenca,
   quantil,
@@ -90,6 +91,88 @@ describe('probabilidadeSentenca', () => {
   });
 });
 
+describe('intervaloSentenca', () => {
+  const g3 = [0, 1, 2];
+  const s3 = [1, 0.8, 0.4];
+  const gw3 = [0, 0.01, 0.06];
+
+  it('usa Var(log R) = σ²(t+h) − σ²(t) na escala log(−log)', () => {
+    // R = 0,4/0,8 = 0,5; Var = 0,05 → P = 0,5 com IC [0,3081; 0,7287]
+    const ic = intervaloSentenca(g3, s3, gw3, 1, 1)!;
+    expect(ic.inferior).toBeCloseTo(0.3081075, 6);
+    expect(ic.superior).toBeCloseTo(0.7286722, 6);
+  });
+
+  it('em t = 0 é o complemento do IC log(−log) de S(h)', () => {
+    const ic = intervaloSentenca(g3, s3, gw3, 0, 2)!;
+    const z = 1.959963984540054;
+    const a = (z * Math.sqrt(0.06)) / -Math.log(0.4);
+    expect(ic.inferior).toBeCloseTo(1 - Math.pow(0.4, Math.exp(-a)), 10);
+    expect(ic.superior).toBeCloseTo(1 - Math.pow(0.4, Math.exp(a)), 10);
+  });
+
+  it('interpola σ² como S em t fracionário', () => {
+    // S(0,5) = 0,9; S(1,5) = 0,6; σ² = 0,005 e 0,035
+    const ic = intervaloSentenca(g3, s3, gw3, 0.5, 1)!;
+    expect(ic.inferior).toBeCloseTo(0.160984, 5);
+    expect(ic.superior).toBeCloseTo(0.6080523, 5);
+  });
+
+  it('bate com o IC do Kaplan-Meier recomeçado em t', () => {
+    // Amostra pequena com censura e empates; KM e Greenwood calculados à mão.
+    const tempos = [1, 2, 2, 3, 3, 3, 4, 5, 5, 6, 7, 7, 8, 9, 10, 10];
+    const eventos = [1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0];
+    const g = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    const km = (ts: number[], es: number[]) => {
+      const s: number[] = [];
+      const v: number[] = [];
+      for (const ponto of g) {
+        let sAcum = 1;
+        let vAcum = 0;
+        for (const ti of [...new Set(ts)].sort((x, y) => x - y)) {
+          if (ti > ponto) break;
+          const n = ts.filter((x) => x >= ti).length;
+          const d = ts.filter((x, i) => x === ti && es[i] === 1).length;
+          if (d === 0) continue;
+          sAcum *= 1 - d / n;
+          if (n > d) vAcum += d / (n * (n - d));
+        }
+        s.push(sAcum);
+        v.push(vAcum);
+      }
+      return { s, v };
+    };
+    const total = km(tempos, eventos);
+    for (const [t, h] of [[2, 3], [3, 6], [1, 6]] as const) {
+      const fica = tempos.map((x, i) => [x, eventos[i]!] as const).filter(([x]) => x > t);
+      const recomecado = km(
+        fica.map(([x]) => x - t),
+        fica.map(([, e]) => e),
+      );
+      const r = recomecado.s[h]!;
+      const a = (1.959963984540054 * Math.sqrt(recomecado.v[h]!)) / -Math.log(r);
+      const ic = intervaloSentenca(g, total.s, total.v, t, h)!;
+      expect(ic.inferior).toBeCloseTo(1 - Math.pow(r, Math.exp(-a)), 10);
+      expect(ic.superior).toBeCloseTo(1 - Math.pow(r, Math.exp(a)), 10);
+    }
+  });
+
+  it('devolve null quando a probabilidade não tem número', () => {
+    expect(intervaloSentenca(g3, s3, gw3, 1, 2)).toBeNull(); // passa do horizonte
+    expect(intervaloSentenca([0, 1, 2], [1, 0, 0], [0, 0.1, 0.1], 1, 1)).toBeNull(); // S(t) = 0
+  });
+
+  it('devolve null quando a transformação não se define', () => {
+    expect(intervaloSentenca(g3, [1, 1, 0.5], [0, 0, 0.05], 0, 1)).toBeNull(); // R = 1
+    expect(intervaloSentenca(g3, [1, 0.5, 0], [0, 0.05, 0.05], 1, 1)).toBeNull(); // R = 0
+    expect(intervaloSentenca(g3, s3, [0, 0.01, 0.01], 1, 1)).toBeNull(); // variância nula
+  });
+
+  it('rejeita greenwood de tamanho diferente da grade', () => {
+    expect(() => intervaloSentenca(g3, s3, [0, 0.01], 1, 1)).toThrow(RangeError);
+  });
+});
+
 describe('quantil e tempoAteNivel', () => {
   it('acha o cruzamento interpolado', () => {
     expect(quantil(grade, linear, 0.5)).toBeCloseTo(5);
@@ -158,6 +241,26 @@ describe('fixture do contrato', () => {
         else expect(Math.abs(calculado! - publicado)).toBeLessThanOrEqual(1);
       }
     }
+  });
+
+  it('o IC envolve a probabilidade e fica em [0, 1] para toda curva, t e h', () => {
+    let calculados = 0;
+    for (const c of fixture.curvas) {
+      expect(c.greenwood_acumulado).toBeDefined();
+      for (let t = 0; t <= 108; t += 6) {
+        for (const h of [3, 6, 12]) {
+          const r = probabilidadeSentenca(fixture.grade_meses, c.sobrevivencia, t, h);
+          const ic = intervaloSentenca(fixture.grade_meses, c.sobrevivencia, c.greenwood_acumulado!, t, h);
+          if (r.tipo !== 'ok' || ic === null) continue;
+          calculados++;
+          expect(ic.inferior).toBeGreaterThanOrEqual(0);
+          expect(ic.inferior).toBeLessThanOrEqual(r.valor + 1e-12);
+          expect(ic.superior).toBeGreaterThanOrEqual(r.valor - 1e-12);
+          expect(ic.superior).toBeLessThanOrEqual(1);
+        }
+      }
+    }
+    expect(calculados).toBeGreaterThan(100);
   });
 
   it('probabilidades ficam em [0, 1] para toda curva, t e h', () => {

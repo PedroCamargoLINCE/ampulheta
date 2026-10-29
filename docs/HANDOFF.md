@@ -16,7 +16,8 @@ Ação esperada do outro lado:
 ---
 
 ## 2026-10-29 · ML → Web · contrato 1.1.0: `greenwood_acumulado` e transformação dos IC
-Status: aberto
+Status: resolvido (2026-10-29) — a tela Meu processo mostra o IC 95% em 3, 6 e 12 meses
+(`intervaloSentenca` em `web/src/sobrevivencia.ts`) e mantém o aviso "sem IC" sem o campo
 O que mudou: `contracts/` está na versão 1.1.0. Cada curva pode trazer o campo opcional
 `greenwood_acumulado` (σ²(t) = Σ d/(n(n−d)) na grade, não decrescente, começa em 0), e o
 README do contrato documenta que `ic_*` são IC 95% na escala log(−log S) com variância de

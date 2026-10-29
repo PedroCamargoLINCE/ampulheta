@@ -6,6 +6,7 @@ import {
   curvaCondicional,
   horizonte,
   interpolar,
+  intervaloSentenca,
   probabilidadeSentenca,
   quantilCondicional,
 } from './sobrevivencia';
@@ -110,6 +111,7 @@ export function montarMeuProcesso(painel: HTMLElement, doc: Contrato): void {
       return;
     }
 
+    const greenwood = curva.greenwood_acumulado;
     const cartoes = document.createElement('dl');
     cartoes.className = 'probabilidades';
     for (const h of HORIZONTES) {
@@ -119,6 +121,14 @@ export function montarMeuProcesso(painel: HTMLElement, doc: Contrato): void {
       const dd = document.createElement('dd');
       if (r.tipo === 'ok') {
         dd.append(html('span', 'valor', porcentagem(r.valor)), html('span', 'ajuda', 'de chance de sentença'));
+        if (greenwood) {
+          const ic = intervaloSentenca(doc.grade_meses, curva.sobrevivencia, greenwood, t, h);
+          dd.appendChild(
+            ic
+              ? html('span', 'ic', `IC 95%: ${porcentagem(ic.inferior)} a ${porcentagem(ic.superior)}`)
+              : html('span', 'ic', 'IC 95%: não calculável nesse ponto'),
+          );
+        }
       } else if (r.tipo === 'fora-do-horizonte') {
         dd.append(
           html('span', 'valor indisponivel', '—'),
@@ -184,8 +194,12 @@ export function montarMeuProcesso(painel: HTMLElement, doc: Contrato): void {
     const nota = html(
       'p',
       'nota',
-      'Estas probabilidades ainda não têm intervalo de confiança próprio. ' +
-        'A incerteza da curva de origem aparece como faixa na aba Explorar.',
+      greenwood
+        ? 'IC 95%: intervalo de confiança pela variância de Greenwood, na mesma escala log(−log) da faixa da aba Explorar. ' +
+            'Mede só a incerteza do tamanho da amostra; não cobre mudanças futuras na vara. ' +
+            'Quando nenhum ou todos os processos da amostra foram sentenciados no trecho, o intervalo não se define.'
+        : 'Estas probabilidades ainda não têm intervalo de confiança próprio. ' +
+            'A incerteza da curva de origem aparece como faixa na aba Explorar.',
     );
     notasFolha.append(base, nota);
   };
