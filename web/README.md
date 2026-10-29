@@ -41,7 +41,7 @@ Sem dependência em produção e sem telemetria. O único recurso externo são a
 
 | Arquivo | Papel |
 | --- | --- |
-| `src/sobrevivencia.ts` | interpolação de S(t), P(sentença em h meses \| t), quantis; puro e testado |
+| `src/sobrevivencia.ts` | interpolação de S(t), P(sentença em h meses \| t) e seu IC 95%, quantis; puro e testado |
 | `src/dados.ts` | tipos do contrato, carga do JSON, busca de curva |
 | `src/grafico.ts` | gráfico SVG acessível |
 | `src/explorar.ts` | tela Explorar: curva com IC, quantis, amostra, comparação de duas curvas |
@@ -54,5 +54,8 @@ Sem dependência em produção e sem telemetria. O único recurso externo são a
 - P(sentença nos próximos *h* meses | tramita há *t*) = `1 − S(t+h)/S(t)`, com interpolação
   linear na grade (ADR-007). Se `S(t) = 0` ou `t + h` passa do horizonte, a tela diz isso
   em vez de mostrar número.
+- O IC 95% dessa probabilidade usa `greenwood_acumulado` (contrato 1.1.0):
+  Var(log S(t+h)/S(t)) = σ²(t+h) − σ²(t), na escala log(−log) dos `ic_*`. Sem o campo,
+  a tela diz que não há IC; com S(t+h)/S(t) igual a 0 ou 1, diz que o IC não se define.
 - Nenhum número sozinho: a curva aparece junto, com IC na tela Explorar, e n, eventos e
   censurados acompanham cada estimativa.
