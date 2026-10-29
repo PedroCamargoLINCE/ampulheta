@@ -1,7 +1,15 @@
-// Gráfico de S(t) em SVG feito à mão: linha, faixa do IC, guia da mediana,
-// cursor por mouse e teclado, leitura em região aria-live e tabela de dados.
+// Gráfico de S(t) em SVG feito à mão: linha, faixa do IC, guia da mediana com o
+// ponto de cada curva marcado, cursor por mouse e teclado, leitura em região
+// aria-live e tabela de dados. Desenhado na largura real do contêiner, para o
+// texto manter o tamanho em qualquer tela.
 import { interpolar } from './sobrevivencia';
 import { porcentagem } from './formato';
+
+export interface MarcaGrafico {
+  mes: number;
+  valor: number;
+  rotulo: string;
+}
 
 export interface SerieGrafico {
   rotulo: string;
@@ -11,6 +19,8 @@ export interface SerieGrafico {
   valores: readonly number[];
   inferior?: readonly number[];
   superior?: readonly number[];
+  /** Pontos anotados na curva (ex.: a mediana), com rótulo em mono. */
+  marcas?: readonly MarcaGrafico[];
 }
 
 export interface OpcoesGrafico {
@@ -21,10 +31,9 @@ export interface OpcoesGrafico {
 }
 
 const SVG = 'http://www.w3.org/2000/svg';
-const LARGURA = 720;
-const ALTURA = 340;
-const M = { esq: 52, dir: 16, topo: 14, base: 46 };
+const M = { esq: 48, dir: 12, topo: 32, base: 44 };
 const LIMIAR_FIM = 0.02;
+const observadores = new WeakMap<HTMLElement, ResizeObserver>();
 
 function el<K extends keyof SVGElementTagNameMap>(
   tag: K,
@@ -85,7 +94,7 @@ function leitura(series: readonly SerieGrafico[], mes: number, rotuloMes: (m: nu
     }
     return texto;
   });
-  return `${rotuloMes(mes)} — ${partes.join('; ')}.`;
+  return `${rotuloMes(mes)}: ${partes.join('; ')}.`;
 }
 
 export function desenharGrafico(
@@ -93,7 +102,28 @@ export function desenharGrafico(
   series: readonly SerieGrafico[],
   opcoes: OpcoesGrafico,
 ): void {
+  observadores.get(alvo)?.disconnect();
+  let larguraAtual = 0;
+  const desenhar = () => {
+    const largura = Math.max(280, Math.round(alvo.clientWidth || 720));
+    if (largura === larguraAtual) return;
+    larguraAtual = largura;
+    desenharNaLargura(alvo, series, opcoes, largura);
+  };
+  desenhar();
+  const obs = new ResizeObserver(desenhar);
+  obs.observe(alvo);
+  observadores.set(alvo, obs);
+}
+
+function desenharNaLargura(
+  alvo: HTMLElement,
+  series: readonly SerieGrafico[],
+  opcoes: OpcoesGrafico,
+  LARGURA: number,
+): void {
   alvo.replaceChildren();
+  const ALTURA = Math.round(Math.min(420, Math.max(240, LARGURA * 0.52)));
   const ate = limiteX(series);
   const larguraUtil = LARGURA - M.esq - M.dir;
   const alturaUtil = ALTURA - M.topo - M.base;
@@ -106,41 +136,68 @@ export function desenharGrafico(
 
   const svg = el('svg', {
     viewBox: `0 0 ${LARGURA} ${ALTURA}`,
+    width: LARGURA,
+    height: ALTURA,
     role: 'img',
+    class: 'grafico-curva',
     tabindex: 0,
     'aria-label': `${opcoes.descricao} Use as setas para percorrer os meses.`,
   });
   figura.appendChild(svg);
 
-  // Grade e eixos.
+  // Grade e eixos: filetes finos, poucos, sólidos.
   const eixos = el('g', { class: 'eixos' }, svg);
   for (const v of [0, 0.25, 0.5, 0.75, 1]) {
+    if (v === 0.5) continue;
     el('line', { x1: M.esq, x2: LARGURA - M.dir, y1: y(v), y2: y(v), class: v === 0 ? 'eixo' : 'grade' }, eixos);
     const t = el('text', { x: M.esq - 8, y: y(v), class: 'tick', 'text-anchor': 'end', 'dominant-baseline': 'middle' }, eixos);
     t.textContent = `${v * 100}%`;
   }
-  const passo = ate > 60 ? 12 : ate > 24 ? 6 : 3;
+  const passoBase = ate > 60 ? 12 : ate > 24 ? 6 : 3;
+  const passo = larguraUtil / (ate / passoBase) < 36 ? passoBase * 2 : passoBase;
   for (let m = 0; m <= ate; m += passo) {
     el('line', { x1: x(m), x2: x(m), y1: y(0), y2: y(0) + 5, class: 'eixo' }, eixos);
     const t = el('text', { x: x(m), y: y(0) + 18, class: 'tick', 'text-anchor': 'middle' }, eixos);
     t.textContent = String(m);
   }
-  const rx = el('text', { x: M.esq + larguraUtil / 2, y: ALTURA - 6, class: 'rotulo-eixo', 'text-anchor': 'middle' }, eixos);
+  const rx = el('text', { x: LARGURA - M.dir, y: ALTURA - 4, class: 'rotulo-eixo', 'text-anchor': 'end' }, eixos);
   rx.textContent = opcoes.rotuloX;
-  const ry = el('text', { x: 14, y: M.topo + alturaUtil / 2, class: 'rotulo-eixo', 'text-anchor': 'middle', transform: `rotate(-90 14 ${M.topo + alturaUtil / 2})` }, eixos);
+  const ry = el('text', { x: M.esq - 8, y: 12, class: 'rotulo-eixo', 'text-anchor': 'start' }, eixos);
   ry.textContent = opcoes.rotuloY;
 
-  // Guia da mediana: onde a curva cruza 50%.
+  // Guia da mediana: onde a curva cruza 50%, em régua firme.
   el('line', { x1: M.esq, x2: LARGURA - M.dir, y1: y(0.5), y2: y(0.5), class: 'guia-mediana' }, svg);
-  const tm = el('text', { x: LARGURA - M.dir - 4, y: y(0.5) - 6, class: 'tick', 'text-anchor': 'end' }, svg);
+  const t50 = el('text', { x: M.esq - 8, y: y(0.5), class: 'tick', 'text-anchor': 'end', 'dominant-baseline': 'middle' }, svg);
+  t50.textContent = '50%';
+  const tm = el('text', { x: LARGURA - M.dir, y: y(0.5) - 8, class: 'rotulo-guia', 'text-anchor': 'end' }, svg);
   tm.textContent = 'mediana';
 
-  // Faixas primeiro, linhas por cima.
-  for (const s of series) {
+  // Faixas primeiro, linhas por cima; a curva principal por último.
+  const ordem = [...series].sort((a, b) => (a.cor === 'a' ? 1 : 0) - (b.cor === 'a' ? 1 : 0));
+  for (const s of ordem) {
     if (s.inferior && s.superior) el('path', { d: faixa(s, x, y, ate), class: `faixa cor-${s.cor}` }, svg);
   }
-  for (const s of series) {
+  for (const s of ordem) {
     el('path', { d: caminho(s.meses, s.valores, x, y, ate), class: `linha cor-${s.cor}` }, svg);
+  }
+
+  // Pontos anotados: a curva principal rotula acima e à direita, a comparada abaixo e à esquerda.
+  for (const s of series) {
+    for (const marca of s.marcas ?? []) {
+      if (marca.mes > ate) continue;
+      const cx = x(marca.mes);
+      const cy = y(marca.valor);
+      el('circle', { cx, cy, r: 4, class: `marca-ponto cor-${s.cor}` }, svg);
+      const acima = s.cor === 'a';
+      const ty = acima ? cy - 10 : cy + 20;
+      const largoTexto = marca.rotulo.length * 7.4 + 8;
+      const fundoX = acima
+        ? Math.min(cx + 6, LARGURA - M.dir - largoTexto)
+        : Math.max(M.esq + 2, cx - 6 - largoTexto);
+      el('rect', { x: fundoX, y: ty - 12, width: largoTexto, height: 16, class: 'marca-fundo' }, svg);
+      const t = el('text', { x: fundoX + 4, y: ty, class: 'marca-rotulo' }, svg);
+      t.textContent = marca.rotulo;
+    }
   }
 
   // Cursor.
@@ -217,32 +274,39 @@ function tabelaDados(series: readonly SerieGrafico[], ate: number, rotuloX: stri
   detalhes.appendChild(resumo);
 
   const tabela = document.createElement('table');
+  tabela.className = 'tabela';
   const cab = tabela.createTHead().insertRow();
-  const th = (texto: string) => {
+  const th = (texto: string, numerico: boolean) => {
     const c = document.createElement('th');
     c.scope = 'col';
     c.textContent = texto;
+    if (numerico) c.className = 'num';
     cab.appendChild(c);
   };
-  th(rotuloX);
+  th(rotuloX, false);
   for (const s of series) {
-    th(`${s.rotulo}: sem sentença`);
-    if (s.inferior && s.superior) th(`${s.rotulo}: IC 95%`);
+    th(`${s.rotulo}: sem sentença`, true);
+    if (s.inferior && s.superior) th('IC 95%', true);
   }
   const corpo = tabela.createTBody();
   for (let m = 0; m <= ate; m++) {
     const linha = corpo.insertRow();
     const cabLinha = document.createElement('th');
     cabLinha.scope = 'row';
+    cabLinha.className = 'num';
     cabLinha.textContent = String(m);
     linha.appendChild(cabLinha);
     for (const s of series) {
       const v = interpolar(s.meses, s.valores, m);
-      linha.insertCell().textContent = v === null ? '—' : porcentagem(v);
+      const c = linha.insertCell();
+      c.className = 'num';
+      c.textContent = v === null ? '—' : porcentagem(v);
       if (s.inferior && s.superior) {
         const lo = interpolar(s.meses, s.inferior, m);
         const hi = interpolar(s.meses, s.superior, m);
-        linha.insertCell().textContent = lo === null || hi === null ? '—' : `${porcentagem(lo)} a ${porcentagem(hi)}`;
+        const ci = linha.insertCell();
+        ci.className = 'num';
+        ci.textContent = lo === null || hi === null ? '—' : `${porcentagem(lo)} a ${porcentagem(hi)}`;
       }
     }
   }

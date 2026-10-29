@@ -9,7 +9,7 @@ import {
   probabilidadeSentenca,
   quantilCondicional,
 } from './sobrevivencia';
-import { AVISO_PASSADO, criarSelect, html, opcoesClasse, opcoesVara, paraCodigo } from './ui';
+import { AVISO_PASSADO, criarBancada, criarSelect, html, opcoesClasse, opcoesVara, paraCodigo } from './ui';
 
 const HORIZONTES = [3, 6, 12] as const;
 /** Abaixo disso, poucos processos chegaram a t sem sentença e a estimativa fica instável. */
@@ -17,7 +17,9 @@ const S_POUCOS_CASOS = 0.05;
 
 export function montarMeuProcesso(painel: HTMLElement, doc: Contrato): void {
   const fim = horizonte(doc.grade_meses);
+  const { controles, folha } = criarBancada(painel);
 
+  const titulo = html('h2', '', 'Quanto ainda falta no seu processo');
   const intro = html(
     'p',
     'intro',
@@ -27,7 +29,7 @@ export function montarMeuProcesso(painel: HTMLElement, doc: Contrato): void {
 
   const form = html('form', 'controles') as HTMLFormElement;
   form.addEventListener('submit', (ev) => ev.preventDefault());
-  const grupo = html('fieldset', 'grupo borda-a') as HTMLFieldSetElement;
+  const grupo = html('fieldset', 'grupo') as HTMLFieldSetElement;
   grupo.appendChild(html('legend', '', 'Seu processo'));
   const vara = criarSelect('mp-vara', 'Vara', opcoesVara(doc), doc.varas[0]?.codigo ?? null);
   const classe = criarSelect('mp-classe', 'Classe', opcoesClasse(doc), doc.classes[0]?.codigo ?? null);
@@ -52,118 +54,117 @@ export function montarMeuProcesso(painel: HTMLElement, doc: Contrato): void {
   grupo.append(vara.campo, classe.campo, campoT);
   form.appendChild(grupo);
 
-  const resultado = html('div', 'resultado');
+  const aviso = html('p', 'aviso-passado', AVISO_PASSADO);
+  controles.append(titulo, intro, form);
+
+  const resultado = html('div', 'folha-resultado');
   resultado.setAttribute('aria-live', 'polite');
   const alvoGrafico = html('div', '');
-  const aviso = html('p', 'aviso-passado', AVISO_PASSADO);
-  painel.append(intro, form, resultado, alvoGrafico, aviso);
+  const notasFolha = html('div', 'folha-notas');
+  folha.append(resultado, alvoGrafico, notasFolha, aviso);
+
+  const mensagem = (texto: string) => {
+    resultado.appendChild(html('p', 'aviso', texto));
+  };
 
   const atualizar = () => {
     resultado.replaceChildren();
     alvoGrafico.replaceChildren();
+    notasFolha.replaceChildren();
 
     const escolha = { vara: paraCodigo(vara.select.value), classe: paraCodigo(classe.select.value) };
     const curva = buscarCurva(doc, escolha.vara, escolha.classe);
     const t = Number(entradaT.value);
 
+    const invalido = entradaT.value.trim() === '' || !Number.isFinite(t) || t < 0 || t > fim;
+    entradaT.setAttribute('aria-invalid', String(invalido));
     if (entradaT.value.trim() === '' || !Number.isFinite(t) || t < 0) {
-      resultado.appendChild(html('p', 'aviso', 'Informe um número de meses igual ou maior que zero.'));
+      mensagem('Informe um número de meses igual ou maior que zero.');
       return;
     }
     if (t > fim) {
-      resultado.appendChild(
-        html('p', 'aviso', `Os dados cobrem só os primeiros ${fim} meses de tramitação; não há o que dizer depois disso.`),
-      );
+      mensagem(`Os dados cobrem só os primeiros ${fim} meses de tramitação; não há o que dizer depois disso.`);
       return;
     }
     if (!curva) {
-      resultado.appendChild(
-        html(
-          'p',
-          'aviso',
-          'Não há curva publicada para essa combinação de vara e classe (amostras com menos de 30 processos ficam de fora). ' +
-            'Tente "Todas as varas" ou "Todas as classes".',
-        ),
+      mensagem(
+        'Não há curva publicada para essa combinação de vara e classe (amostras com menos de 30 processos ficam de fora). ' +
+          'Tente “Todas as varas” ou “Todas as classes”.',
       );
       return;
     }
 
-    const titulo = html('h3', '', `${rotuloCurva(doc, escolha)}, tramitando há ${meses(t)}`);
-    resultado.appendChild(titulo);
+    const cabeca = html('div', 'folha-cabeca');
+    cabeca.append(
+      html('h3', '', rotuloCurva(doc, escolha)),
+      html('p', '', `Tramitando há ${meses(t)}.`),
+    );
+    resultado.appendChild(cabeca);
 
     const st = interpolar(doc.grade_meses, curva.sobrevivencia, t)!;
     if (st <= 0) {
-      resultado.appendChild(
-        html(
-          'p',
-          'aviso',
-          `Nenhum processo desta amostra chegou a ${meses(t)} sem sentença. ` +
-            'Não há base para estimar o que acontece a partir daqui, então não mostramos número.',
-        ),
+      mensagem(
+        `Nenhum processo desta amostra chegou a ${meses(t)} sem sentença. ` +
+          'Não há base para estimar o que acontece a partir daqui, então não mostramos número.',
       );
       return;
     }
 
-    const cartoes = html('div', 'probabilidades');
+    const cartoes = document.createElement('dl');
+    cartoes.className = 'probabilidades';
     for (const h of HORIZONTES) {
       const r = probabilidadeSentenca(doc.grade_meses, curva.sobrevivencia, t, h);
       const cartao = html('div', 'probabilidade');
-      cartao.appendChild(html('span', 'rotulo', `Nos próximos ${h} meses`));
+      cartao.appendChild(html('dt', '', `Nos próximos ${h} meses`));
+      const dd = document.createElement('dd');
       if (r.tipo === 'ok') {
-        cartao.appendChild(html('strong', 'valor', porcentagem(r.valor)));
-        cartao.appendChild(html('span', 'ajuda', 'de chance de sentença'));
+        dd.append(html('span', 'valor', porcentagem(r.valor)), html('span', 'ajuda', 'de chance de sentença'));
       } else if (r.tipo === 'fora-do-horizonte') {
-        cartao.appendChild(html('strong', 'valor indisponivel', '—'));
-        cartao.appendChild(html('span', 'ajuda', `${t + h} meses passa da janela de ${r.horizonte} meses dos dados`));
+        dd.append(
+          html('span', 'valor indisponivel', '—'),
+          html('span', 'ajuda', `${t + h} meses passa da janela de ${r.horizonte} meses dos dados`),
+        );
       } else {
-        cartao.appendChild(html('strong', 'valor indisponivel', '—'));
-        cartao.appendChild(html('span', 'ajuda', 'sem processos nesse ponto da curva'));
+        dd.append(html('span', 'valor indisponivel', '—'), html('span', 'ajuda', 'sem processos nesse ponto da curva'));
       }
+      cartao.appendChild(dd);
       cartoes.appendChild(cartao);
     }
     resultado.appendChild(cartoes);
 
     const mediana = quantilCondicional(doc.grade_meses, curva.sobrevivencia, t, 0.5);
     const p80 = quantilCondicional(doc.grade_meses, curva.sobrevivencia, t, 0.8);
-    const frase = html('p', 'frase');
-    frase.textContent =
-      `Dos processos que chegaram a ${meses(t)} sem sentença, metade foi sentenciada ` +
-      (mediana === null ? 'só depois do fim da janela de dados' : `em até mais ${meses(mediana)}`) +
-      ' e 80% ' +
-      (p80 === null ? 'só depois do fim da janela de dados.' : `em até mais ${meses(p80)}.`);
-    resultado.appendChild(frase);
-
-    const base = html('p', 'amostra-texto');
-    base.textContent =
-      `Base: curva de ${inteiro(curva.n)} processos (${inteiro(curva.eventos)} com sentença, ` +
-      `${inteiro(curva.censurados)} abertos no snapshot). Pela curva, ${porcentagem(st)} dos processos chegam a ${meses(t)} sem sentença.`;
-    resultado.appendChild(base);
-
-    if (st < S_POUCOS_CASOS) {
-      resultado.appendChild(
-        html(
-          'p',
-          'aviso',
-          `Atenção: só ${porcentagem(st)} dos processos chegam a esse tempo sem sentença. ` +
-            'A estimativa se apoia em poucos casos e pode variar bastante.',
-        ),
-      );
-    }
-
     resultado.appendChild(
       html(
         'p',
-        'nota',
-        'Estas probabilidades ainda não têm intervalo de confiança próprio. ' +
-          'A incerteza da curva de origem aparece como faixa na aba Explorar.',
+        'frase',
+        `Dos processos que chegaram a ${meses(t)} sem sentença, metade foi sentenciada ` +
+          (mediana === null ? 'só depois do fim da janela de dados' : `em até mais ${meses(mediana)}`) +
+          ' e 80% ' +
+          (p80 === null ? 'só depois do fim da janela de dados.' : `em até mais ${meses(p80)}.`),
       ),
     );
+
+    if (st < S_POUCOS_CASOS) {
+      mensagem(
+        `Atenção: só ${porcentagem(st)} dos processos chegam a esse tempo sem sentença. ` +
+          'A estimativa se apoia em poucos casos e pode variar bastante.',
+      );
+    }
 
     const cond = curvaCondicional(doc.grade_meses, curva.sobrevivencia, t);
     if (cond) {
       desenharGrafico(
         alvoGrafico,
-        [{ rotulo: 'Processos como o seu', cor: 'a', meses: cond.meses, valores: cond.valores }],
+        [
+          {
+            rotulo: 'Processos como o seu',
+            cor: 'a',
+            meses: cond.meses,
+            valores: cond.valores,
+            marcas: mediana === null ? [] : [{ mes: mediana, valor: 0.5, rotulo: `+${meses(mediana)}` }],
+          },
+        ],
         {
           descricao:
             `Proporção de processos que chegaram a ${meses(t)} sem sentença e continuam sem sentença ` +
@@ -173,6 +174,20 @@ export function montarMeuProcesso(painel: HTMLElement, doc: Contrato): void {
         },
       );
     }
+
+    const base = html(
+      'p',
+      'amostra-texto',
+      `Base: curva de ${inteiro(curva.n)} processos (${inteiro(curva.eventos)} com sentença, ` +
+        `${inteiro(curva.censurados)} abertos no snapshot). Pela curva, ${porcentagem(st)} dos processos chegam a ${meses(t)} sem sentença.`,
+    );
+    const nota = html(
+      'p',
+      'nota',
+      'Estas probabilidades ainda não têm intervalo de confiança próprio. ' +
+        'A incerteza da curva de origem aparece como faixa na aba Explorar.',
+    );
+    notasFolha.append(base, nota);
   };
 
   for (const s of [vara.select, classe.select]) s.addEventListener('change', atualizar);

@@ -4,25 +4,34 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Quanto tempo um processo ainda vai levar até a sentença, com análise de sobrevivência sobre dados públicos do CNJ/DataJud." />
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 1h10v2c0 2-2 4-3.5 5C11 9 13 11 13 13v2H3v-2c0-2 2-4 3.5-5C5 7 3 5 3 3z' fill='%232b5fb3'/%3E%3C/svg%3E" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 1h10v2c0 2-2 4-3.5 5C11 9 13 11 13 13v2H3v-2c0-2 2-4 3.5-5C5 7 3 5 3 3z' fill='%23a3195b'/%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./src/estilo.css" />
     <title>Ampulheta</title>
   </head>
   <body>
     <a class="pular" href="#conteudo">Pular para o conteúdo</a>
-    <header class="topo">
-      <h1>Ampulheta</h1>
-      <p class="subtitulo">Quanto tempo um processo ainda vai levar até a sentença, estimado a partir de dados públicos.</p>
+    <header class="topo container">
+      <div class="topo-linha">
+        <div>
+          <h1 class="marca">Ampulheta</h1>
+          <p class="subtitulo">Quanto tempo um processo ainda vai levar até a sentença, estimado a partir de dados públicos.</p>
+        </div>
+        <dl id="edicao" class="edicao"></dl>
+      </div>
       <nav aria-label="Telas">
         <div id="abas" role="tablist" aria-label="Telas do site"></div>
       </nav>
     </header>
-    <main id="conteudo" tabindex="-1">
-      <p>Carregando dados…</p>
+    <main id="conteudo" class="container" tabindex="-1">
+      <p class="nota" role="status">Carregando dados…</p>
     </main>
-    <footer id="rodape" class="rodape">
+    <footer id="rodape" class="rodape container">
       <p>Fonte: CNJ/DataJud.</p>
     </footer>
-    <noscript><p>Este site precisa de JavaScript para calcular as curvas no navegador.</p></noscript>
+    <noscript><p class="container">Este site precisa de JavaScript para calcular as curvas no navegador.</p></noscript>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
