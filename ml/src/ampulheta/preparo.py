@@ -56,6 +56,9 @@ def processar(src: dict[str, Any], snapshot: date, familia: Familia, contagem: C
     vistos: set[tuple[int, date]] = set()
     movimentos = []
     for m in src.get("movimentos", []):
+        if "codigo" not in m:  # raro na API (só dataHora e orgaoJulgador); sem código não há como classificar
+            contagem["movimento sem código TPU ignorado"] += 1
+            continue
         chave = (m["codigo"], data_movimento(m["dataHora"]))
         if chave in vistos:
             contagem["movimento duplicado (mesmo código, mesmo dia) removido"] += 1

@@ -68,3 +68,12 @@ def test_movimentos_duplicados_no_dia_e_historico_curto(familia):
     assert len(movs) == 1 and linha["n_movimentos"] == 1
     assert c["movimento duplicado (mesmo código, mesmo dia) removido"] == 1
     assert "historico_curto" in linha["flags"]
+
+
+def test_movimento_sem_codigo_e_ignorado_e_contado(familia):
+    c = Counter()
+    src = fonte(movimentos=[(26, "2020-01-16T10:00:00.000Z"), (219, "2021-01-15T10:00:00.000Z")])
+    src["movimentos"].append({"dataHora": "2026-05-18T06:24:00.000Z", "orgaoJulgador": {"codigo": "10672"}})
+    linha, movs = processar(src, SNAPSHOT, familia, c)
+    assert c["movimento sem código TPU ignorado"] == 1
+    assert len(movs) == 2 and linha["evento"] == 1
