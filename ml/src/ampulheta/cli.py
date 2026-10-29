@@ -15,6 +15,7 @@ def construir_parser() -> argparse.ArgumentParser:
 
     c = sub.add_parser("coletar", help="estágio 1: baixa processos da API do DataJud para raw/<snapshot>/")
     c.add_argument("--snapshot", help="data AAAA-MM-DD; padrão é hoje")
+    c.add_argument("--vara", type=int, action="append", help="coletar só esta(s) vara(s), sem fechar o snapshot; permite processos em paralelo")
 
     pr = sub.add_parser("preparar", help="estágio 2: raw/<snapshot>/ -> data/*.parquet + relatório")
     pr.add_argument("--snapshot", required=True, help="pasta de raw/ a usar")
@@ -25,13 +26,16 @@ def construir_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    sys.stdout.reconfigure(line_buffering=True)  # progresso visível mesmo com saída redirecionada
     args = construir_parser().parse_args(argv)
     from .config import carregar
 
     cfg = carregar(args.config)
     if args.comando == "coletar":
         from .coletor import coletar
-        print(coletar(cfg, args.snapshot))
+        if args.vara:
+            cfg["varas"] = [v for v in cfg["varas"] if v["codigo"] in args.vara]
+        print(coletar(cfg, args.snapshot, fechar=not args.vara))
     elif args.comando == "preparar":
         from .preparo import preparar
         preparar(cfg, args.snapshot)

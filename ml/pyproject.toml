@@ -16,6 +16,7 @@ dependencies = [
   "pyarrow>=16",
   "lifelines>=0.29",
   "scikit-survival>=0.23",
+  "tabulate>=0.9",
 ]
 
 [project.optional-dependencies]

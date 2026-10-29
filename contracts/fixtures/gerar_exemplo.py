@@ -44,10 +44,11 @@ def weibull(t: float, lam: float, k: float) -> float:
 def curva(lam: float, k: float, n: int, grade: list[int]) -> dict:
     S = [weibull(t, lam, k) for t in grade]
     # Greenwood aproximado: var(S) ≈ S² · (1−S)/(n·S) ; IC em escala log(−log) simplificado
-    lo, hi = [], []
+    lo, hi, gw = [], [], []
     for s in S:
         if s <= 0 or s >= 1:
-            lo.append(s); hi.append(s); continue
+            lo.append(s); hi.append(s); gw.append(gw[-1] if gw else 0.0); continue
+        gw.append((1 - s) / (n * s))  # σ² de Greenwood acumulada, aproximação sem censura
         se = s * math.sqrt((1 - s) / (n * s))
         lo.append(max(0.0, s - 1.96 * se))
         hi.append(min(1.0, s + 1.96 * se))
@@ -62,6 +63,7 @@ def curva(lam: float, k: float, n: int, grade: list[int]) -> dict:
         "sobrevivencia": [round(x, 4) for x in S],
         "ic_inferior": [round(x, 4) for x in lo],
         "ic_superior": [round(x, 4) for x in hi],
+        "greenwood_acumulado": [round(x, 6) for x in gw],
         "quantis_meses": quantis,
     }
 
@@ -70,8 +72,8 @@ def mistura(chaves: list[tuple[str, str]], grade: list[int]) -> dict:
     """Agregado = média ponderada por n das curvas componentes."""
     comps = [(TAMANHOS[c], curva(*PARAMS[c], TAMANHOS[c], grade)) for c in chaves]
     n = sum(w for w, _ in comps)
-    def pond(campo: str) -> list[float]:
-        return [round(sum(w * c[campo][i] for w, c in comps) / n, 4) for i in range(len(grade))]
+    def pond(campo: str, casas: int = 4) -> list[float]:
+        return [round(sum(w * c[campo][i] for w, c in comps) / n, casas) for i in range(len(grade))]
     S = pond("sobrevivencia")
     eventos = sum(c["eventos"] for _, c in comps)
     quantis = {}
@@ -88,7 +90,7 @@ def mistura(chaves: list[tuple[str, str]], grade: list[int]) -> dict:
     return {
         "metodo": "kaplan-meier", "n": n, "eventos": eventos, "censurados": n - eventos,
         "sobrevivencia": S, "ic_inferior": pond("ic_inferior"), "ic_superior": pond("ic_superior"),
-        "quantis_meses": quantis,
+        "greenwood_acumulado": pond("greenwood_acumulado", 6), "quantis_meses": quantis,
     }
 
 
@@ -107,7 +109,7 @@ def main() -> None:
         curvas.append({"vara": v, "classe": c, **curva(lam, k, TAMANHOS[(v, c)], grade)})
 
     doc = {
-        "contrato": "1.0.0",
+        "contrato": "1.1.0",
         "gerado_em": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "snapshot": "2026-10-28",
         "sintetico": True,
