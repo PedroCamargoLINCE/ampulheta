@@ -1,26 +1,48 @@
-# Recorte da v1 (ADR-003). Códigos a confirmar na TPU e na API antes da primeira coleta.
+# Recorte da v1 (ADR-003). Códigos confirmados na API em 2026-10-29 por agregação sobre
+# orgaoJulgador.codigoMunicipioIBGE = 3552205 (Sorocaba), grau G1, ajuizados 2018–2024.
 tribunal: tjsp            # sufixo do endpoint: api_publica_<tribunal>
 grau: G1
 api:
   url: https://api-publica.datajud.cnj.jus.br/api_publica_{tribunal}/_search
-  chave_env: DATAJUD_API_KEY   # chave pública do CNJ; ler da variável de ambiente, nunca commitar
-  tamanho_pagina: 1000
+  chave_env: DATAJUD_API_KEY   # chave pública do CNJ (datajud-wiki.cnj.jus.br/api-publica/acesso); ler do ambiente, nunca commitar
+  tamanho_pagina: 50           # 1000 é rejeitado (429/504, páginas de ~8 MB); 100 sofre com 504 e shards parciais em pico; 50 é leve
   req_por_minuto: 120
-  timeout_s: 90
-classes:                  # TODO confirmar códigos na TPU
+  timeout_s: 150
+classes:                  # códigos da TPU; o TJSP não usa o 12 (Despejo por Falta de Pagamento), usa 93 e 94
   - codigo: 7
     nome: Procedimento Comum Cível
-  - codigo: 12
+  - codigo: 93
     nome: Despejo por Falta de Pagamento
-varas:                    # TODO preencher com códigos de orgaoJulgador das varas cíveis de Sorocaba
-  - codigo: 0
-    nome: PREENCHER
+  - codigo: 94
+    nome: Despejo por Falta de Pagamento Cumulado Com Cobrança
+varas:                    # varas cíveis de Sorocaba (orgaoJulgador.codigo); nomes como vêm da API
+  - codigo: 10669
+    nome: 1ª Vara Cível de Sorocaba
+  - codigo: 10670
+    nome: 2ª Vara Cível de Sorocaba
+  - codigo: 10671
+    nome: 3ª Vara Cível de Sorocaba
+  - codigo: 10672
+    nome: 4ª Vara Cível de Sorocaba
+  - codigo: 10673
+    nome: 5ª Vara Cível de Sorocaba
+  - codigo: 10674
+    nome: 6ª Vara Cível de Sorocaba
+  - codigo: 10675
+    nome: 7ª Vara Cível de Sorocaba
+  - codigo: 87759
+    nome: 8ª Vara Cível de Sorocaba
+  - codigo: 87760
+    nome: 9ª Vara Cível de Sorocaba
+municipio: Sorocaba
 ajuizamento:
   de: "2018-01-01"
   ate: "2024-12-31"
 evento_sentenca:
-  familia_tpu: 193        # Julgamento e filhos; confirmar lista exata na TPU
+  familia_tpu: 193        # Julgamento; ramos 218 (sem resolução de mérito) e 385 (com resolução do mérito)
+  tabela: tpu_julgamento.csv   # 193 e descendentes, extraída da TPU oficial (gateway.cloud.pje.jus.br/tpu) em 2026-10-29
 saida:
   raw: raw
   data: ../data
   publicado: ../data/publicado
+  validador: ../contracts/validar.py

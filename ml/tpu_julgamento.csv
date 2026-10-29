@@ -1,0 +1,273 @@
+codigo,nome,pai,ramo
+193,Julgamento,1,julgamento
+218,Sem Resolução de Mérito,193,sem_merito
+228,Arquivamento,218,sem_merito
+472,"Sumaríssimo (art. 852-B, § 1º/CLT)",228,sem_merito
+473,Ausência do Reclamante,228,sem_merito
+230,Recurso prejudicado,218,sem_merito
+235,Não Conhecimento de recurso,218,sem_merito
+236,Negação de Seguimento,218,sem_merito
+244,Conversão de Agravo de Instrumento em Agravo Retido,218,sem_merito
+456,Extinção,218,sem_merito
+454,Indeferimento da petição inicial,456,sem_merito
+457,Paralisação por negligência das partes,456,sem_merito
+458,Abandono da causa,456,sem_merito
+459,Ausência de pressupostos processuais,456,sem_merito
+460,"Perempção, litispendência ou coisa julgada",456,sem_merito
+461,Ausência das condições da ação,456,sem_merito
+462,Convenção de arbitragem,456,sem_merito
+463,Desistência,456,sem_merito
+464,Ação intransmissível,456,sem_merito
+465,Confusão entre autor e réu,456,sem_merito
+11374,Devedor não encontrado,456,sem_merito
+11375,Inexistência de bens penhoráveis,456,sem_merito
+11376,Ausência do autor à audiência,456,sem_merito
+11377,Inadmissibilidade do procedimento sumaríssimo,456,sem_merito
+11378,Incompetência territorial,456,sem_merito
+11379,Incompetência em razão da pessoa,456,sem_merito
+11380,Autor falecido e sem habilitação de sucessores,456,sem_merito
+11381,Ausência de citação de sucessores do réu falecido,456,sem_merito
+12256,Continência,456,sem_merito
+12298,Cancelamento de Dívida Ativa,456,sem_merito
+12325,Perda do objeto,456,sem_merito
+12617,Renúncia,456,sem_merito
+14848,Ausência de Requerimento Administrativo Prévio,456,sem_merito
+15245,Unificação de Medida Socioeducativa,456,sem_merito
+15249,Morte do Adolescente/Socioeducando,456,sem_merito
+15250,Aplicação de Pena Privativa de Liberdade ao Adolescente/Socioeducando,456,sem_merito
+15251,Condição de Doença Grave do Adolescente/Socioeducando,15250,sem_merito
+853,Conversão de Agravo de Instrumento em Recurso Especial ou Extraordinário,218,sem_merito
+10953,Pronúncia,218,sem_merito
+10961,Impronúncia,218,sem_merito
+11373,Anulação de sentença/acórdão,218,sem_merito
+11394,Homologada a Remissão,218,sem_merito
+11396,Concessão de remissão a adolescente com exclusão do processo,218,sem_merito
+12184,Suspensão Condicional do Processo,218,sem_merito
+12319,Não conhecimento do pedido,218,sem_merito
+12458,Não conhecimento do habeas corpus,218,sem_merito
+12459,Prejudicado,218,sem_merito
+12709,Registro de Candidatura,218,sem_merito
+12710,Anulação de Acórdão (Registro Deferido),12709,sem_merito
+12711,Anulação de Acórdao (Registro Indeferido),12709,sem_merito
+12712,Anulação de Acórdão (Registro Cancelado),12709,sem_merito
+12713,Anulação de Acórdão (Registro Cassado),12709,sem_merito
+12714,Anulação de Acórdão (Registro Sem Julgamento),12709,sem_merito
+12715,Não Conhecimento (Registro Deferido),12709,sem_merito
+12716,Não Conhecimento (Registro Indeferido),12709,sem_merito
+12717,Não Conhecimento (Registro Cancelado),12709,sem_merito
+12718,Não Conhecimento (Registro Cassado),12709,sem_merito
+12719,Não Conhecimento (Registro Sem Julgamento),12709,sem_merito
+12720,Negação de Seguimento (Registro Deferido),12709,sem_merito
+12721,Negação de Seguimento (Registro Indeferido),12709,sem_merito
+12722,Negação de Seguimento (Registro Cancelado),12709,sem_merito
+12723,Negação de Seguimento (Registro Cassado),12709,sem_merito
+12724,Negação de Seguimento (Registro Sem Julgamento),12709,sem_merito
+14218,Anulação de Sentença (Registro Sem Julgamento),12709,sem_merito
+15253,Concessão de Remissão a Adolescente com Extinção do Processo,218,sem_merito
+15254,Justiça Restaurativa,15253,sem_merito
+15255,Sem Medida Socioeducativa,15253,sem_merito
+15256,Liberdade Assistida,15253,sem_merito
+15257,Prestação de Serviços à Comunidade,15253,sem_merito
+15258,Reparação de Dano,15253,sem_merito
+15259,Advertência,15253,sem_merito
+15260,Homologada a Remissão,218,sem_merito
+15261,Justiça Restaurativa,15260,sem_merito
+15262,Sem Medida Socioeducativa,15260,sem_merito
+15263,Liberdade Assistida,15260,sem_merito
+15264,Prestação de Serviços à Comunidade,15260,sem_merito
+15265,Reparação do Dano,15260,sem_merito
+15266,Advertência,15260,sem_merito
+15408,Não Conhecimento de Embargos de Declaração,218,sem_merito
+385,Com Resolução do Mérito,193,com_merito
+196,Extinção da execução ou do cumprimento da sentença,385,com_merito
+198,Acolhimento de Embargos de Declaração,385,com_merito
+200,Não-Acolhimento de Embargos de Declaração,385,com_merito
+202,Decretação de falência,385,com_merito
+208,Não-Decretação de Falência,385,com_merito
+210,Concessão,385,com_merito
+442,Segurança,210,com_merito
+443,Habeas corpus,210,com_merito
+444,Habeas data,210,com_merito
+445,Mandado de injunção,210,com_merito
+10965,Remissão a Adolescente Infrator,210,com_merito
+12032,Exequatur,210,com_merito
+12041,Recuperação judicial,210,com_merito
+12475,Habeas Corpus de ofício,210,com_merito
+212,Denegação,385,com_merito
+446,Segurança,212,com_merito
+447,Habeas corpus,212,com_merito
+448,Habeas data,212,com_merito
+449,Mandado de injunção,212,com_merito
+214,Concessão em Parte,385,com_merito
+450,Segurança,214,com_merito
+451,Habeas corpus,214,com_merito
+452,Habeas data,214,com_merito
+453,Mandado de injunção,214,com_merito
+14680,Exequatur,214,com_merito
+219,Procedência,385,com_merito
+220,Improcedência,385,com_merito
+221,Procedência em Parte,385,com_merito
+237,Provimento,385,com_merito
+238,Provimento em Parte,385,com_merito
+239,Não-Provimento,385,com_merito
+240,Conhecimento em Parte e Provimento ou Concessão,385,com_merito
+241,Conhecimento em Parte e Provimento em Parte ou Concessão em Parte,385,com_merito
+242,Conhecimento em Parte e Não-Provimento ou Denegação,385,com_merito
+455,Renúncia ao direito pelo autor,385,com_merito
+466,Homologação de Transação,385,com_merito
+471,Pronúncia de Decadência ou Prescrição,385,com_merito
+871,Acolhimento em parte de Embargos de Declaração,385,com_merito
+884,Transação Penal,385,com_merito
+900,Declaração de competência em conflito,385,com_merito
+901,Negação Monocrática de Provimento,385,com_merito
+972,Provimento Monocrático,385,com_merito
+973,Extinção da Punibilidade ou da Pena,385,com_merito
+1042,Morte do agente,973,com_merito
+1043,"Anistia, graça ou indulto",973,com_merito
+1044,Retroatividade de lei,973,com_merito
+1045,"Prescrição, decadência ou perempção",973,com_merito
+1046,Renúncia do queixoso ou perdão aceito,973,com_merito
+1047,Retratação do agente,973,com_merito
+1048,Perdão judicial,973,com_merito
+1049,Pagamento integral do débito,973,com_merito
+1050,Cumprimento da Pena,973,com_merito
+11411,Cumprimento da suspensão condicional do processo,973,com_merito
+11801,Reparação do dano,973,com_merito
+11878,Prescrição,973,com_merito
+11879,Decadência ou perempção,973,com_merito
+12028,Cumprimento de transação penal,973,com_merito
+12616,Composição Civil dos Danos,973,com_merito
+12735,Cumprimento de ANPP,973,com_merito
+15322,Extinção da Pena - Cumprimento de Sursis,973,com_merito
+10964,Extinção por Cumprimento de Medida Sócio-Educativa,385,com_merito
+11401,Procedência do pedido e procedência do pedido contraposto,385,com_merito
+11402,Procedência do pedido e procedência em parte do pedido contraposto,385,com_merito
+11403,Procedência do pedido e improcedência do pedido contraposto,385,com_merito
+11404,Procedência em parte do pedido e procedência do pedido contraposto,385,com_merito
+11405,Procedência em parte do pedido e procedência em parte do pedido contraposto,385,com_merito
+11406,Procedência em parte do pedido e improcedência do pedido contraposto,385,com_merito
+11407,Improcedência do pedido e procedência do pedido contraposto,385,com_merito
+11408,Improcedência do pedido e procedência em parte do pedido contraposto,385,com_merito
+11409,Improcedência do pedido e improcedência do pedido contraposto,385,com_merito
+11795,Procedência do Pedido - Reconhecimento pelo réu,385,com_merito
+11796,Declaração de competência em conflito,385,com_merito
+11876,Absolvição Sumária do art. 397-CPP,385,com_merito
+11877,Absolvição sumária - crimes dolosos contra a vida,385,com_merito
+12033,Sentença Estrangeira,385,com_merito
+12034,Exequatur,385,com_merito
+12187,Homologação de Decisão de Juiz Leigo,385,com_merito
+12252,Sentença confirmada,385,com_merito
+12253,Sentença confirmada em parte,385,com_merito
+12254,Sentença desconstituída,385,com_merito
+12257,Definição de tese jurídica em incidentes repetitivos,385,com_merito
+12258,Emissão de juízo de retratação pelo Órgão Julgador,385,com_merito
+12321,Parecer,385,com_merito
+12322,Favorável,12321,com_merito
+12323,Favorável em parte,12321,com_merito
+12324,Desfavorável,12321,com_merito
+12326,Consulta,385,com_merito
+12327,Respondida,12326,com_merito
+12328,Respondida em parte,12326,com_merito
+12329,Pedido conhecido em parte e procedente,385,com_merito
+12330,Pedido conhecido em parte e procedente em parte,385,com_merito
+12331,Pedido conhecido em parte e improcedente,385,com_merito
+12433,Conjunto Agravo e Recurso Especial,385,com_merito
+12434,Conhecimento para dar provimento ao Recurso Especial,12433,com_merito
+12435,Conhecimento para negar provimento ao recurso especial,12433,com_merito
+12436,Conhecimento para não conhecer do Recurso Especial,12433,com_merito
+12437,Conhecimento para determinar sua autuação como Recurso Especial,12433,com_merito
+12438,conhecimento para dar parcial provimento ao recurso especial,12433,com_merito
+12439,conhecimento para conhecer em parte o recurso especial e dar provimento,12433,com_merito
+12440,conhecimento para conhecer em parte o recurso especial e negar provimento,12433,com_merito
+12441,Conhecimento para conhecer o recurso especial,12433,com_merito
+12442,conhecimento para conhecer em parte o recurso especial,12433,com_merito
+12443,conhecimento em parte para dar provimento ao recurso especial,12433,com_merito
+12450,impugnação à execução,385,com_merito
+12451,Procedência,12450,com_merito
+12452,procedência parcial,12450,com_merito
+12453,improcedência,12450,com_merito
+12615,Composição Civil,385,com_merito
+12649,Homologação do Pedido,385,com_merito
+12650,Não Homologado o Pedido,385,com_merito
+12651,Contas Não Prestação,385,com_merito
+12652,Contas Aprovadas,385,com_merito
+12653,Contas Desaprovadas,385,com_merito
+12654,Contas Aprovadas com Ressalvas,385,com_merito
+12661,Impugnação do Registro de Candidatura,385,com_merito
+12666,Procedência da Impugnação (Registro Deferido),12661,com_merito
+12667,Procedência da Impugnação (Registro Indeferido),12661,com_merito
+12668,Procedência em Parte da Impugnação (Registro Deferido),12661,com_merito
+12669,Procedência em Parte da Impugnação (Registro Indeferido),12661,com_merito
+12670,Procedência em Parte da Impugnação (Registro Cancelado),12661,com_merito
+12671,Procedência em Parte da Impugnação (Registro Cassado),12670,com_merito
+12672,Procedência em Parte da Impugnação (Registro Cassado),12661,com_merito
+12673,Não-Procedência da Impugnação (Registro Deferido),12661,com_merito
+12674,Não-Procedência da Impugnação (Registro Indeferido),12661,com_merito
+12675,Não-Procedência da Impugnação (Registro Cancelado),12661,com_merito
+12676,Não-Procedência da Impugnação (Registro Cassado),12661,com_merito
+12677,Procedência da Impugnação (Registro Cancelado),12661,com_merito
+12792,Procedência da Impugnação (Registro Cassado),12661,com_merito
+12664,Movimentar Partido,385,com_merito
+12665,Procedência da Impugnação (Registro Deferido),385,com_merito
+12678,Registro de Candidatura,385,com_merito
+12660,Deferimento do Pedido de Registro de Candidatura,12678,com_merito
+12662,Cassação do Registro de Candidatura,12678,com_merito
+12663,Cancelamento do Pedido de Registro de Candidatura,12678,com_merito
+12679,Provimento (Registro Deferido),12678,com_merito
+12680,Provimento (Registro Indeferido),12678,com_merito
+12681,Provimento (Registro Cancelado),12678,com_merito
+12682,Provimento (Registro Cassado),12678,com_merito
+12683,Provimento (Registro Sem Julgamento),12678,com_merito
+12684,Provimento em Parte (Registro Deferido),12678,com_merito
+12685,Provimento em Parte (Registro Indeferido),12678,com_merito
+12686,Provimento em Parte (Registro Cancelado),12678,com_merito
+12687,Provimento em Parte (Registro Cassado),12678,com_merito
+12688,Provimento em Parte (Registro Sem Julgamento),12678,com_merito
+12689,Não-Provimento (Registro Deferido),12678,com_merito
+12690,Não-Provimento (Registro Indeferido),12678,com_merito
+12691,Não-Provimento (Registro Cancelado),12678,com_merito
+12692,Não-Provimento (Registro Cassado),12678,com_merito
+12693,Não-Provimento (Registro Sem Julgamento),12678,com_merito
+12694,Acolhimento (Registro Deferido),12678,com_merito
+12695,Acolhimento (Registro Indeferido),12678,com_merito
+12696,Acolhimento (Registro Cancelado),12678,com_merito
+12697,Acolhimento (Registro Cassado),12678,com_merito
+12698,Acolhimento (Registro Sem Julgamento),12678,com_merito
+12699,Não-Acolhimento (Registro Deferido),12678,com_merito
+12700,Não-Acolhimento (Registro Indeferido),12678,com_merito
+12701,Não-Acolhimento (Registro Cancelado),12678,com_merito
+12702,Não-Acolhimento (Registro Cassado),12678,com_merito
+12703,Não-Acolhimento (Registro Sem Julgamento),12678,com_merito
+12704,Anulação de Acórdão (Registro Deferido),12678,com_merito
+12705,Anulação de Acórdão (Registro Indeferido),12678,com_merito
+12706,Anulação de Acórdão (Registro Cancelado),12678,com_merito
+12707,Anulação de Acórdão (Registro Cassado),12678,com_merito
+12708,Anulação de Acórdão (Registro Sem Julgamento),12678,com_merito
+14210,Indeferimento do Pedido de Registro de Candidatura,12678,com_merito
+14211,Homologação da Renúncia ao Registro de Candidatura,12678,com_merito
+14213,Acolhimento em Parte (Registro Deferido),12678,com_merito
+14214,Acolhimento em Parte (Registro Indeferido),12678,com_merito
+14215,Acolhimento em Parte (Registro Cancelado),12678,com_merito
+14216,Acolhimento em Parte (Registro Cassado),12678,com_merito
+14217,Acolhimento em Parte (Registro sem Julgamento),12678,com_merito
+15023,DRAP Deferido,12678,com_merito
+15024,DRAP Indeferido,12678,com_merito
+12738,Homologação de Transação Penal,385,com_merito
+14099,Homologação de Acordo em Execução ou em Cumprimento de Sentença,385,com_merito
+14219,Contas Regularizadas,385,com_merito
+14777,Sentença Estrangeira,385,com_merito
+14778,Sentença Estrangeira,385,com_merito
+14937,Acolhimento da Justificativa do Mesário Faltoso ou Dispensa de Multa,385,com_merito
+15022,Rejeição de Justificativa do Mesário Faltoso ou Manutenção de Multa,385,com_merito
+15026,Cancelamento de Inscrição Eleitoral,385,com_merito
+15027,Manutenção da Inscrição Eleitoral,385,com_merito
+15028,Acolhimento de Pedido de Inclusão em Lista Especial,385,com_merito
+15029,Indeferimento de Pedido de Inclusão em Lista Especial,385,com_merito
+15030,Cancelamento de Filiação Partidária,385,com_merito
+15165,Resolução Aprovada,385,com_merito
+15166,Resolução Desaprovada,385,com_merito
+15211,Procedência do Pedido com Aplicação de Medida Socioeducativa,385,com_merito
+15212,Procedência do Pedido sem Aplicação de Medida Socioeducativa,385,com_merito
+15213,Procedência em Parte do Pedido com Aplicação de Medida Socioeducativa,385,com_merito
+15214,Procedência em Parte do Pedido sem Aplicação de Medida Socioeducativa,385,com_merito
+15252,Extinção do processo de execução de medida socioeducativa em razão da perda do caráter pedagógico,385,com_merito
