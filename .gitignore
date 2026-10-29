@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Dados brutos: grandes e imutáveis; só o manifest é versionado
+ml/raw/*
+!ml/raw/.gitkeep
+!ml/raw/**/manifest.json
+
+# Modelos treinados grandes (publicar o JSON derivado, não o pickle)
+ml/models/*.pkl
+ml/models/*.joblib
+
+# Node / site
+node_modules/
+web/dist/
+web/.vite/
+
+# Sistema
+.DS_Store
+*.log
+.ruff_cache/

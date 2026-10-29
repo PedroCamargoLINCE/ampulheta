@@ -1,0 +1,26 @@
+# Recorte da v1 (ADR-003). Códigos a confirmar na TPU e na API antes da primeira coleta.
+tribunal: tjsp            # sufixo do endpoint: api_publica_<tribunal>
+grau: G1
+api:
+  url: https://api-publica.datajud.cnj.jus.br/api_publica_{tribunal}/_search
+  chave_env: DATAJUD_API_KEY   # chave pública do CNJ; ler da variável de ambiente, nunca commitar
+  tamanho_pagina: 1000
+  req_por_minuto: 120
+  timeout_s: 90
+classes:                  # TODO confirmar códigos na TPU
+  - codigo: 7
+    nome: Procedimento Comum Cível
+  - codigo: 12
+    nome: Despejo por Falta de Pagamento
+varas:                    # TODO preencher com códigos de orgaoJulgador das varas cíveis de Sorocaba
+  - codigo: 0
+    nome: PREENCHER
+ajuizamento:
+  de: "2018-01-01"
+  ate: "2024-12-31"
+evento_sentenca:
+  familia_tpu: 193        # Julgamento e filhos; confirmar lista exata na TPU
+saida:
+  raw: raw
+  data: ../data
+  publicado: ../data/publicado
