@@ -15,8 +15,39 @@ Ação esperada do outro lado:
 
 ---
 
-## 2026-10-29 · Web → ML · intervalo de confiança da probabilidade condicional
+## 2026-10-29 · ML → Web · contrato 1.1.0: `greenwood_acumulado` e transformação dos IC
 Status: aberto
+O que mudou: `contracts/` está na versão 1.1.0. Cada curva pode trazer o campo opcional
+`greenwood_acumulado` (σ²(t) = Σ d/(n(n−d)) na grade, não decrescente, começa em 0), e o
+README do contrato documenta que `ic_*` são IC 95% na escala log(−log S) com variância de
+Greenwood. `publicar.py` já emite o campo; a fixture foi regenerada com ele; o validador o
+checa quando presente.
+Ação esperada: calcular na tela Meu processo o IC de P(sentença em h | t) via
+Var(log S(t+h)/S(t)) = σ²(t+h) − σ²(t), e manter o aviso "sem IC" quando o campo faltar.
+
+## 2026-10-29 · ML → todos · estado da coleta e como continuar em outra máquina
+Status: aberto
+O que mudou: pipeline inteiro implementado em `ml/` (coletor, preparo, Kaplan-Meier,
+publicação) e validado de ponta a ponta com dado real; ver `ml/README.md`. O snapshot
+`2026-10-29` está **aberto** (sem `manifest.json`), com páginas compactadas versionadas em
+`ml/raw/2026-10-29/` (ADR-008): vara 10672 com 2.650 de ~5.300 processos, varas 10671 e
+10673 com 200 cada; as outras seis varas ainda não começaram. A API do CNJ responde em
+40–50 s por requisição e recusa muitas em horário de pico; a coleta é lenta mas retomável.
+Ainda **não** existe `data/publicado/curvas.json` real: só sai quando o snapshot fechar.
+Ação esperada (quem continuar o ML): em um checkout do branch, com
+`export DATAJUD_API_KEY=<chave vigente em datajud-wiki.cnj.jus.br/api-publica/acesso>`, rodar
+em paralelo um processo por vara, `ampulheta coletar --snapshot 2026-10-29 --vara <codigo>`
+(três a quatro de cada vez; cada um faz no máximo uma requisição por minuto). Commitar
+`ml/raw/2026-10-29/` periodicamente para não perder progresso. Quando todas as varas
+tiverem `total_esperado.txt`, rodar `ampulheta coletar --snapshot 2026-10-29` sem `--vara`
+para fechar o manifesto, depois `preparar --snapshot 2026-10-29`, `modelar`, `publicar`,
+e registrar aqui o snapshot com o resultado do validador.
+Obrigação do termo de uso do CNJ (cláusula 3.9): dar ciência ao CNJ antes de publicar
+estudo ou painel com os dados; a cláusula 3.8 proíbe exploração comercial sem autorização
+escrita. Anotado também em `ml/README.md`.
+
+## 2026-10-29 · Web → ML · intervalo de confiança da probabilidade condicional
+Status: resolvido (2026-10-29) — ver item "contrato 1.1.0" acima
 O que preciso: a tela Meu processo mostra P(sentença em h meses | tramita há t) sem
 intervalo, porque não dá para derivá-lo de `ic_inferior`/`ic_superior` (o contrato não
 diz a transformação usada, e razão de limites não é IC). Com a soma acumulada de

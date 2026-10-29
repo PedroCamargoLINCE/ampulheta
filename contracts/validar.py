@@ -5,7 +5,8 @@ Uso: python3 contracts/validar.py <arquivo.json> [--estrito]
 
 Checa a estrutura (campos, tipos) e os invariantes matemáticos que um JSON Schema
 não expressa: tamanhos iguais, S não crescente, S[0] == 1, IC envolvendo S,
-n == eventos + censurados, códigos referenciados existentes, quantis ordenados.
+n == eventos + censurados, códigos referenciados existentes, quantis ordenados,
+greenwood_acumulado (opcional, 1.1.0) não decrescente a partir de 0.
 Sai com código 0 se válido, 1 se houver erro. Avisos (ex.: n < 30) só viram erro
 com --estrito.
 """
@@ -171,6 +172,18 @@ def validar(doc: dict) -> Resultado:
             if lo and hi and len(lo) == len(S) == len(hi):
                 if any(not (l - EPS <= s <= h + EPS) for l, s, h in zip(lo, S, hi)):
                     r.erro(f"{onde}: IC não envolve a sobrevivência em algum ponto")
+
+        gw = c.get("greenwood_acumulado")
+        if gw is not None:  # opcional desde 1.1.0
+            if not isinstance(gw, list) or not all(isinstance(x, (int, float)) and not isinstance(x, bool) and x >= 0 for x in gw):
+                r.erro(f"{onde}: 'greenwood_acumulado' deve ser lista de números >= 0")
+            else:
+                if n_grade is not None and len(gw) != n_grade:
+                    r.erro(f"{onde}: 'greenwood_acumulado' tem {len(gw)} pontos, grade tem {n_grade}")
+                if gw and abs(gw[0]) > EPS:
+                    r.erro(f"{onde}: greenwood_acumulado[0] deve ser 0")
+                if any(b < a - EPS for a, b in zip(gw, gw[1:])):
+                    r.erro(f"{onde}: greenwood_acumulado deve ser não decrescente")
 
         if _exige(c, "quantis_meses", dict, r, onde):
             q = c["quantis_meses"]
