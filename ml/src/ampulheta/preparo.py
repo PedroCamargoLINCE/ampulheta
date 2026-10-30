@@ -56,6 +56,9 @@ def processar(src: dict[str, Any], snapshot: date, familia: Familia, contagem: C
     vistos: set[tuple[int, date]] = set()
     movimentos = []
     for m in src.get("movimentos", []):
+        if "codigo" not in m:  # raro na API (só dataHora e orgaoJulgador); sem código não há como classificar
+            contagem["movimento sem código TPU ignorado"] += 1
+            continue
         chave = (m["codigo"], data_movimento(m["dataHora"]))
         if chave in vistos:
             contagem["movimento duplicado (mesmo código, mesmo dia) removido"] += 1
@@ -105,6 +108,8 @@ def relatorio(processos: pd.DataFrame, contagem: Counter, manifest: dict, snapsh
     por_vara["censura_%"] = (100 * (1 - por_vara["eventos"] / por_vara["n"])).round(1)
     por_classe = processos.groupby("classe_nome").agg(n=("evento", "size"), eventos=("evento", "sum"))
     por_classe["censura_%"] = (100 * (1 - por_classe["eventos"] / por_classe["n"])).round(1)
+    por_sistema = processos.groupby("sistema").agg(n=("evento", "size"), eventos=("evento", "sum"))
+    por_sistema["censura_%"] = (100 * (1 - por_sistema["eventos"] / por_sistema["n"])).round(1)
     tipos = processos.loc[processos.evento == 1, "tipo_sentenca"].value_counts().head(15)
     anos = processos.assign(ano=processos.data_ajuizamento.map(lambda d: d.year)).groupby("ano").agg(n=("evento", "size"), eventos=("evento", "sum"))
     sentenciados = processos[processos.evento == 1]
@@ -129,6 +134,7 @@ def relatorio(processos: pd.DataFrame, contagem: Counter, manifest: dict, snapsh
         "",
         "## Por vara", "", por_vara.to_markdown(),
         "", "## Por classe", "", por_classe.to_markdown(),
+        "", "## Por sistema de origem", "", por_sistema.to_markdown(),
         "", "## Por ano de ajuizamento", "", anos.to_markdown(),
         "", "## Tipo da primeira sentença (TPU)", "", tipos.to_markdown(),
         "",

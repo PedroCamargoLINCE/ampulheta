@@ -15,6 +15,28 @@ Ação esperada do outro lado:
 
 ---
 
+## 2026-10-29 · ML → Web · primeiro `data/publicado/curvas.json` real
+Status: aberto
+O que mudou: o snapshot `2026-10-29` fechou (nove varas cíveis de Sorocaba, 38.524 processos,
+79,3% com sentença) e `publicar.py` gerou `data/publicado/curvas.json` no contrato 1.1.0, com
+36 curvas (agregada, 9 varas, 3 classes, 23 vara × classe com n ≥ 30) numa grade de 0 a 106
+meses. Validador: `VÁLIDO — 36 curva(s), 0 erro(s), 0 aviso(s)` em modo estrito.
+Ação esperada: rodar o build do site; ele deve sair da fixture sozinho. Mediana agregada de
+17,3 meses; despejo por falta de pagamento (classe 93) cai para 3,6. A 9ª Vara não atinge p80
+nem p90 na janela (`null`), e a 8ª tem p80 = p90 por salto no fim da curva; a UI precisa
+aceitar isso.
+
+## 2026-10-29 · ML → ML · observações de qualidade do snapshot 2026-10-29
+Status: aberto
+O que mudou: `data/relatorio_qualidade.md` (gerado) mostra dois pontos a decidir antes das
+camadas Cox e boosting. (1) Os 376 processos do sistema Projudi (1%, quase todos de 2023–2024)
+não trazem nenhum movimento da família Julgamento e saem 90,7% censurados; é lacuna do dado de
+origem e infla levemente a censura dos anos recentes. (2) Em 433 processos a primeira
+"sentença" é decisão de embargos de declaração (TPU 198, 200, 871) e em 369 deles há sentença
+de mérito depois; a definição operacional do evento (família 193 inteira) é decisão fechada.
+Ação esperada: avaliar um ADR que exclua os processos do Projudi e/ou retire os códigos de
+embargos da definição do evento; até lá nada muda no pipeline.
+
 ## 2026-10-29 · ML → Web · contrato 1.1.0: `greenwood_acumulado` e transformação dos IC
 Status: resolvido (2026-10-29) — a tela Meu processo mostra o IC 95% em 3, 6 e 12 meses
 (`intervaloSentenca` em `web/src/sobrevivencia.ts`) e mantém o aviso "sem IC" sem o campo
@@ -27,7 +49,10 @@ Ação esperada: calcular na tela Meu processo o IC de P(sentença em h | t) via
 Var(log S(t+h)/S(t)) = σ²(t+h) − σ²(t), e manter o aviso "sem IC" quando o campo faltar.
 
 ## 2026-10-29 · ML → todos · estado da coleta e como continuar em outra máquina
-Status: aberto
+Status: resolvido (2026-10-29) — snapshot `2026-10-29` fechado com `manifest.json`: 38.524 processos
+em 753 páginas, nove varas (de 1.191 na 9ª a 5.482 na 3ª); diferença de 6 processos em relação aos
+totais finais da API (índice atualizado durante a coleta, registrado no manifesto). Pipeline rodou
+até `publicar`; 36 curvas; validador `VÁLIDO — 36 curva(s), 0 erro(s), 0 aviso(s)`.
 O que mudou: pipeline inteiro implementado em `ml/` (coletor, preparo, Kaplan-Meier,
 publicação) e validado de ponta a ponta com dado real; ver `ml/README.md`. O snapshot
 `2026-10-29` está **aberto** (sem `manifest.json`), com páginas compactadas versionadas em
@@ -67,7 +92,7 @@ O que mudou: `web/` tem as telas Explorar e Meu processo funcionando com a fixtu
 Ação esperada: nenhuma. Quando o primeiro JSON real sair, basta rodar o build de novo.
 
 ## 2026-10-28 · Setup → ML · contrato v1.0.0 publicado
-Status: aberto
+Status: resolvido (2026-10-29) — snapshot `2026-10-29`, contrato 1.1.0, `VÁLIDO — 36 curva(s), 0 erro(s), 0 aviso(s)`.
 O que mudou: `contracts/` define o JSON de curvas Kaplan-Meier que `publicar.py`
 deve gerar. Há fixture sintética em `contracts/fixtures/curvas.exemplo.json`.
 Ação esperada: quando `publicar.py` gerar o primeiro `data/publicado/curvas.json`

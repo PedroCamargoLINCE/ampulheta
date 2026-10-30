@@ -44,7 +44,7 @@ processo); uma rodada final sem `--vara` confere cada vara e fecha o snapshot.
   classe e ano, distribuição dos tipos de sentença.
 
 Regras, todas contadas: hit repetido na paginação é removido; ajuizamento fora de
-[1990, snapshot] descarta; sentença antes do ajuizamento descarta; movimento de mesmo
+[1990, snapshot] descarta; sentença antes do ajuizamento descarta; movimento sem código TPU é ignorado; movimento de mesmo
 código no mesmo dia é deduplicado; menos de dois movimentos ou movimento anterior ao
 ajuizamento recebe flag (provável migração com histórico truncado).
 
