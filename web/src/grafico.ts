@@ -181,23 +181,28 @@ function desenharNaLargura(
     el('path', { d: caminho(s.meses, s.valores, x, y, ate), class: `linha cor-${s.cor}` }, svg);
   }
 
-  // Pontos anotados: a curva principal rotula acima e à direita, a comparada abaixo e à esquerda.
-  for (const s of series) {
-    for (const marca of s.marcas ?? []) {
-      if (marca.mes > ate) continue;
-      const cx = x(marca.mes);
-      const cy = y(marca.valor);
-      el('circle', { cx, cy, r: 4, class: `marca-ponto cor-${s.cor}` }, svg);
-      const acima = s.cor === 'a';
-      const ty = acima ? cy - 10 : cy + 20;
-      const largoTexto = marca.rotulo.length * 7.4 + 8;
-      const fundoX = acima
-        ? Math.min(cx + 6, LARGURA - M.dir - largoTexto)
-        : Math.max(M.esq + 2, cx - 6 - largoTexto);
-      el('rect', { x: fundoX, y: ty - 12, width: largoTexto, height: 16, class: 'marca-fundo' }, svg);
-      const t = el('text', { x: fundoX + 4, y: ty, class: 'marca-rotulo' }, svg);
-      t.textContent = marca.rotulo;
-    }
+  // Pontos anotados: como as curvas descem, o espaço livre fica acima e à direita do ponto
+  // mais à direita e abaixo e à esquerda do outro. Rótulo de quem está mais à esquerda no
+  // mesmo nível vai para baixo; em empate, a curva principal fica em cima.
+  const visiveis = series.flatMap((s) => (s.marcas ?? []).filter((m) => m.mes <= ate).map((m) => ({ s, m })));
+  for (const { s, m: marca } of visiveis) {
+    const cx = x(marca.mes);
+    const cy = y(marca.valor);
+    el('circle', { cx, cy, r: 4, class: `marca-ponto cor-${s.cor}` }, svg);
+    const acima = !visiveis.some(
+      (o) =>
+        o.s !== s &&
+        o.m.valor === marca.valor &&
+        (o.m.mes > marca.mes || (o.m.mes === marca.mes && o.s.cor === 'a')),
+    );
+    const ty = acima ? cy - 10 : cy + 20;
+    const largoTexto = marca.rotulo.length * 7.4 + 8;
+    const fundoX = acima
+      ? Math.min(cx + 6, LARGURA - M.dir - largoTexto)
+      : Math.max(M.esq + 2, cx - 6 - largoTexto);
+    el('rect', { x: fundoX, y: ty - 12, width: largoTexto, height: 16, class: 'marca-fundo' }, svg);
+    const t = el('text', { x: fundoX + 4, y: ty, class: 'marca-rotulo' }, svg);
+    t.textContent = marca.rotulo;
   }
 
   // Cursor.
