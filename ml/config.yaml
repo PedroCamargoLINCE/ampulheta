@@ -5,7 +5,23 @@ grau: G1
 api:
   url: https://api-publica.datajud.cnj.jus.br/api_publica_{tribunal}/_search
   chave_env: DATAJUD_API_KEY   # chave pública do CNJ (datajud-wiki.cnj.jus.br/api-publica/acesso); ler do ambiente, nunca commitar
-  tamanho_pagina: 50           # 1000 é rejeitado (429/504, páginas de ~8 MB); 100 sofre com 504 e shards parciais em pico; 50 é leve
+  tamanho_pagina: 300          # com `campos`, 300 documentos respondem em ~40 s (ADR-014); 1000 é rejeitado; o snapshot 2026-10-29 usou 50 com hits inteiros
+  campos:                      # _source da página: só o que o pipeline usa; fora ficam complementosTabelados e movimentos.orgaoJulgador (ADR-014)
+    - numeroProcesso
+    - classe
+    - orgaoJulgador
+    - dataAjuizamento
+    - assuntos
+    - sistema
+    - grau
+    - tribunal
+    - formato
+    - nivelSigilo
+    - dataHoraUltimaAtualizacao
+    - "@timestamp"
+    - movimentos.codigo
+    - movimentos.nome
+    - movimentos.dataHora
   req_por_minuto: 120
   timeout_s: 150
 classes:                  # códigos da TPU; o TJSP não usa o 12 (Despejo por Falta de Pagamento), usa 93 e 94

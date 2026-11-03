@@ -105,3 +105,16 @@ grau continua imutável. No preparo, os movimentos de 2º grau entram só nos ma
 `classe_recurso`, e `eventos.parquet` ganha a coluna `grau`. A sentença segue sendo a de 1º grau.
 Uma transição com destino no trânsito só é publicada depois que o relatório de qualidade mostrar
 o registro completo o bastante por ano da sentença.
+
+## ADR-014 — Páginas de 300 com `_source` enxuto e jitter no backoff (2026-11-03)
+Medido à noite numa vara de Sorocaba: página de 300 documentos inteira = 2,3 MB em 50 s; com
+`_source` restrito aos campos que o pipeline usa = 1,3 MB em 40 s; o snapshot 2026-10-29 usou
+páginas de 50 inteiras, seis vezes mais requisições. O servidor leva 30 a 50 s por consulta
+independentemente do tamanho, então o número de requisições é o que manda no tempo total. A
+partir daqui o coletor pede páginas de 300 com `api.campos` (lista no config); ficam de fora
+`complementosTabelados` e `movimentos.orgaoJulgador`, que nenhum estágio lê. Isso ajusta o
+ADR-008: o raw continua guardando o hit (`_id`, `_source`, `sort`), mas o `_source` é parcial, e
+o manifesto registra os campos. O backoff ganha jitter (×0,5 a ×1,5) para processos paralelos não
+repetirem em sincronia. Projetos abertos que usam a API (datajud-pipeline, datajud-mcp, juscraper)
+chegam às mesmas práticas: `search_after`, retry só em erro transitório, checagem de shards e
+limite de 120 req/min; nenhum tem truque além disso.
