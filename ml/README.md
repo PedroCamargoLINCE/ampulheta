@@ -58,8 +58,10 @@ da Tabela Processual Unificada oficial (`gateway.cloud.pje.jus.br/tpu`, versão 
 `com_merito` (385: procedência, improcedência, homologação de transação…). É a definição
 operacional de "sentença" do projeto.
 
-**`modelo.py`** (estágio 3, camada 1). Kaplan-Meier com `lifelines` para o agregado, cada
-vara, cada classe e cada vara × classe com n ≥ 30. S(t) é avaliada numa grade de meses
+**`modelo.py`** (estágio 3, camada 1). Kaplan-Meier com `lifelines`, para cada transição de
+`transicoes` no config (ajuizamento → sentença e audiência → sentença; ADR-011 e ADR-012 dizem
+por que trânsito em julgado e execução ainda não entram), para o agregado, cada vara, cada
+classe e cada vara × classe com n ≥ 30. S(t) é avaliada numa grade de meses
 inteiros comum a todas as curvas (ADR-007), com IC 95% e quantis p50, p80, p90 (`null` quando
 a curva não chega lá). Calcula também o log-rank entre varas. Escreve `models/km.json`.
 

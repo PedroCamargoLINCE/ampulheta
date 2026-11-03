@@ -55,12 +55,10 @@ marcos:                   # data do primeiro movimento com um destes códigos TP
   - nome: extincao_execucao
     rotulo: Extinção da execução
     codigos: [196]
-transicoes:               # curvas publicadas: tempo da origem ao destino (ADR-011); a primeira é a padrão
+transicoes:               # curvas publicadas: tempo da origem ao destino; a primeira é a padrão (ADR-011, ADR-012)
   - [ajuizamento, sentenca]
-  - [ajuizamento, transito_em_julgado]
-  - [sentenca, transito_em_julgado]
   - [audiencia, sentenca]
-  - [inicio_cumprimento, extincao_execucao]
+  # trânsito em julgado e execução ficam fora até a coleta do 2º grau (ADR-012)
 preparo:
   sistemas_sem_julgamento: [Projudi]   # no DataJud não trazem movimento da família Julgamento; processo ganha a flag sistema_sem_julgamento (ADR-009)
 saida:
