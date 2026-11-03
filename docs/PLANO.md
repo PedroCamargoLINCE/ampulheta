@@ -133,6 +133,36 @@ Seis passos, cerca de duas semanas de trabalho em meio período. O passo 3 já e
 
 Recorte da v1: TJSP, 1º grau, uma ou poucas comarcas (Sorocaba, Campinas), duas ou três classes com fim bem definido (Procedimento Comum Cível, Despejo por falta de pagamento), ajuizados entre 2018 e 2024.
 
+## Roteiro depois da v1 (2026-11-03)
+
+Os seis passos acima estão cumpridos até o Cox (passo 4), com snapshot de 29/10/2026 das nove
+varas cíveis de Sorocaba. O que vem a seguir é organizado em fases; cada linha é um PR, cada
+decisão de método vira ADR em `DECISOES.md` antes do código, e o que cruza a fronteira entre
+pipeline e site passa por `HANDOFF.md`. Regra transversal: todo número novo publicado vai com
+intervalo, calibração no relatório gerado e método aberto; é o que faz a ferramenta ser citável.
+
+**Fase A — profundidade em Sorocaba.** Transformar "quando sai a sentença" em "quando acaba".
+
+| PR | Frente | Entrega | Decisão prévia |
+| --- | --- | --- | --- |
+| A1 | pipeline | Marcos além da sentença: audiência, trânsito em julgado, início e fim da execução; um par tempo/evento por marco no `processos.parquet`, a partir do `eventos.parquet`. | ADR: códigos da TPU de cada marco (848 e 11385 já observados nos dados; audiência e fim da execução a conferir na tabela). |
+| A2 | pipeline + contrato | Curvas por transição (ajuizamento → sentença, audiência → sentença, sentença → trânsito, trânsito → fim da execução). Contrato 1.3.0 com `origem` e `destino` por curva e a lista de marcos com seus códigos. | Decorre da A1. |
+| A3 | site | Seletor de marco em Explorar; em Meu processo, "em que fase está?" escolhe a curva que começa nessa fase. É o estado atual como covariável, sem modelo novo. | Via HANDOFF com o 1.3.0. |
+| A4 | site + pipeline | Consulta por número de processo: o site lê classe, vara e movimentos na API pública e descobre a fase com os códigos do contrato. Nada é armazenado. | ADR: chamada direta do navegador ou função mínima sem estado; depende de a API aceitar CORS. |
+| A5 | pipeline | Cox v2 com assunto principal e fase atual; boosting como camada 3 com a mesma validação temporal; métricas publicadas. | Nenhuma. |
+
+A1 → A2 → A3 em sequência; A4 em paralelo a partir da A2; A5 por último.
+
+**Fase B — largura.** B1: revisar o ADR-008 para tirar os brutos do git a partir da segunda
+comarca, mantendo o manifesto versionado. B2: Campinas, com descoberta dos códigos de vara pela
+API, config, coleta e curvas, sem mudar código. B3: capital de São Paulo, com recorte de varas a
+decidir.
+
+**Fase C — produto para quem advoga.** Carteira (lista de números com a previsão de cada um),
+relatório comparativo de foros em PDF e alertas de atraso acima do p80 da curva. Carteira e PDF
+são só site e nascem da A4; alertas exigem backend com estado e ficam para depois da conversa
+de autorização com o CNJ, único ponto em que faria sentido cobrar.
+
 ## Decisões já tomadas e por quê
 
 - **Sem LLM, sem serviço externo.** Reprodutível por qualquer pessoa com Python; no estágio 3 nem internet precisa.
