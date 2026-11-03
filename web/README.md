@@ -35,7 +35,7 @@ Com a fixture, o site mostra uma faixa de "dado sintético" no topo.
   mesmos números numa tabela.
 
 Sem dependência em produção e sem telemetria. O único recurso externo são as fontes
-(Hanken Grotesk, Newsreader e IBM Plex Mono), carregadas do Google Fonts.
+(Hanken Grotesk), carregada do Google Fonts.
 
 ## Organização
 
