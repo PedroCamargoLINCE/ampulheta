@@ -116,6 +116,8 @@ Manter `web/src/tokens.css` como fonte dos valores compartilhados. Os nomes abai
 | Ação | `--color-action`, `--color-on-action`, `--color-focus` | Botão principal e foco |
 | Estados | `--color-error`, `--color-warning`, `--color-info` | Estados acompanhados de texto |
 | Gráficos | `--color-series-a`, `--color-series-b`, `--color-grid` | Séries e grade, independentes dos estados |
+| Linhas | `--color-border`, `--color-border-strong` | Divisórias decorativas e bordas de controle (≥ 3:1) |
+| Faixas e inversão | `--color-band-a`, `--color-band-b`, `--color-inverse`, `--color-on-inverse` | Banda de confiança de cada série; faixa de dado sintético |
 
 Não usar verde/vermelho para classificar duração como boa/ruim. Séries devem diferir também por traço ou identificação textual. A banda de confiança precisa continuar distinguível nos dois temas.
 
