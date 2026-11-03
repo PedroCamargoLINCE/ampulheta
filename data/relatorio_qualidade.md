@@ -65,6 +65,24 @@ mediana 404 dias, p80 788, p90 1093.
 | inicio_cumprimento  |        6282 | 16.3 |            844 |
 | extincao_execucao   |        1626 |  4.2 |            598 |
 
+## Registros de 2º grau (ADR-013)
+
+0 processos (0.0%) têm registro de 2º grau; classes mais comuns: .
+
+Trânsito em julgado entre os sentenciados, por ano da sentença:
+
+|   ano_sentenca |   sentenciados |   com_transito |   com_recurso |   %_com_transito |
+|---------------:|---------------:|---------------:|--------------:|-----------------:|
+|           2018 |            251 |            110 |             0 |             43.8 |
+|           2019 |           2782 |           1082 |             0 |             38.9 |
+|           2020 |           4876 |           2121 |             0 |             43.5 |
+|           2021 |           4763 |           2235 |             0 |             46.9 |
+|           2022 |           4555 |           2383 |             0 |             52.3 |
+|           2023 |           3676 |           2059 |             0 |             56   |
+|           2024 |           2092 |            592 |             0 |             28.3 |
+|           2025 |           4482 |           1567 |             0 |             35   |
+|           2026 |           3020 |            810 |             0 |             26.8 |
+
 ## Por ano de ajuizamento
 
 |   ano |    n |   eventos |
