@@ -1,16 +1,16 @@
 import { carregar, type Contrato } from './dados';
+import { montarEstimar } from './estimar';
 import { montarExplorar } from './explorar';
-import { montarMeuProcesso } from './meu-processo';
 import { dataIso } from './formato';
+import { botao, cobertura, grau, lerEstado } from './ui';
 
-const ABAS = [
-  { id: 'explorar', titulo: 'Explorar', montar: montarExplorar },
-  { id: 'meu-processo', titulo: 'Meu processo', montar: montarMeuProcesso },
-] as const;
+type Montar = (painel: HTMLElement, doc: Contrato) => { aplicar: (params: URLSearchParams) => void };
 
-function grau(doc: Contrato): string {
-  return doc.grau === 'G1' ? '1º grau' : '2º grau';
-}
+/** Estimar tempo é a entrada padrão; Explorar dados é a tarefa secundária. */
+const ABAS: readonly { id: string; titulo: string; montar: Montar; antigos: readonly string[] }[] = [
+  { id: 'estimar', titulo: 'Estimar tempo', montar: montarEstimar, antigos: ['meu-processo'] },
+  { id: 'explorar', titulo: 'Explorar dados', montar: montarExplorar, antigos: [] },
+];
 
 function linhaDefinicao(lista: HTMLDListElement, termo: string, valor: string | Node, classe = ''): void {
   const dt = document.createElement('dt');
@@ -21,12 +21,12 @@ function linhaDefinicao(lista: HTMLDListElement, termo: string, valor: string | 
   lista.append(dt, dd);
 }
 
-/** A edição datada no cabeçalho: de onde e de quando são os números. */
+/** Cobertura e data no cabeçalho: de onde e de quando são os números. */
 function edicao(doc: Contrato): void {
   const alvo = document.getElementById('edicao') as HTMLDListElement;
   alvo.replaceChildren();
-  linhaDefinicao(alvo, 'Recorte', `${doc.tribunal}, ${grau(doc)}`);
-  linhaDefinicao(alvo, 'Snapshot', dataIso(doc.snapshot), 'num');
+  linhaDefinicao(alvo, 'Cobertura', `${doc.tribunal}, ${grau(doc)}`);
+  linhaDefinicao(alvo, 'Dados atualizados em', dataIso(doc.snapshot), 'num');
 }
 
 function rodape(doc: Contrato): void {
@@ -42,18 +42,19 @@ function rodape(doc: Contrato): void {
   link.href = doc.fonte.url;
   link.textContent = doc.fonte.nome;
   linhaDefinicao(colofao, 'Fonte', link);
-  linhaDefinicao(colofao, 'Snapshot', dataIso(doc.snapshot));
-  linhaDefinicao(colofao, 'Recorte', `${doc.tribunal}, ${grau(doc)}`);
+  linhaDefinicao(colofao, 'Data de referência dos dados', dataIso(doc.snapshot));
+  linhaDefinicao(colofao, 'Cobertura', cobertura(doc));
   linhaDefinicao(colofao, 'Evento', `${doc.evento.charAt(0).toLowerCase()}${doc.evento.slice(1)}`);
 
   const limites = document.createElement('p');
   limites.textContent =
-    '“Sentença” aqui é o fim do 1º grau, não do processo: recursos podem estender bastante o tempo total.';
+    'O Ampulheta estima o tempo até a sentença de 1º grau. Não prevê o resultado da decisão, a chance de ganhar o processo ' +
+    'nem o tempo de recursos. Não tem vínculo com o CNJ nem com os tribunais.';
   alvo.append(citacao, colofao, limites);
 }
 
 function faixaSintetica(doc: Contrato): void {
-  if (!doc.sintetico) return;
+  if (!doc.sintetico || document.querySelector('.faixa-sintetica')) return;
   const faixa = document.createElement('div');
   faixa.className = 'faixa-sintetica';
   faixa.setAttribute('role', 'note');
@@ -71,27 +72,30 @@ function montarAbas(doc: Contrato): void {
   const principal = document.getElementById('conteudo')!;
   const botoes: HTMLButtonElement[] = [];
   const paineis: HTMLElement[] = [];
+  const telas: ReturnType<Montar>[] = [];
+  lista.replaceChildren();
   principal.replaceChildren();
 
   for (const aba of ABAS) {
-    const botao = document.createElement('button');
-    botao.type = 'button';
-    botao.id = `aba-${aba.id}`;
-    botao.setAttribute('role', 'tab');
-    botao.setAttribute('aria-controls', `painel-${aba.id}`);
-    botao.textContent = aba.titulo;
-    lista.appendChild(botao);
-    botoes.push(botao);
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.id = `aba-${aba.id}`;
+    b.setAttribute('role', 'tab');
+    b.setAttribute('aria-controls', `painel-${aba.id}`);
+    b.textContent = aba.titulo;
+    lista.appendChild(b);
+    botoes.push(b);
 
     const painel = document.createElement('section');
     painel.id = `painel-${aba.id}`;
     painel.setAttribute('role', 'tabpanel');
-    painel.setAttribute('aria-labelledby', botao.id);
-    painel.tabIndex = 0;
-    aba.montar(painel, doc);
+    painel.setAttribute('aria-labelledby', b.id);
+    telas.push(aba.montar(painel, doc));
     principal.appendChild(painel);
     paineis.push(painel);
   }
+
+  const indiceDe = (id: string) => Math.max(0, ABAS.findIndex((a) => a.id === id || a.antigos.includes(id)));
 
   const ativar = (indice: number, focar = false) => {
     botoes.forEach((b, i) => {
@@ -102,7 +106,7 @@ function montarAbas(doc: Contrato): void {
     });
     if (focar) botoes[indice]!.focus();
     const id = ABAS[indice]!.id;
-    if (location.hash !== `#${id}`) history.replaceState(null, '', `#${id}`);
+    if (lerEstado().aba !== id) history.replaceState(null, '', `#${id}`);
   };
 
   botoes.forEach((b, i) => {
@@ -118,12 +122,21 @@ function montarAbas(doc: Contrato): void {
     });
   });
 
-  const daHash = () => Math.max(0, ABAS.findIndex((a) => `#${a.id}` === location.hash));
-  window.addEventListener('hashchange', () => ativar(daHash()));
-  ativar(daHash());
+  // Um link com recorte (#estimar?vara=…&classe=…&t=…) abre a mesma estimativa.
+  const doLink = () => {
+    const { aba, params } = lerEstado();
+    const i = indiceDe(aba);
+    if ([...params.keys()].length) telas[i]!.aplicar(params);
+    ativar(i);
+  };
+  window.addEventListener('hashchange', doLink);
+  doLink();
 }
 
 async function iniciar(): Promise<void> {
+  const principal = document.getElementById('conteudo')!;
+  principal.replaceChildren(Object.assign(document.createElement('p'), { className: 'nota', textContent: 'Carregando dados…' }));
+  principal.firstElementChild!.setAttribute('role', 'status');
   try {
     const doc = await carregar();
     faixaSintetica(doc);
@@ -131,14 +144,18 @@ async function iniciar(): Promise<void> {
     rodape(doc);
     montarAbas(doc);
   } catch (erro) {
-    const principal = document.getElementById('conteudo')!;
+    console.error(erro);
+    const caixa = document.createElement('div');
+    caixa.className = 'aviso aviso-erro';
+    caixa.setAttribute('role', 'alert');
     const p = document.createElement('p');
-    p.className = 'aviso';
-    p.setAttribute('role', 'alert');
-    p.textContent = `Não foi possível carregar os dados: ${(erro as Error).message}. Recarregue a página; se persistir, o arquivo curvas.json não foi publicado.`;
-    principal.replaceChildren(p);
-    document.getElementById('rodape')!.textContent =
-      'Fonte: CNJ/DataJud. Os dados não carregaram, então a data do snapshot não está disponível.';
+    p.innerHTML = '<strong>Não foi possível carregar os dados.</strong> ';
+    p.append('Pode ter sido uma falha de conexão. Tente de novo; se continuar, volte mais tarde.');
+    const tentar = botao('Tentar de novo', 'secundario');
+    tentar.addEventListener('click', () => void iniciar());
+    caixa.append(p, tentar);
+    principal.replaceChildren(caixa);
+    document.getElementById('rodape')!.textContent = 'Fonte: CNJ/DataJud. Os dados não carregaram.';
   }
 }
 

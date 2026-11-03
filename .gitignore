@@ -29,3 +29,6 @@ web/.vite/
 .DS_Store
 *.log
 .ruff_cache/
+
+# Relatórios locais do Impeccable (critique/polish)
+.impeccable/

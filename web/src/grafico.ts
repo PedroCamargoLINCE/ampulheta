@@ -5,6 +5,13 @@
 import { interpolar } from './sobrevivencia';
 import { porcentagem } from './formato';
 
+function html(tag: string, classe: string, texto: string): HTMLElement {
+  const n = document.createElement(tag);
+  n.className = classe;
+  n.textContent = texto;
+  return n;
+}
+
 export interface MarcaGrafico {
   mes: number;
   valor: number;
@@ -19,7 +26,7 @@ export interface SerieGrafico {
   valores: readonly number[];
   inferior?: readonly number[];
   superior?: readonly number[];
-  /** Pontos anotados na curva (ex.: a mediana), com rótulo em mono. */
+  /** Pontos anotados na curva (ex.: a mediana). */
   marcas?: readonly MarcaGrafico[];
 }
 
@@ -28,12 +35,20 @@ export interface OpcoesGrafico {
   descricao: string;
   rotuloX: string;
   rotuloY: string;
+  /** Como ler um mês do eixo X em voz alta e na tabela (ex.: "+3 meses"). */
+  rotuloMes?: (m: number) => string;
+  /** Nota curta sob a legenda (ex.: onde a curva termina e por quê). */
+  nota?: string;
+  /** Mais baixo, para ficar abaixo dos números sem roubar a cena. */
+  compacto?: boolean;
 }
 
 const SVG = 'http://www.w3.org/2000/svg';
 const M = { esq: 48, dir: 12, topo: 32, base: 44 };
 const LIMIAR_FIM = 0.02;
-const observadores = new WeakMap<HTMLElement, ResizeObserver>();
+const observadores = new WeakMap<HTMLElement, { obs: ResizeObserver; antes: () => void; depois: () => void }>();
+/** Largura de desenho na impressão: o texto do gráfico sai perto do tamanho de tela numa folha A4. */
+const LARGURA_IMPRESSAO = 640;
 
 function el<K extends keyof SVGElementTagNameMap>(
   tag: K,
@@ -85,7 +100,7 @@ function faixa(s: SerieGrafico, x: (m: number) => number, y: (v: number) => numb
 function leitura(series: readonly SerieGrafico[], mes: number, rotuloMes: (m: number) => string): string {
   const partes = series.map((s) => {
     const v = interpolar(s.meses, s.valores, mes);
-    if (v === null) return `${s.rotulo}: fora da janela`;
+    if (v === null) return `${s.rotulo}: não estimado neste mês`;
     let texto = `${s.rotulo}: ${porcentagem(v)} ainda sem sentença`;
     if (s.inferior && s.superior) {
       const lo = interpolar(s.meses, s.inferior, mes)!;
@@ -102,18 +117,37 @@ export function desenharGrafico(
   series: readonly SerieGrafico[],
   opcoes: OpcoesGrafico,
 ): void {
-  observadores.get(alvo)?.disconnect();
+  const anterior = observadores.get(alvo);
+  if (anterior) {
+    anterior.obs.disconnect();
+    window.removeEventListener('beforeprint', anterior.antes);
+    window.removeEventListener('afterprint', anterior.depois);
+  }
   let larguraAtual = 0;
+  let imprimindo = false;
   const desenhar = () => {
+    if (imprimindo) return;
     const largura = Math.max(280, Math.round(alvo.clientWidth || 720));
     if (largura === larguraAtual) return;
     larguraAtual = largura;
     desenharNaLargura(alvo, series, opcoes, largura);
   };
+  // Na impressão o SVG desenhado na largura da tela encolheria junto com o texto.
+  const antes = () => {
+    imprimindo = true;
+    desenharNaLargura(alvo, series, opcoes, LARGURA_IMPRESSAO);
+  };
+  const depois = () => {
+    imprimindo = false;
+    larguraAtual = 0;
+    desenhar();
+  };
   desenhar();
   const obs = new ResizeObserver(desenhar);
   obs.observe(alvo);
-  observadores.set(alvo, obs);
+  window.addEventListener('beforeprint', antes);
+  window.addEventListener('afterprint', depois);
+  observadores.set(alvo, { obs, antes, depois });
 }
 
 function desenharNaLargura(
@@ -123,13 +157,15 @@ function desenharNaLargura(
   LARGURA: number,
 ): void {
   alvo.replaceChildren();
-  const ALTURA = Math.round(Math.min(420, Math.max(240, LARGURA * 0.52)));
+  const ALTURA = opcoes.compacto
+    ? Math.round(Math.min(300, Math.max(200, LARGURA * 0.36)))
+    : Math.round(Math.min(420, Math.max(240, LARGURA * 0.52)));
   const ate = limiteX(series);
   const larguraUtil = LARGURA - M.esq - M.dir;
   const alturaUtil = ALTURA - M.topo - M.base;
   const x = (m: number) => M.esq + (m / ate) * larguraUtil;
   const y = (v: number) => M.topo + (1 - v) * alturaUtil;
-  const rotuloMes = (m: number) => `${m} ${m === 1 ? 'mês' : 'meses'}`;
+  const rotuloMes = opcoes.rotuloMes ?? ((m: number) => `${m} ${m === 1 ? 'mês' : 'meses'}`);
 
   const figura = document.createElement('figure');
   figura.className = 'grafico';
@@ -218,17 +254,21 @@ function desenharNaLargura(
     li.append(s.rotulo);
     legenda.appendChild(li);
   }
-  if (series.some((s) => s.inferior)) {
+  const comFaixa = series.filter((s) => s.inferior);
+  if (comFaixa.length) {
     const li = document.createElement('li');
-    li.innerHTML = '<span class="amostra faixa-amostra" aria-hidden="true"></span>faixa = intervalo de confiança de 95%';
+    li.innerHTML = comFaixa.map((s) => `<span class="amostra faixa-amostra cor-${s.cor}" aria-hidden="true"></span>`).join('');
+    li.append(`${comFaixa.length > 1 ? 'faixas' : 'faixa'}: intervalo de confiança de 95%`);
     legenda.appendChild(li);
   }
   figura.appendChild(legenda);
+  if (opcoes.nota) figura.appendChild(html('p', 'nota', opcoes.nota));
 
   const saida = document.createElement('p');
   saida.className = 'leitura';
   saida.setAttribute('aria-live', 'polite');
-  saida.textContent = 'Passe o mouse ou use as setas sobre o gráfico para ler os valores mês a mês.';
+  // Vazia até a pessoa tocar, passar o mouse ou usar as setas; a instrução está no rótulo acessível.
+  saida.textContent = '';
   figura.appendChild(saida);
 
   let mesAtual = 0;
@@ -266,12 +306,17 @@ function desenharNaLargura(
     ev.preventDefault();
   });
 
-  figura.appendChild(tabelaDados(series, ate, opcoes.rotuloX));
+  figura.appendChild(tabelaDados(series, ate, opcoes.rotuloX, rotuloMes));
   alvo.appendChild(figura);
 }
 
 /** Os mesmos números em tabela, para leitor de tela e para quem quer copiar. */
-function tabelaDados(series: readonly SerieGrafico[], ate: number, rotuloX: string): HTMLDetailsElement {
+function tabelaDados(
+  series: readonly SerieGrafico[],
+  ate: number,
+  rotuloX: string,
+  rotuloMes: (m: number) => string,
+): HTMLDetailsElement {
   const detalhes = document.createElement('details');
   detalhes.className = 'tabela-dados';
   const resumo = document.createElement('summary');
@@ -290,8 +335,8 @@ function tabelaDados(series: readonly SerieGrafico[], ate: number, rotuloX: stri
   };
   th(rotuloX, false);
   for (const s of series) {
-    th(`${s.rotulo}: sem sentença`, true);
-    if (s.inferior && s.superior) th('IC 95%', true);
+    th(`${s.rotulo}: ainda sem sentença`, true);
+    if (s.inferior && s.superior) th(`${s.rotulo}: intervalo de confiança de 95%`, true);
   }
   const corpo = tabela.createTBody();
   for (let m = 0; m <= ate; m++) {
@@ -299,24 +344,28 @@ function tabelaDados(series: readonly SerieGrafico[], ate: number, rotuloX: stri
     const cabLinha = document.createElement('th');
     cabLinha.scope = 'row';
     cabLinha.className = 'num';
-    cabLinha.textContent = String(m);
+    cabLinha.textContent = rotuloMes(m);
     linha.appendChild(cabLinha);
     for (const s of series) {
       const v = interpolar(s.meses, s.valores, m);
       const c = linha.insertCell();
       c.className = 'num';
-      c.textContent = v === null ? '—' : porcentagem(v);
+      c.textContent = v === null ? 'não estimado' : porcentagem(v);
       if (s.inferior && s.superior) {
         const lo = interpolar(s.meses, s.inferior, m);
         const hi = interpolar(s.meses, s.superior, m);
         const ci = linha.insertCell();
         ci.className = 'num';
-        ci.textContent = lo === null || hi === null ? '—' : `${porcentagem(lo)} a ${porcentagem(hi)}`;
+        ci.textContent = lo === null || hi === null ? 'não estimado' : `${porcentagem(lo)} a ${porcentagem(hi)}`;
       }
     }
   }
+  // Região rolável própria: a tabela larga rola aqui dentro, não na página, e o teclado alcança.
   const rolagem = document.createElement('div');
   rolagem.className = 'rolagem';
+  rolagem.tabIndex = 0;
+  rolagem.setAttribute('role', 'region');
+  rolagem.setAttribute('aria-label', 'Dados do gráfico em tabela, rolável');
   rolagem.appendChild(tabela);
   detalhes.appendChild(rolagem);
   return detalhes;

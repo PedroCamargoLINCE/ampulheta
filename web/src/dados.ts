@@ -23,6 +23,8 @@ export interface Curva {
   ic_superior: number[];
   /** Opcional desde 1.1.0: σ²(t) = Σ d/(n(n−d)) de Greenwood na grade. */
   greenwood_acumulado?: number[];
+  /** Opcional desde 1.2.0: processos ainda em risco em cada ponto da grade (não crescente, começa em n). */
+  em_risco?: number[];
   quantis_meses: { p50: number | null; p80: number | null; p90: number | null };
 }
 
