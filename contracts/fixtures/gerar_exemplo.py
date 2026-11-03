@@ -53,6 +53,7 @@ def curva(lam: float, k: float, n: int, grade: list[int]) -> dict:
         lo.append(max(0.0, s - 1.96 * se))
         hi.append(min(1.0, s + 1.96 * se))
     eventos = round(n * (1 - weibull(grade[-1] * 0.55, lam, k)))  # censura cerca de 45% da janela
+    em_risco = [round(n * s * (1 - t / (grade[-1] + 1))) for s, t in zip(S, grade)]  # censura uniforme na janela
     quantis = {}
     for nome, p in (("p50", 0.5), ("p80", 0.8), ("p90", 0.9)):
         t = lam * (-math.log(1 - p)) ** (1 / k)
@@ -64,6 +65,7 @@ def curva(lam: float, k: float, n: int, grade: list[int]) -> dict:
         "ic_inferior": [round(x, 4) for x in lo],
         "ic_superior": [round(x, 4) for x in hi],
         "greenwood_acumulado": [round(x, 6) for x in gw],
+        "em_risco": em_risco,
         "quantis_meses": quantis,
     }
 
@@ -90,7 +92,9 @@ def mistura(chaves: list[tuple[str, str]], grade: list[int]) -> dict:
     return {
         "metodo": "kaplan-meier", "n": n, "eventos": eventos, "censurados": n - eventos,
         "sobrevivencia": S, "ic_inferior": pond("ic_inferior"), "ic_superior": pond("ic_superior"),
-        "greenwood_acumulado": pond("greenwood_acumulado", 6), "quantis_meses": quantis,
+        "greenwood_acumulado": pond("greenwood_acumulado", 6),
+        "em_risco": [sum(c["em_risco"][i] for _, c in comps) for i in range(len(grade))],
+        "quantis_meses": quantis,
     }
 
 
@@ -109,7 +113,7 @@ def main() -> None:
         curvas.append({"vara": v, "classe": c, **curva(lam, k, TAMANHOS[(v, c)], grade)})
 
     doc = {
-        "contrato": "1.1.0",
+        "contrato": "1.2.0",
         "gerado_em": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "snapshot": "2026-10-28",
         "sintetico": True,
