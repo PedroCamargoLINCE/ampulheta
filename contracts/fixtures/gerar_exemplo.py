@@ -78,9 +78,9 @@ def curva(lam: float, k: float, n: int, grade: list[int]) -> dict:
     }
 
 
-def mistura(chaves: list[tuple[str, str]], grade: list[int]) -> dict:
-    """Agregado = média ponderada por n das curvas componentes."""
-    comps = [(TAMANHOS[c], curva(*PARAMS[c], TAMANHOS[c], grade)) for c in chaves]
+def mistura(chaves: list[tuple[str, str]], grade: list[int], params: dict = PARAMS, tamanhos: dict = TAMANHOS) -> dict:
+    """Agregado = média ponderada por n das curvas componentes; quantis lidos da curva agregada."""
+    comps = [(tamanhos[c], curva(*params[c], tamanhos[c], grade)) for c in chaves]
     n = sum(w for w, _ in comps)
     def pond(campo: str, casas: int = 4) -> list[float]:
         return [round(sum(w * c[campo][i] for w, c in comps) / n, casas) for i in range(len(grade))]
@@ -121,15 +121,8 @@ def main() -> None:
         curvas.append({"vara": v, "classe": c, **curva(lam, k, TAMANHOS[(v, c)], grade)})
     for c in curvas:
         c.update(origem="ajuizamento", destino="sentenca")
-    comps = [(TAMANHOS_AUDIENCIA[ch], curva(*PARAMS_AUDIENCIA[ch], TAMANHOS_AUDIENCIA[ch], grade)) for ch in PARAMS_AUDIENCIA]
-    n = sum(w for w, _ in comps)
-    agregada = {"metodo": "kaplan-meier", "n": n, "eventos": sum(c["eventos"] for _, c in comps),
-                "censurados": n - sum(c["eventos"] for _, c in comps),
-                **{k: [round(sum(w * c[k][i] for w, c in comps) / n, 6 if k == "greenwood_acumulado" else 4) for i in range(len(grade))]
-                   for k in ("sobrevivencia", "ic_inferior", "ic_superior", "greenwood_acumulado")},
-                "em_risco": [sum(c["em_risco"][i] for _, c in comps) for i in range(len(grade))],
-                "quantis_meses": comps[0][1]["quantis_meses"]}
-    curvas.append({"vara": None, "classe": None, "origem": "audiencia", "destino": "sentenca", **agregada})
+    curvas.append({"vara": None, "classe": None, "origem": "audiencia", "destino": "sentenca",
+                   **mistura(list(PARAMS_AUDIENCIA), grade, PARAMS_AUDIENCIA, TAMANHOS_AUDIENCIA)})
     for (v, c), (lam, k) in PARAMS_AUDIENCIA.items():
         curvas.append({"vara": v, "classe": c, "origem": "audiencia", "destino": "sentenca",
                        **curva(lam, k, TAMANHOS_AUDIENCIA[(v, c)], grade)})
