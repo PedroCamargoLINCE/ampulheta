@@ -6,6 +6,7 @@ dados públicos do CNJ/DataJud. Sem LLM, sem serviço pago.
 
 - Plano e método: [`docs/PLANO.md`](docs/PLANO.md)
 - Decisões de arquitetura: [`docs/DECISOES.md`](docs/DECISOES.md)
+- Produto e design system da interface: [`docs/PRODUCT.md`](docs/PRODUCT.md), [`docs/DESIGN.md`](docs/DESIGN.md)
 - Contrato de dados entre pipeline e site: [`contracts/README.md`](contracts/README.md)
 - Pipeline (Python): [`ml/`](ml/)
 - Site: [`web/`](web/)
