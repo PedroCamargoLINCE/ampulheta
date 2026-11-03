@@ -47,3 +47,22 @@ uns 30 MB) e entram no git junto com o `manifest.json`. Isso complementa a ADR-0
 Parquet continua sendo o produto, e agora o estágio 2 também é reproduzível. Quando um
 recorte passar de ~100 MB compactados, os brutos voltam a ficar fora do git e só o
 manifesto é versionado, como previa o plano original.
+
+## ADR-009 — Processos de sistema sem movimentos de julgamento ficam na base, com flag (2026-11-03)
+No snapshot 2026-10-29, os 376 processos de Sorocaba vindos do Projudi (1% do total, quase
+todos ajuizados em 2023–2024) não trazem nenhum movimento da família Julgamento em 22.772
+movimentos, enquanto no SAJ 80% dos processos têm sentença. É lacuna do envio ao DataJud,
+não do processo. Eles permanecem no Parquet, marcados com a flag `sistema_sem_julgamento`
+(lista em `preparo.sistemas_sem_julgamento` do config), e o relatório de qualidade mostra a
+censura por sistema. Cada modelo decide se os usa; as curvas Kaplan-Meier publicadas os
+mantêm, porque excluí-los seria escolher a amostra pelo resultado. Revisar quando o TJSP
+regularizar o envio ou quando a fração passar de uns 5%.
+
+## ADR-010 — Decisões de embargos de declaração não contam como sentença (2026-11-03)
+A família Julgamento da TPU inclui os códigos 198, 200, 871 e 15408 (acolhimento,
+não-acolhimento, acolhimento parcial e não conhecimento de embargos de declaração). Embargos
+respondem a uma decisão anterior; quando a decisão embargada é interlocutória, o código
+aparece antes da sentença. No snapshot 2026-10-29 isso acontecia em 433 processos (1,4%); em
+364 deles havia sentença de mérito depois, em mediana 430 dias mais tarde. O evento passa a
+ser o primeiro movimento da família Julgamento fora dessa lista (`evento_sentenca.excluir_codigos`
+no config). Um processo cuja única decisão da família é de embargos fica censurado.

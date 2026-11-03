@@ -41,6 +41,9 @@ ajuizamento:
 evento_sentenca:
   familia_tpu: 193        # Julgamento; ramos 218 (sem resolução de mérito) e 385 (com resolução do mérito)
   tabela: tpu_julgamento.csv   # 193 e descendentes, extraída da TPU oficial (gateway.cloud.pje.jus.br/tpu) em 2026-10-29
+  excluir_codigos: [198, 200, 871, 15408]   # decisões de embargos de declaração: respondem a decisão anterior, não encerram a fase (ADR-010)
+preparo:
+  sistemas_sem_julgamento: [Projudi]   # no DataJud não trazem movimento da família Julgamento; processo ganha a flag sistema_sem_julgamento (ADR-009)
 saida:
   raw: raw
   data: ../data
