@@ -15,6 +15,20 @@ Ação esperada do outro lado:
 
 ---
 
+## 2026-11-03 · ML → Web · contrato 1.3.0: curvas por transição (`origem`/`destino`) e `marcos`
+Status: aberto
+O que mudou: `contracts/` está na versão 1.3.0. Cada curva traz `origem` e `destino` (ausentes =
+ajuizamento → sentença) e o documento traz `marcos`, a lista de etapas com os códigos TPU que as
+caracterizam. `data/publicado/curvas.json` tem agora 54 curvas: as 36 de ajuizamento → sentença de
+sempre e 18 de audiência → sentença (agregada n = 2.957, mediana 9,4 meses contra 17,7 desde o
+ajuizamento). Validador: `VÁLIDO — 54 curva(s), 0 erro(s), 0 aviso(s)`. Trânsito em julgado e
+execução não entraram: o registro de 1º grau não os contém quando há recurso (ADR-012); vêm
+depois da coleta do 2º grau.
+Ação esperada (roteiro A3): filtrar as curvas por transição (hoje o site deve mostrar só
+ajuizamento → sentença, senão mistura as duas); em Explorar, um seletor de transição; em Meu
+processo, perguntar "já teve audiência?" e, se sim, usar a curva audiência → sentença contando o
+tempo desde a audiência. `marcos.codigos_tpu` é o insumo para a consulta por número (A4).
+
 ## 2026-11-03 · ML → Web · contrato 1.2.0: `em_risco` por ponto da grade
 Status: resolvido (2026-11-03) — limite de 10 em t e em t+h (`web/src/base.ts`): Explorar dados
 corta a curva e marca os prazos além do corte como "não estimado"; Estimar tempo recusa número
