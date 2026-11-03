@@ -15,8 +15,24 @@ Ação esperada do outro lado:
 
 ---
 
-## 2026-10-29 · ML → Web · primeiro `data/publicado/curvas.json` real
+## 2026-10-30 · Web → ML · número em risco por ponto da grade (contrato 1.2.0)
 Status: aberto
+O que preciso: com o dado real, a cauda de várias curvas se apoia em pouquíssimos processos e o
+site não tem como saber. Exemplos: na 9ª Vara, `greenwood_acumulado` salta de 0,0031 para 0,0365
+entre 37 e 38 meses (cerca de 6 em risco) e S fica em 0,2283 até 106 meses, repetindo o último
+valor além do último tempo observado, onde o KM não é definido; na 8ª, S cai de 0,26 para 0 aos
+42 meses pelo último processo em risco, o que gera p80 = p90 = 41,6 e, em Meu processo, "100% em
+6 meses" para quem tramita há 38 meses. As cruzadas vara × classe 93/94 (n ≈ 130–200) têm o mesmo
+padrão. O aviso atual do site (S(t) < 5%) não pega esses casos, porque S fica alto e o que cai é
+o risco por censura.
+Ação esperada: publicar por curva o campo opcional `em_risco: number[]` (processos ainda em risco
+em cada ponto de `grade_meses`, mesmo tamanho), subindo o contrato para 1.2.0. Com ele, o site
+corta a curva onde o número em risco fica abaixo de um limite e, em Meu processo, recusa número
+nesses trechos em vez de mostrar 0% ou 100%.
+
+## 2026-10-29 · ML → Web · primeiro `data/publicado/curvas.json` real
+Status: resolvido (2026-10-30) — o build usa o JSON real sozinho e a UI aceita quantis `null` e
+p80 = p90; a cauda pouco sustentada virou o item "número em risco" acima
 O que mudou: o snapshot `2026-10-29` fechou (nove varas cíveis de Sorocaba, 38.524 processos,
 79,3% com sentença) e `publicar.py` gerou `data/publicado/curvas.json` no contrato 1.1.0, com
 36 curvas (agregada, 9 varas, 3 classes, 23 vara × classe com n ≥ 30) numa grade de 0 a 106
