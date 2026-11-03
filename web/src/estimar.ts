@@ -121,7 +121,10 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
   const exemplo = botao('Preencher um exemplo', 'secundario');
   const acoes = html('div', 'acoes');
   acoes.append(calcular, exemplo);
-  form.append(grupo, acoes);
+  // Nota visível junto do botão: exemplo preenchido ou resultado de uma seleção anterior.
+  const notaForm = html('p', 'nota-anterior');
+  notaForm.hidden = true;
+  form.append(grupo, acoes, notaForm);
   controles.appendChild(form);
 
   // Anúncio curto, uma vez por cálculo, em vez de reler a folha inteira a cada tecla.
@@ -151,12 +154,43 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
     desatualizado = true;
     folha.classList.add('desatualizado');
     const banda = aviso(
-      'info',
+      'atencao',
       `Este resultado é da seleção anterior (${rotuloCurva(doc, ultima)}, tramitando há ${meses(ultima.t)}).`,
-      'Clique em “Calcular estimativa” para atualizar.',
+      'Refaça o cálculo antes de usar ou citar estes números.',
     );
     banda.classList.add('aviso-anterior');
     folha.prepend(banda);
+    notaForm.textContent = 'O resultado mostrado é da seleção anterior. Clique em “Calcular estimativa” para atualizar.';
+    notaForm.hidden = false;
+  };
+
+  /** Ajuda do tempo: depois de escolher vara e classe, diz até onde aquele recorte tem base. */
+  const ajudaTempo = document.getElementById('estimar-meses-ajuda') ?? tempo.campo.querySelector('.ajuda');
+  const textoAjudaTempo = `Meses completos desde o ajuizamento até hoje, de 0 a ${fim}.`;
+  const atualizarAjudaTempo = () => {
+    if (!ajudaTempo) return;
+    const v = vara.controle.value;
+    const c = classe.controle.value;
+    const curva = v !== NADA && c !== NADA ? buscarCurva(doc, paraCodigo(v), paraCodigo(c)) : undefined;
+    const corte = curva ? mesComBase(doc.grade_meses, curva) : null;
+    ajudaTempo.textContent =
+      curva && corte !== null && corte < fim
+        ? `Meses completos desde o ajuizamento até hoje. Neste recorte, há base para estimar até ${meses(corte)}.`
+        : textoAjudaTempo;
+  };
+
+  /** Ação de um clique para um recorte mais amplo, quando ele existe. */
+  const acaoAmpliar = (e: Escolha): HTMLButtonElement | undefined => {
+    const alvo = e.vara !== null ? { ...e, vara: null } : e.classe !== null ? { ...e, classe: null } : null;
+    if (!alvo) return undefined;
+    const b = botao(e.vara !== null ? 'Calcular com todas as varas' : 'Calcular com todas as classes', 'secundario');
+    b.addEventListener('click', () => {
+      vara.controle.value = deCodigo(alvo.vara);
+      classe.controle.value = deCodigo(alvo.classe);
+      atualizarAjudaTempo();
+      mostrar(alvo);
+    });
+    return b;
   };
 
   const validar = (): Escolha | null => {
@@ -196,12 +230,15 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
 
   const cartaoPara = (curva: Curva, corte: number, t: number, h: number): Cartao => {
     if (t + h > fim) {
-      return { tipo: 'horizonte', motivo: `Os dados cobrem até ${fim} meses de tramitação, e ${meses(t + h)} passa desse limite.` };
+      return { tipo: 'horizonte', motivo: `Os dados não cobrem mais que ${maisMeses(fim - t)} a partir do tempo informado.` };
     }
     if (t + h > corte) {
       return {
         tipo: 'base',
-        motivo: `Menos de ${MIN_EM_RISCO} processos do recorte seguiam sem sentença e em acompanhamento aos ${meses(t + h)}.`,
+        motivo:
+          corte > t
+            ? `Não há base para estimar além de ${maisMeses(corte - t)} neste recorte: depois disso, menos de ${MIN_EM_RISCO} processos seguiam em acompanhamento.`
+            : `Não há base para estimar além do tempo informado neste recorte: depois dele, menos de ${MIN_EM_RISCO} processos seguiam em acompanhamento.`,
       };
     }
     const r = probabilidadeSentenca(doc.grade_meses, curva.sobrevivencia, t, h);
@@ -214,6 +251,7 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
   const mostrar = (e: Escolha) => {
     ultima = e;
     desatualizado = false;
+    notaForm.hidden = true;
     folha.classList.remove('desatualizado');
     folha.replaceChildren();
     const rotulo = rotuloCurva(doc, e);
@@ -225,7 +263,21 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
       `${doc.tribunal} · ${grau(doc)} · tramitando há ${meses(e.t)} sem sentença · dados até ${dataIso(doc.snapshot)}`,
     );
     if (doc.sintetico) citacao.prepend(html('strong', 'marca-sintetico', 'Dado sintético · '));
-    cabeca.append(html('h3', '', rotulo), citacao);
+    const urlImpressa = html('p', 'url-impressa');
+    const copiar = botao('Copiar link deste resultado', 'secundario');
+    copiar.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(location.href);
+        status.textContent = 'Link copiado.';
+        copiar.textContent = 'Link copiado';
+      } catch {
+        status.textContent = 'Não foi possível copiar. Copie o endereço da barra do navegador: ele já guarda este resultado.';
+        copiar.textContent = 'Copie o endereço da barra do navegador';
+      }
+    });
+    const acoesFolha = html('div', 'folha-acoes');
+    acoesFolha.appendChild(copiar);
+    cabeca.append(html('h3', '', rotulo), citacao, urlImpressa, acoesFolha);
     folha.appendChild(cabeca);
 
     const fechar = (resumo: string) => {
@@ -233,6 +285,7 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
       status.textContent = resumo;
       const params = new URLSearchParams({ vara: deCodigo(e.vara), classe: deCodigo(e.classe), t: String(e.t) });
       gravarEstado(ABA, params);
+      urlImpressa.textContent = `Link deste resultado: ${location.href}`;
     };
 
     const curva = buscarCurva(doc, e.vara, e.classe);
@@ -242,6 +295,7 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
           'info',
           'Não há estimativa disponível para esta combinação de vara e classe. Combinações com menos de 30 processos na base não são publicadas.',
           '“Todas as varas” e “Todas as classes” usam um conjunto mais amplo de processos.',
+          acaoAmpliar(e),
         ),
       );
       fechar(`Não há estimativa disponível para ${rotulo}.`);
@@ -262,6 +316,7 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
           e.vara === null && e.classe === null && corte !== null
             ? `Neste recorte, há base até ${meses(corte)} de tramitação.`
             : 'Um recorte mais amplo, como “Todas as varas” ou “Todas as classes”, pode ter base suficiente.',
+          acaoAmpliar(e),
         ),
       );
       fechar(`Sem estimativa para ${rotulo} aos ${meses(e.t)}: base insuficiente.`);
@@ -383,9 +438,16 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
   form.addEventListener('submit', (ev) => {
     ev.preventDefault();
     const e = validar();
-    if (e) mostrar(e);
+    if (!e) return;
+    mostrar(e);
+    // No celular o resultado nasce abaixo do formulário: leva até ele, sem mover o foco.
+    if (folha.getBoundingClientRect().top > window.innerHeight * 0.6) {
+      const reduzir = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      folha.scrollIntoView({ block: 'start', behavior: reduzir ? 'auto' : 'smooth' });
+    }
   });
 
+  for (const c of [vara.controle, classe.controle]) c.addEventListener('change', atualizarAjudaTempo);
   for (const c of [vara.controle, classe.controle, tempo.controle, confirmacao.controle]) {
     c.addEventListener('input', marcarDesatualizado);
     c.addEventListener('change', marcarDesatualizado);
@@ -408,7 +470,10 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
     confirmacao.controle.checked = true;
     for (const c of [vara, classe, tempo, data, confirmacao]) c.erro(null);
     marcarDesatualizado();
-    status.textContent = 'Exemplo preenchido: todas as varas, todas as classes, 12 meses. Clique em “Calcular estimativa”.';
+    atualizarAjudaTempo();
+    notaForm.textContent = 'Exemplo preenchido: todas as varas, todas as classes, 12 meses. Clique em “Calcular estimativa”.';
+    notaForm.hidden = false;
+    status.textContent = notaForm.textContent;
   });
 
   estadoInicial();
@@ -419,11 +484,21 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
       const v = params.get('vara') ?? '';
       const c = params.get('classe') ?? '';
       const t = params.get('t') ?? '';
-      if (!opcaoExiste(vara.controle, v) || !opcaoExiste(classe.controle, c) || !/^\d+$/.test(t) || Number(t) > fim) return;
+      if (!opcaoExiste(vara.controle, v) || !opcaoExiste(classe.controle, c) || !/^\d+$/.test(t) || Number(t) > fim) {
+        folha.prepend(
+          aviso(
+            'info',
+            `Este link tem um recorte que não existe nos dados de ${dataIso(doc.snapshot)}.`,
+            'Escolha vara, classe e tempo de tramitação e calcule de novo.',
+          ),
+        );
+        return;
+      }
       vara.controle.value = v;
       classe.controle.value = c;
       tempo.controle.value = t;
       confirmacao.controle.checked = true;
+      atualizarAjudaTempo();
       mostrar({ vara: paraCodigo(v), classe: paraCodigo(c), t: Number(t) });
     },
   };

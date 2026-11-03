@@ -44,7 +44,9 @@ export interface OpcoesGrafico {
 const SVG = 'http://www.w3.org/2000/svg';
 const M = { esq: 48, dir: 12, topo: 32, base: 44 };
 const LIMIAR_FIM = 0.02;
-const observadores = new WeakMap<HTMLElement, ResizeObserver>();
+const observadores = new WeakMap<HTMLElement, { obs: ResizeObserver; antes: () => void; depois: () => void }>();
+/** Largura de desenho na impressão: o texto do gráfico sai perto do tamanho de tela numa folha A4. */
+const LARGURA_IMPRESSAO = 640;
 
 function el<K extends keyof SVGElementTagNameMap>(
   tag: K,
@@ -113,18 +115,37 @@ export function desenharGrafico(
   series: readonly SerieGrafico[],
   opcoes: OpcoesGrafico,
 ): void {
-  observadores.get(alvo)?.disconnect();
+  const anterior = observadores.get(alvo);
+  if (anterior) {
+    anterior.obs.disconnect();
+    window.removeEventListener('beforeprint', anterior.antes);
+    window.removeEventListener('afterprint', anterior.depois);
+  }
   let larguraAtual = 0;
+  let imprimindo = false;
   const desenhar = () => {
+    if (imprimindo) return;
     const largura = Math.max(280, Math.round(alvo.clientWidth || 720));
     if (largura === larguraAtual) return;
     larguraAtual = largura;
     desenharNaLargura(alvo, series, opcoes, largura);
   };
+  // Na impressão o SVG desenhado na largura da tela encolheria junto com o texto.
+  const antes = () => {
+    imprimindo = true;
+    desenharNaLargura(alvo, series, opcoes, LARGURA_IMPRESSAO);
+  };
+  const depois = () => {
+    imprimindo = false;
+    larguraAtual = 0;
+    desenhar();
+  };
   desenhar();
   const obs = new ResizeObserver(desenhar);
   obs.observe(alvo);
-  observadores.set(alvo, obs);
+  window.addEventListener('beforeprint', antes);
+  window.addEventListener('afterprint', depois);
+  observadores.set(alvo, { obs, antes, depois });
 }
 
 function desenharNaLargura(
@@ -229,9 +250,11 @@ function desenharNaLargura(
     li.append(s.rotulo);
     legenda.appendChild(li);
   }
-  if (series.some((s) => s.inferior)) {
+  const comFaixa = series.filter((s) => s.inferior);
+  if (comFaixa.length) {
     const li = document.createElement('li');
-    li.innerHTML = '<span class="amostra faixa-amostra" aria-hidden="true"></span>faixa: intervalo de confiança de 95%';
+    li.innerHTML = comFaixa.map((s) => `<span class="amostra faixa-amostra cor-${s.cor}" aria-hidden="true"></span>`).join('');
+    li.append(`${comFaixa.length > 1 ? 'faixas' : 'faixa'}: intervalo de confiança de 95%`);
     legenda.appendChild(li);
   }
   figura.appendChild(legenda);
@@ -240,7 +263,7 @@ function desenharNaLargura(
   const saida = document.createElement('p');
   saida.className = 'leitura';
   saida.setAttribute('aria-live', 'polite');
-  saida.textContent = 'Passe o mouse ou use as setas sobre o gráfico para ler os valores mês a mês.';
+  saida.textContent = 'Toque, passe o mouse ou use as setas sobre o gráfico para ler os valores mês a mês.';
   figura.appendChild(saida);
 
   let mesAtual = 0;
@@ -308,7 +331,7 @@ function tabelaDados(
   th(rotuloX, false);
   for (const s of series) {
     th(`${s.rotulo}: ainda sem sentença`, true);
-    if (s.inferior && s.superior) th('Intervalo de confiança de 95%', true);
+    if (s.inferior && s.superior) th(`${s.rotulo}: intervalo de confiança de 95%`, true);
   }
   const corpo = tabela.createTBody();
   for (let m = 0; m <= ate; m++) {

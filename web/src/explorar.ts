@@ -140,8 +140,8 @@ export function montarExplorar(painel: HTMLElement, doc: Contrato): { aplicar: (
   grupoB.appendChild(legendaB);
   const camposB = html('div', 'campos-b');
   camposB.id = 'explorar-campos-b';
-  const varaB = criarSelect('explorar-vara-b', 'Vara', opcoesVara(doc), doc.varas[0]?.codigo ?? TODAS);
-  const classeB = criarSelect('explorar-classe-b', 'Classe processual', opcoesClasse(doc), TODAS);
+  const varaB = criarSelect('explorar-vara-b', 'Vara do segundo recorte', opcoesVara(doc), doc.varas[0]?.codigo ?? TODAS);
+  const classeB = criarSelect('explorar-classe-b', 'Classe do segundo recorte', opcoesClasse(doc), TODAS);
   camposB.append(varaB.campo, classeB.campo);
   grupoB.appendChild(camposB);
 
@@ -256,10 +256,13 @@ export function montarExplorar(painel: HTMLElement, doc: Contrato): { aplicar: (
         rotuloY: 'ainda sem sentença',
         rotuloMes: (m) => meses(m),
         nota: cortadas.length
-          ? `${series.length === 1 ? 'A curva termina' : 'Uma curva que termina antes do fim do gráfico para'} onde menos de ${MIN_EM_RISCO} processos do recorte seguiam em acompanhamento.`
+          ? `${series.length === 1 ? 'A curva termina' : 'Cada curva termina'} onde menos de ${MIN_EM_RISCO} processos do recorte seguiam em acompanhamento, ou no fim do período observado.`
           : undefined,
       });
       const rolagem = html('div', 'quantis-rolagem');
+      rolagem.tabIndex = 0;
+      rolagem.setAttribute('role', 'region');
+      rolagem.setAttribute('aria-label', 'Prazos e base de cada recorte, rolável');
       rolagem.appendChild(tabelaPrazos(doc, itens));
       alvoTabela.replaceChildren(rolagem);
     }

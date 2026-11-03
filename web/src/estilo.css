@@ -226,7 +226,8 @@ input[type='date'] {
 }
 select:focus-visible,
 input[type='text']:focus-visible,
-input[type='date']:focus-visible {
+input[type='date']:focus-visible,
+input[type='date']:focus {
   outline-color: var(--color-focus);
   border-color: var(--color-text);
 }
@@ -485,9 +486,22 @@ input[type='checkbox'][aria-invalid='true'] {
   align-items: center;
   gap: var(--space-xs);
 }
-.faixa-amostra {
+.amostra.faixa-amostra {
   height: var(--space-sm);
+  border: 0;
   background: var(--color-band-a);
+}
+.amostra.faixa-amostra.cor-b {
+  background: var(--color-band-b);
+}
+.amostra.faixa-amostra + .amostra.faixa-amostra {
+  margin-left: calc(-1 * var(--space-2xs));
+}
+/* Sem isto, a impressão descarta fundos e as amostras da legenda somem. */
+.amostra,
+.grafico svg {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 .leitura {
   min-height: 1lh;
@@ -533,6 +547,10 @@ input[type='checkbox'][aria-invalid='true'] {
 }
 .quantis-rolagem {
   overflow-x: auto;
+}
+.quantis-rolagem:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
 .tabela thead th .amostra {
   margin-right: var(--space-xs);
@@ -713,6 +731,31 @@ input[type='checkbox'][aria-invalid='true'] {
   }
 }
 
+/* Resultado da seleção anterior: o aviso acompanha a rolagem da folha. */
+.aviso-anterior {
+  position: sticky;
+  top: var(--space-md);
+  z-index: var(--z-raised);
+  max-width: none;
+  box-shadow: 0 var(--space-xs) var(--space-lg) calc(-1 * var(--space-xs)) color-mix(in oklab, var(--color-text) 18%, transparent);
+}
+.nota-anterior {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+}
+
+/* Compartilhar: copiar o link e, no papel, o endereço por extenso. */
+.folha-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.url-impressa {
+  display: none;
+}
+
 /* Avisos: motivo, impacto e próximo passo. O tipo vem escrito; a cor só reforça. */
 .aviso {
   display: grid;
@@ -798,6 +841,7 @@ input[type='checkbox'][aria-invalid='true'] {
 }
 .colofao dd {
   margin: 0;
+  text-wrap: pretty;
 }
 .rodape a {
   color: var(--color-text);
@@ -871,6 +915,18 @@ input[type='checkbox'][aria-invalid='true'] {
   }
   .folha {
     padding: 0;
+  }
+  .aviso-anterior {
+    position: static;
+    box-shadow: none;
+  }
+  .folha-acoes {
+    display: none;
+  }
+  .url-impressa {
+    display: block;
+    font-size: var(--text-sm);
+    overflow-wrap: anywhere;
   }
   .probabilidades,
   .grafico,

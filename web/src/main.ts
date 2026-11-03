@@ -34,7 +34,7 @@ function rodape(doc: Contrato): void {
   alvo.replaceChildren();
   const citacao = document.createElement('p');
   citacao.className = 'citacao';
-  citacao.textContent = `Como citar a fonte: ${doc.fonte.citacao}`;
+  citacao.textContent = doc.fonte.citacao;
 
   const colofao = document.createElement('dl');
   colofao.className = 'colofao';

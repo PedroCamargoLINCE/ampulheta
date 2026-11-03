@@ -144,12 +144,13 @@ export type TipoAviso = 'info' | 'atencao' | 'erro';
 const PREFIXO: Record<TipoAviso, string> = { info: 'Observação', atencao: 'Atenção', erro: 'Não foi possível continuar' };
 
 /** Aviso com motivo, impacto e próximo passo. O tipo aparece em texto, não só na cor. */
-export function aviso(tipo: TipoAviso, texto: string, proximoPasso?: string): HTMLElement {
+export function aviso(tipo: TipoAviso, texto: string, proximoPasso?: string, acao?: HTMLElement): HTMLElement {
   const caixa = html('div', `aviso aviso-${tipo}`);
   const p = document.createElement('p');
   p.append(html('strong', '', `${PREFIXO[tipo]}. `), texto);
   caixa.appendChild(p);
   if (proximoPasso) caixa.appendChild(html('p', 'aviso-passo', proximoPasso));
+  if (acao) caixa.appendChild(acao);
   return caixa;
 }
 

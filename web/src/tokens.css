@@ -31,8 +31,8 @@
   --color-series-a: light-dark(oklch(45% 0.18 350), oklch(74% 0.14 350));
   --color-series-b: light-dark(oklch(34% 0.03 250), oklch(86% 0.025 250));
   --color-grid: light-dark(oklch(91% 0.005 350), oklch(29% 0.01 350));
-  --color-band-a: light-dark(oklch(45% 0.18 350 / 0.2), oklch(74% 0.14 350 / 0.3));
-  --color-band-b: light-dark(oklch(34% 0.03 250 / 0.14), oklch(86% 0.025 250 / 0.24));
+  --color-band-a: light-dark(oklch(45% 0.18 350 / 0.2), oklch(74% 0.14 350 / 0.2));
+  --color-band-b: light-dark(oklch(34% 0.03 250 / 0.14), oklch(86% 0.025 250 / 0.14));
 
   /* Faixa invertida (dado sintético) */
   --color-inverse: var(--color-text);
