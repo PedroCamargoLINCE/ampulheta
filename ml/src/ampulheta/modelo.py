@@ -1,6 +1,7 @@
 """Estágio 3 — Modelagem. Lê só `../data/processos.parquet`; nunca chama a API.
 
-Camada 1 (esta): Kaplan-Meier por vara, por classe e por vara × classe, avaliado numa grade
+Camada 1 (esta): Kaplan-Meier por transição entre marcos (ADR-011: ajuizamento → sentença,
+sentença → trânsito em julgado…), cada uma por vara, por classe e por vara × classe, numa grade
 mensal fixa (ADR-007), com IC 95% (escala log(−log S), padrão do lifelines), variância de
 Greenwood acumulada, número em risco por ponto da grade e quantis. Escreve `models/km.json` já no formato de curva
 do contrato; `publicar.py` só acrescenta o cabeçalho. Curvas com n < 30 não são geradas.
@@ -21,6 +22,23 @@ from lifelines.utils import qth_survival_time
 DIAS_POR_MES = 365.25 / 12
 N_MINIMO = 30
 H_MAXIMO = 120  # meses
+TRANSICAO_PADRAO = ("ajuizamento", "sentenca")
+
+
+def coluna_marco(nome: str) -> str:
+    return {"ajuizamento": "data_ajuizamento", "sentenca": "data_evento"}.get(nome, f"data_{nome}")
+
+
+def tempos_da_transicao(processos: pd.DataFrame, origem: str, destino: str) -> pd.DataFrame:
+    """Processos que atingiram a origem, com tempo em dias até o destino ou até a censura.
+    Quem tem o destino antes da origem (raro, registro fora de ordem) fica de fora."""
+    ini = pd.to_datetime(processos[coluna_marco(origem)])
+    fim = pd.to_datetime(processos[coluna_marco(destino)])
+    censura = pd.to_datetime(processos["data_censura"])
+    evento = fim.notna()
+    ok = ini.notna() & ~(evento & (fim < ini))
+    tempo = (fim.where(evento, censura) - ini).dt.days
+    return processos.assign(tempo_dias=tempo, evento=evento.astype(int))[ok]
 
 
 def tempo_em_meses(tempo_dias: pd.Series) -> pd.Series:
@@ -59,23 +77,27 @@ def curva_km(tempo_meses: pd.Series, evento: pd.Series, grade: list[int]) -> dic
     }
 
 
-def curvas_km(processos: pd.DataFrame) -> dict[str, Any]:
-    """Curvas agregada, por vara, por classe e vara × classe (n >= 30), numa grade mensal comum."""
-    df = processos.assign(t=tempo_em_meses(processos.tempo_dias))
-    grade = list(range(min(math.ceil(df.t.max()), H_MAXIMO) + 1))
+def grupos(df: pd.DataFrame):
+    yield (None, None), df
+    for v, g in df.groupby("vara_codigo"):
+        yield (str(v), None), g
+    for c, g in df.groupby("classe_codigo"):
+        yield (None, str(c)), g
+    for (v, c), g in df.groupby(["vara_codigo", "classe_codigo"]):
+        yield (str(v), str(c)), g
 
-    def grupos():
-        yield (None, None), df
-        for v, g in df.groupby("vara_codigo"):
-            yield (str(v), None), g
-        for c, g in df.groupby("classe_codigo"):
-            yield (None, str(c)), g
-        for (v, c), g in df.groupby(["vara_codigo", "classe_codigo"]):
-            yield (str(v), str(c)), g
 
-    curvas = [{"vara": v, "classe": c, **curva_km(g.t, g.evento, grade)}
-              for (v, c), g in grupos() if len(g) >= N_MINIMO]
+def curvas_km(processos: pd.DataFrame, transicoes: list[tuple[str, str]] | None = None) -> dict[str, Any]:
+    """Para cada transição, curvas agregada, por vara, por classe e vara × classe (n >= 30), numa
+    grade mensal comum a todas. O log-rank entre varas é calculado na transição padrão."""
+    transicoes = [tuple(t) for t in (transicoes or [TRANSICAO_PADRAO])]
+    frames = {t: (lambda d: d.assign(t=tempo_em_meses(d.tempo_dias)))(tempos_da_transicao(processos, *t)) for t in transicoes}
+    maior = max(df.t.max() for df in frames.values() if len(df))
+    grade = list(range(min(math.ceil(maior), H_MAXIMO) + 1))
+    curvas = [{"vara": v, "classe": c, "origem": o, "destino": d, **curva_km(g.t, g.evento, grade)}
+              for (o, d), df in frames.items() for (v, c), g in grupos(df) if len(g) >= N_MINIMO]
     logrank = None
+    df = frames[transicoes[0]]
     if df.vara_codigo.nunique() > 1:
         lr = multivariate_logrank_test(df.t, df.vara_codigo, df.evento)
         logrank = {"estatistica": round(float(lr.test_statistic), 2), "p": float(lr.p_value),
@@ -85,9 +107,10 @@ def curvas_km(processos: pd.DataFrame) -> dict[str, Any]:
 
 def modelar(cfg: dict[str, Any]) -> None:
     processos = pd.read_parquet(Path(cfg["saida"]["data"]) / "processos.parquet")
-    km = curvas_km(processos)
+    km = curvas_km(processos, cfg.get("transicoes"))
     Path("models").mkdir(exist_ok=True)
     Path("models/km.json").write_text(json.dumps(km, ensure_ascii=False), encoding="utf-8")
-    print(f"{len(km['curvas'])} curvas KM em grade de {len(km['grade_meses'])} meses -> models/km.json")
+    por_transicao = pd.Series([f"{c['origem']}→{c['destino']}" for c in km["curvas"]]).value_counts().to_dict()
+    print(f"{len(km['curvas'])} curvas KM em grade de {len(km['grade_meses'])} meses -> models/km.json {por_transicao}")
     if lr := km["logrank_entre_varas"]:
         print(f"log-rank entre varas: estatística {lr['estatistica']}, p = {lr['p']:.3g}")

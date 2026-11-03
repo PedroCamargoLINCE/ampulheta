@@ -43,14 +43,24 @@ evento_sentenca:
   tabela: tpu_julgamento.csv   # 193 e descendentes, extraída da TPU oficial (gateway.cloud.pje.jus.br/tpu) em 2026-10-29
   excluir_codigos: [198, 200, 871, 15408]   # decisões de embargos de declaração: respondem a decisão anterior, não encerram a fase (ADR-010)
 marcos:                   # data do primeiro movimento com um destes códigos TPU vira coluna data_<nome> (ADR-011)
-  - nome: audiencia
+  - nome: audiencia         # ajuizamento e sentenca são marcos implícitos (dataAjuizamento e evento_sentenca)
+    rotulo: Audiência
     codigos: [970, 12624]
   - nome: transito_em_julgado
+    rotulo: Trânsito em julgado
     codigos: [848]
   - nome: inicio_cumprimento
+    rotulo: Início do cumprimento de sentença
     codigos: [11385]
   - nome: extincao_execucao
+    rotulo: Extinção da execução
     codigos: [196]
+transicoes:               # curvas publicadas: tempo da origem ao destino (ADR-011); a primeira é a padrão
+  - [ajuizamento, sentenca]
+  - [ajuizamento, transito_em_julgado]
+  - [sentenca, transito_em_julgado]
+  - [audiencia, sentenca]
+  - [inicio_cumprimento, extincao_execucao]
 preparo:
   sistemas_sem_julgamento: [Projudi]   # no DataJud não trazem movimento da família Julgamento; processo ganha a flag sistema_sem_julgamento (ADR-009)
 saida:
