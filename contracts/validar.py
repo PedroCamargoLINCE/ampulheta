@@ -7,7 +7,7 @@ Checa a estrutura (campos, tipos) e os invariantes matemáticos que um JSON Sche
 não expressa: tamanhos iguais, S não crescente, S[0] == 1, IC envolvendo S,
 n == eventos + censurados, códigos referenciados existentes, quantis ordenados,
 greenwood_acumulado (opcional, 1.1.0) não decrescente a partir de 0, em_risco (opcional, 1.2.0)
-inteiros não crescentes começando em n.
+inteiros não crescentes começando em n, origem/destino (opcional, 1.3.0) referenciando `marcos`.
 Sai com código 0 se válido, 1 se houver erro. Avisos (ex.: n < 30) só viram erro
 com --estrito.
 """
@@ -115,6 +115,23 @@ def validar(doc: dict) -> Resultado:
             elif not isinstance(c, dict):
                 r.erro(f"{onde}: deve ser objeto")
 
+    marcos: set[str] = set()
+    if "marcos" in doc:  # opcional desde 1.3.0
+        if not isinstance(doc["marcos"], list):
+            r.erro("raiz: 'marcos' deve ser lista")
+        else:
+            for i, m in enumerate(doc["marcos"]):
+                onde = f"marcos[{i}]"
+                if not isinstance(m, dict):
+                    r.erro(f"{onde}: deve ser objeto")
+                    continue
+                if all(_exige(m, k, str, r, onde) for k in ("codigo", "nome")):
+                    if m["codigo"] in marcos:
+                        r.erro(f"{onde}: código duplicado {m['codigo']!r}")
+                    marcos.add(m["codigo"])
+                if _exige(m, "codigos_tpu", list, r, onde) and not all(isinstance(x, int) and not isinstance(x, bool) for x in m["codigos_tpu"]):
+                    r.erro(f"{onde}: 'codigos_tpu' deve ser lista de inteiros")
+
     # --- curvas --------------------------------------------------------------
     if not _exige(doc, "curvas", list, r, "raiz") or not doc["curvas"]:
         r.erro("curvas: lista vazia")
@@ -122,6 +139,8 @@ def validar(doc: dict) -> Resultado:
 
     tem_agregada = False
     chaves_vistas: set[tuple] = set()
+    transicoes: set[tuple] = set()
+    agregadas: set[tuple] = set()
     n_grade = len(grade) if isinstance(grade, list) else None
     for i, c in enumerate(doc["curvas"]):
         onde = f"curvas[{i}]"
@@ -136,11 +155,24 @@ def validar(doc: dict) -> Resultado:
                 r.erro(f"{onde}: '{nome}' deve ser string ou null")
             elif val not in dic:
                 r.erro(f"{onde}: {nome} {val!r} não está em '{nome}s'")
+        origem, destino = c.get("origem", "ajuizamento"), c.get("destino", "sentenca")
+        if ("origem" in c) != ("destino" in c):
+            r.erro(f"{onde}: 'origem' e 'destino' andam juntos")
+        for nome, val in (("origem", origem), ("destino", destino)):
+            if not isinstance(val, str) or not val:
+                r.erro(f"{onde}: '{nome}' deve ser string não vazia")
+            elif marcos and val not in marcos:
+                r.erro(f"{onde}: {nome} {val!r} não está em 'marcos'")
+        if origem == destino:
+            r.erro(f"{onde}: origem e destino iguais ({origem!r})")
         if vara is None and classe is None:
-            tem_agregada = True
-        chave = (vara, classe)
+            agregadas.add((origem, destino))
+            if (origem, destino) == ("ajuizamento", "sentenca"):
+                tem_agregada = True
+        transicoes.add((origem, destino))
+        chave = (vara, classe, origem, destino)
         if chave in chaves_vistas:
-            r.erro(f"{onde}: curva duplicada para vara={vara!r} classe={classe!r}")
+            r.erro(f"{onde}: curva duplicada para vara={vara!r} classe={classe!r} {origem}→{destino}")
         chaves_vistas.add(chave)
 
         if _exige(c, "metodo", str, r, onde) and c["metodo"] != "kaplan-meier":
@@ -220,7 +252,11 @@ def validar(doc: dict) -> Resultado:
                     r.erro(f"{onde}: quantil atingido depois de um não atingido")
 
     if not tem_agregada:
-        r.erro("curvas: falta a curva agregada (vara=null, classe=null)")
+        r.erro("curvas: falta a curva agregada (vara=null, classe=null) de ajuizamento → sentenca")
+    for t in sorted(transicoes - agregadas):
+        r.erro(f"curvas: a transição {t[0]}→{t[1]} não tem curva agregada")
+    if transicoes != {("ajuizamento", "sentenca")} and "marcos" not in doc:
+        r.erro("raiz: curvas com origem/destino exigem a lista 'marcos'")
     return r
 
 

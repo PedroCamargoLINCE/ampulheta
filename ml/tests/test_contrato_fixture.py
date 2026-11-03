@@ -38,3 +38,13 @@ def test_validador_pega_em_risco_crescente_ou_sem_comecar_em_n():
     c["em_risco"][3] = c["em_risco"][2]
     c["em_risco"][0] = c["n"] - 1
     assert any("em_risco[0]" in e for e in validar.validar(doc).erros)
+
+
+def test_validador_exige_marcos_e_agregada_por_transicao():
+    validar = _carregar_validador()
+    doc = json.loads((RAIZ / "contracts" / "fixtures" / "curvas.exemplo.json").read_text(encoding="utf-8"))
+    assert any(c["origem"] == "audiencia" for c in doc["curvas"]) and validar.validar(doc).erros == []
+    sem = json.loads(json.dumps(doc)); sem["curvas"][0]["origem"] = "citacao"
+    assert any("não está em 'marcos'" in e for e in validar.validar(sem).erros)
+    sem = json.loads(json.dumps(doc)); sem["curvas"] = [c for c in sem["curvas"] if not (c["origem"] == "audiencia" and c["vara"] is None)]
+    assert any("não tem curva agregada" in e for e in validar.validar(sem).erros)

@@ -81,3 +81,15 @@ que quase todo processo alcança (sentença, trânsito em julgado, extinção da
 iniciou o cumprimento); a origem pode ser qualquer marco. Transições publicadas: ajuizamento →
 sentença, ajuizamento → trânsito, sentença → trânsito, audiência → sentença, início do
 cumprimento → extinção da execução.
+
+## ADR-012 — Trânsito em julgado e execução não se medem só com o registro de 1º grau (2026-11-03)
+Ao modelar as transições do ADR-011 ficou claro que o registro de 1º grau não contém o fim do
+processo quando há recurso: entre os sentenciados até 2020, só 40–50% têm trânsito em julgado
+(28% nas improcedências), e uma consulta por número à API mostrou que, no caso de apelação, o
+trânsito e a baixa definitiva estão no registro de 2º grau do mesmo número, que o snapshot não
+coletou. Na execução, o início do cumprimento (11385) só passa a ser enviado em 2021 e a extinção
+(196) quase nunca o segue (79 de 6.267), porque no TJSP o cumprimento de sentença ganha número
+próprio. Publicar essas curvas superestimaria o tempo: o que não foi registrado viraria censura.
+Decisão: publicar por ora só ajuizamento → sentença e audiência → sentença; as datas dos marcos
+continuam no Parquet. Próximo passo: coletar o 2º grau dos mesmos números e medir se o trânsito
+fica completo; só então sentença → trânsito entra. A execução fica fora até haver como ligá-la.

@@ -1,4 +1,4 @@
-# Contrato de dados — versão 1.2.0
+# Contrato de dados — versão 1.3.0
 
 Este é o único ponto de contato entre `ml/` e `web/`. O ML produz
 `data/publicado/curvas.json` neste formato; o Web lê e nada mais.
@@ -31,10 +31,17 @@ Arquivos:
   "grade_meses": [0, 1, 2, ..., 120],       // inteiros, crescentes, começa em 0
   "varas":   [{ "codigo": "1234", "nome": "3ª Vara Cível", "municipio": "Sorocaba" }],
   "classes": [{ "codigo": "7",    "nome": "Procedimento Comum Cível" }],
+  "marcos": [                               // opcional (1.3.0): etapas usadas em origem/destino
+    { "codigo": "ajuizamento", "nome": "Ajuizamento", "codigos_tpu": [] },
+    { "codigo": "sentenca",    "nome": "Sentença",    "codigos_tpu": [219, 220, ...] },
+    { "codigo": "audiencia",   "nome": "Audiência",   "codigos_tpu": [970, 12624] }
+  ],
   "curvas": [
     {
       "vara":   "1234",          // código em `varas`, ou null = todas as varas
       "classe": "7",             // código em `classes`, ou null = todas as classes
+      "origem": "ajuizamento",   // opcional (1.3.0): marco em que o tempo começa; ausente = ajuizamento
+      "destino": "sentenca",     // opcional (1.3.0): marco que é o evento; ausente = sentenca
       "metodo": "kaplan-meier",
       "n": 1820, "eventos": 1301, "censurados": 519,   // n = eventos + censurados
       "sobrevivencia": [1.0, 0.98, ...],  // mesmo tamanho de grade_meses, não crescente, em [0,1]
@@ -65,18 +72,26 @@ Regras:
   curva com poucos em risco é instável (um único evento pode levar S a 0); o Web deve cortar a
   curva e recusar número em Meu processo onde `em_risco` ficar abaixo de um limite seu (sugestão:
   10 nos pontos *t* e *t+h*).
+- `origem`/`destino` (opcionais desde 1.3.0) dizem de que marco a que marco a curva mede o tempo;
+  ausentes, a curva é ajuizamento → sentença. Toda transição publicada tem sua curva agregada.
+  `marcos` lista os marcos com os códigos TPU que os caracterizam: com os movimentos de um
+  processo em mãos (API pública), o site descobre a fase atual procurando esses códigos, e usa a
+  curva cuja origem é o último marco atingido, contando o tempo a partir dele. Só se publicam
+  transições cujo destino é registrado para quase todo processo (ADR-011, ADR-012).
 - Como o Web usa: P(sentença nos próximos *h* meses | tramita há *t*) = `1 − S(t+h)/S(t)`,
   interpolando `S` linearmente entre pontos da grade. Se `S(t)` for `0`, a resposta é indefinida
   e a UI deve dizer isso em vez de mostrar número.
 
 ## Evolução
 
+- **1.3.0** (2026-11-03): `origem`/`destino` por curva e lista `marcos`; primeira transição
+  nova: audiência → sentença.
 - **1.2.0** (2026-11-03): campo opcional `em_risco` por curva.
 - **1.1.0** (2026-10-29): campo opcional `greenwood_acumulado` por curva; documentada a
   transformação dos `ic_*`.
 - **1.0.0** (2026-10-28): versão inicial.
 
-Mudanças compatíveis (campo novo opcional) sobem o *minor*: 1.1.0, 1.2.0. Mudanças que
+Mudanças compatíveis (campo novo opcional) sobem o *minor*: 1.1.0, 1.2.0, 1.3.0. Mudanças que
 quebram o Web sobem o *major*. Toda mudança: atualizar schema, validador, fixture, este
 README e abrir item em `docs/HANDOFF.md`. Candidatos já previstos para 1.x: tabela de
 hazard ratios do Cox, curvas por ano de ajuizamento, métricas de validação temporal.

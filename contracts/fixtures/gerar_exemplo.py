@@ -26,6 +26,14 @@ CLASSES = [
     {"codigo": "7", "nome": "Procedimento Comum Cível"},
     {"codigo": "12", "nome": "Despejo por Falta de Pagamento"},
 ]
+MARCOS = [
+    {"codigo": "ajuizamento", "nome": "Ajuizamento", "codigos_tpu": []},
+    {"codigo": "sentenca", "nome": "Sentença", "codigos_tpu": [219, 220, 221, 466, 471]},
+    {"codigo": "audiencia", "nome": "Audiência", "codigos_tpu": [970, 12624]},
+]
+# audiência → sentença: mais curto que desde o ajuizamento e com n menor
+PARAMS_AUDIENCIA = {("9001", "7"): (9.0, 1.5), ("9002", "7"): (8.0, 1.5), ("9003", "7"): (13.0, 1.4)}
+TAMANHOS_AUDIENCIA = {("9001", "7"): 210, ("9002", "7"): 180, ("9003", "7"): 260}
 # (escala λ em meses, forma k) — despejo é mais rápido; 3ª vara é mais lenta
 PARAMS = {
     ("9001", "7"): (22.0, 1.6), ("9002", "7"): (19.0, 1.5), ("9003", "7"): (31.0, 1.4),
@@ -111,9 +119,23 @@ def main() -> None:
                        **mistura([k for k in todas if k[1] == c["codigo"]], grade)})
     for (v, c), (lam, k) in PARAMS.items():
         curvas.append({"vara": v, "classe": c, **curva(lam, k, TAMANHOS[(v, c)], grade)})
+    for c in curvas:
+        c.update(origem="ajuizamento", destino="sentenca")
+    comps = [(TAMANHOS_AUDIENCIA[ch], curva(*PARAMS_AUDIENCIA[ch], TAMANHOS_AUDIENCIA[ch], grade)) for ch in PARAMS_AUDIENCIA]
+    n = sum(w for w, _ in comps)
+    agregada = {"metodo": "kaplan-meier", "n": n, "eventos": sum(c["eventos"] for _, c in comps),
+                "censurados": n - sum(c["eventos"] for _, c in comps),
+                **{k: [round(sum(w * c[k][i] for w, c in comps) / n, 6 if k == "greenwood_acumulado" else 4) for i in range(len(grade))]
+                   for k in ("sobrevivencia", "ic_inferior", "ic_superior", "greenwood_acumulado")},
+                "em_risco": [sum(c["em_risco"][i] for _, c in comps) for i in range(len(grade))],
+                "quantis_meses": comps[0][1]["quantis_meses"]}
+    curvas.append({"vara": None, "classe": None, "origem": "audiencia", "destino": "sentenca", **agregada})
+    for (v, c), (lam, k) in PARAMS_AUDIENCIA.items():
+        curvas.append({"vara": v, "classe": c, "origem": "audiencia", "destino": "sentenca",
+                       **curva(lam, k, TAMANHOS_AUDIENCIA[(v, c)], grade)})
 
     doc = {
-        "contrato": "1.2.0",
+        "contrato": "1.3.0",
         "gerado_em": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "snapshot": "2026-10-28",
         "sintetico": True,
@@ -128,6 +150,7 @@ def main() -> None:
         "grade_meses": grade,
         "varas": VARAS,
         "classes": CLASSES,
+        "marcos": MARCOS,
         "curvas": curvas,
     }
     SAIDA.write_text(json.dumps(doc, ensure_ascii=False, indent=1), encoding="utf-8")

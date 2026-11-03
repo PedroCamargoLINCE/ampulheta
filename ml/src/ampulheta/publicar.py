@@ -1,4 +1,4 @@
-"""Publicação. Junta `models/km.json` ao cabeçalho do contrato (`../contracts/`, versão 1.2.0)
+"""Publicação. Junta `models/km.json` ao cabeçalho do contrato (`../contracts/`, versão 1.3.0)
 e grava `../data/publicado/curvas.json`. Termina rodando o validador em modo estrito;
 se ele reprovar, nada é publicado.
 """
@@ -13,7 +13,20 @@ from typing import Any
 
 import pandas as pd
 
-CONTRATO = "1.2.0"
+from .preparo import ler_familia
+
+CONTRATO = "1.3.0"
+
+
+def marcos_do_contrato(cfg: dict[str, Any]) -> list[dict[str, Any]]:
+    """Ajuizamento e sentença são implícitos; os demais vêm do config. Os códigos TPU permitem ao site
+    descobrir a fase de um processo a partir dos movimentos da API (ADR-011)."""
+    ev = cfg["evento_sentenca"]
+    excluir = set(ev.get("excluir_codigos", ()))
+    familia = sorted(c for c in ler_familia(ev["tabela"]) if c not in excluir)
+    return [{"codigo": "ajuizamento", "nome": "Ajuizamento", "codigos_tpu": []},
+            {"codigo": "sentenca", "nome": "Sentença", "codigos_tpu": familia},
+            *({"codigo": m["nome"], "nome": m["rotulo"], "codigos_tpu": list(m["codigos"])} for m in cfg.get("marcos", []))]
 
 
 def montar_documento(cfg: dict[str, Any], km: dict[str, Any], processos: pd.DataFrame, gerado_em: datetime) -> dict[str, Any]:
@@ -36,6 +49,7 @@ def montar_documento(cfg: dict[str, Any], km: dict[str, Any], processos: pd.Data
         "varas": [{"codigo": str(v["codigo"]), "nome": v["nome"], "municipio": cfg["municipio"]}
                   for v in cfg["varas"] if str(v["codigo"]) in presentes],
         "classes": [{"codigo": str(c["codigo"]), "nome": c["nome"]} for c in cfg["classes"]],
+        "marcos": marcos_do_contrato(cfg),
         "curvas": km["curvas"],
     }
 
