@@ -103,3 +103,13 @@ def test_sistema_sem_julgamento_recebe_flag(familia):
     assert "sistema_sem_julgamento" in linha["flags"].split(",") and c["flag: sistema_sem_julgamento"] == 1
     linha, _ = processar(src, SNAPSHOT, familia, Counter())
     assert "sistema_sem_julgamento" not in linha["flags"]
+
+
+def test_marcos_viram_colunas_de_data(familia):
+    marcos = {"transito_em_julgado": {848}, "audiencia": {970, 12624}}
+    linha, _ = processar(fonte(movimentos=[
+        (26, "2020-01-16T10:00:00.000Z"), (219, "2021-01-15T10:00:00.000Z"),
+        (848, "2021-04-01T10:00:00.000Z"), (848, "2021-05-01T10:00:00.000Z"),
+    ]), SNAPSHOT, familia, Counter(), marcos=marcos)
+    assert linha["data_transito_em_julgado"] == date(2021, 4, 1)
+    assert linha["data_audiencia"] is None

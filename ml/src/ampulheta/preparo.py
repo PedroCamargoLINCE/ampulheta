@@ -10,6 +10,8 @@ lida de `tpu_julgamento.csv` (gerada da TPU oficial em 2026-10-29, versão de 20
 códigos listados em `evento_sentenca.excluir_codigos` do config (decisões de embargos, ADR-010).
 Processos de sistemas listados em `preparo.sistemas_sem_julgamento` recebem a flag
 `sistema_sem_julgamento` (ADR-009): ficam na base, e cada modelo decide se os usa.
+Cada marco de `marcos` no config (ADR-011) vira uma coluna `data_<nome>` com a data do primeiro
+movimento de seus códigos, ou nula.
 """
 from __future__ import annotations
 
@@ -25,6 +27,7 @@ from typing import Any
 import pandas as pd
 
 Familia = dict[int, dict[str, str]]  # codigo -> {nome, ramo}
+Marcos = dict[str, set[int]]  # nome -> códigos TPU
 
 
 def ler_familia(caminho: str | Path, excluir: Iterable[int] = ()) -> Familia:
@@ -50,7 +53,7 @@ def data_movimento(s: str) -> date:
 
 
 def processar(src: dict[str, Any], snapshot: date, familia: Familia, contagem: Counter,
-              sistemas_sem_julgamento: Iterable[str] = ()) -> tuple[dict | None, list[dict]]:
+              sistemas_sem_julgamento: Iterable[str] = (), marcos: Marcos | None = None) -> tuple[dict | None, list[dict]]:
     """Transforma um `_source` da API em (linha de processos, linhas de eventos).
     Devolve (None, []) quando o processo é descartado; cada descarte e flag é contado em `contagem`."""
     numero = src["numeroProcesso"]
@@ -109,7 +112,21 @@ def processar(src: dict[str, Any], snapshot: date, familia: Familia, contagem: C
         "n_movimentos": len(movimentos),
         "flags": ",".join(flags),
     }
+    for nome, codigos in (marcos or {}).items():
+        datas = [m["data"] for m in movimentos if m["codigo"] in codigos]
+        linha[f"data_{nome}"] = min(datas) if datas else None
     return linha, movimentos
+
+
+def tabela_marcos(processos: pd.DataFrame) -> pd.DataFrame:
+    """Cobertura de cada marco e mediana de dias desde o ajuizamento (só quem o atingiu; ignora censura)."""
+    linhas = []
+    for col in [c for c in processos.columns if c.startswith("data_") and c not in ("data_ajuizamento", "data_evento", "data_censura")]:
+        d = processos[col].dropna()
+        dias = (pd.to_datetime(d) - pd.to_datetime(processos.loc[d.index, "data_ajuizamento"])).dt.days
+        linhas.append({"marco": col.removeprefix("data_"), "processos": len(d),
+                       "%": round(100 * len(d) / len(processos), 1), "mediana_dias": dias.median() if len(d) else None})
+    return pd.DataFrame(linhas)
 
 
 def relatorio(processos: pd.DataFrame, contagem: Counter, manifest: dict, snapshot: str) -> str:
@@ -144,6 +161,7 @@ def relatorio(processos: pd.DataFrame, contagem: Counter, manifest: dict, snapsh
         "## Por vara", "", por_vara.to_markdown(),
         "", "## Por classe", "", por_classe.to_markdown(),
         "", "## Por sistema de origem", "", por_sistema.to_markdown(),
+        "", "## Marcos além da sentença (ADR-011)", "", tabela_marcos(processos).to_markdown(index=False),
         "", "## Por ano de ajuizamento", "", anos.to_markdown(),
         "", "## Tipo da primeira sentença (TPU)", "", tipos.to_markdown(),
         "",
@@ -155,6 +173,7 @@ def preparar(cfg: dict[str, Any], snapshot: str) -> None:
     manifest = json.loads((raiz / "manifest.json").read_text(encoding="utf-8"))
     familia = ler_familia(cfg["evento_sentenca"]["tabela"], cfg["evento_sentenca"].get("excluir_codigos", ()))
     sistemas = cfg.get("preparo", {}).get("sistemas_sem_julgamento", ())
+    marcos = {m["nome"]: set(m["codigos"]) for m in cfg.get("marcos", [])}
     data_snapshot = date.fromisoformat(snapshot)
 
     contagem: Counter = Counter()
@@ -165,7 +184,7 @@ def preparar(cfg: dict[str, Any], snapshot: str) -> None:
             contagem["hit duplicado na paginação removido"] += 1
             continue
         vistos.add(hit["_id"])
-        linha, movs = processar(hit["_source"], data_snapshot, familia, contagem, sistemas)
+        linha, movs = processar(hit["_source"], data_snapshot, familia, contagem, sistemas, marcos)
         if linha:
             linhas.append(linha)
             eventos.extend(movs)

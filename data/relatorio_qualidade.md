@@ -56,6 +56,15 @@ mediana 404 dias, p80 788, p90 1093.
 | Projudi   |   376 |        34 |        91   |
 | SAJ       | 38148 |     30463 |        20.1 |
 
+## Marcos além da sentença (ADR-011)
+
+| marco               |   processos |    % |   mediana_dias |
+|:--------------------|------------:|-----:|---------------:|
+| audiencia           |        2992 |  7.8 |            127 |
+| transito_em_julgado |       13037 | 33.8 |            499 |
+| inicio_cumprimento  |        6282 | 16.3 |            844 |
+| extincao_execucao   |        1626 |  4.2 |            598 |
+
 ## Por ano de ajuizamento
 
 |   ano |    n |   eventos |
