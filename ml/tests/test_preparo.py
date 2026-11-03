@@ -77,3 +77,29 @@ def test_movimento_sem_codigo_e_ignorado_e_contado(familia):
     linha, movs = processar(src, SNAPSHOT, familia, c)
     assert c["movimento sem código TPU ignorado"] == 1
     assert len(movs) == 2 and linha["evento"] == 1
+
+
+def test_codigos_excluidos_saem_da_familia():
+    familia = ler_familia("tpu_julgamento.csv", excluir=[198, 200, 871, 15408])
+    assert 198 not in familia and 200 not in familia and 219 in familia
+
+
+def test_embargos_excluidos_adiam_o_evento_ate_a_sentenca_de_merito():
+    familia = ler_familia("tpu_julgamento.csv", excluir=[198, 200, 871, 15408])
+    c = Counter()
+    linha, _ = processar(fonte(movimentos=[
+        (26, "2020-01-16T10:00:00.000Z"),
+        (200, "2020-06-01T10:00:00.000Z"),   # não-acolhimento de embargos contra decisão interlocutória
+        (219, "2021-01-15T10:00:00.000Z"),   # procedência
+    ]), SNAPSHOT, familia, c)
+    assert linha["evento"] == 1 and linha["data_evento"] == date(2021, 1, 15)
+
+
+def test_sistema_sem_julgamento_recebe_flag(familia):
+    c = Counter()
+    src = fonte(movimentos=[(26, "2020-01-16T10:00:00.000Z"), (85, "2020-02-01T10:00:00.000Z")])
+    src["sistema"] = {"nome": "Projudi"}
+    linha, _ = processar(src, SNAPSHOT, familia, c, sistemas_sem_julgamento=["Projudi"])
+    assert "sistema_sem_julgamento" in linha["flags"].split(",") and c["flag: sistema_sem_julgamento"] == 1
+    linha, _ = processar(src, SNAPSHOT, familia, Counter())
+    assert "sistema_sem_julgamento" not in linha["flags"]

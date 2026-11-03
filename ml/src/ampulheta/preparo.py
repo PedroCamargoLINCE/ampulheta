@@ -6,7 +6,10 @@ Saídas:
 - relatorio_qualidade.md: gerado, com a contagem de cada regra de limpeza e a censura por vara.
 
 Evento = primeiro movimento cujo código está na família Julgamento da TPU (193 e descendentes),
-lida de `tpu_julgamento.csv` (gerada da TPU oficial em 2026-10-29, versão de 2025-09-11).
+lida de `tpu_julgamento.csv` (gerada da TPU oficial em 2026-10-29, versão de 2025-09-11), menos os
+códigos listados em `evento_sentenca.excluir_codigos` do config (decisões de embargos, ADR-010).
+Processos de sistemas listados em `preparo.sistemas_sem_julgamento` recebem a flag
+`sistema_sem_julgamento` (ADR-009): ficam na base, e cada modelo decide se os usa.
 """
 from __future__ import annotations
 
@@ -14,6 +17,7 @@ import csv
 import gzip
 import json
 from collections import Counter
+from collections.abc import Iterable
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
@@ -23,9 +27,11 @@ import pandas as pd
 Familia = dict[int, dict[str, str]]  # codigo -> {nome, ramo}
 
 
-def ler_familia(caminho: str | Path) -> Familia:
+def ler_familia(caminho: str | Path, excluir: Iterable[int] = ()) -> Familia:
+    fora = set(excluir)
     with open(caminho, encoding="utf-8") as f:
-        return {int(r["codigo"]): {"nome": r["nome"], "ramo": r["ramo"]} for r in csv.DictReader(f)}
+        return {int(r["codigo"]): {"nome": r["nome"], "ramo": r["ramo"]}
+                for r in csv.DictReader(f) if int(r["codigo"]) not in fora}
 
 
 def ler_hits(raiz: Path):
@@ -43,7 +49,8 @@ def data_movimento(s: str) -> date:
     return datetime.fromisoformat(s).date()
 
 
-def processar(src: dict[str, Any], snapshot: date, familia: Familia, contagem: Counter) -> tuple[dict | None, list[dict]]:
+def processar(src: dict[str, Any], snapshot: date, familia: Familia, contagem: Counter,
+              sistemas_sem_julgamento: Iterable[str] = ()) -> tuple[dict | None, list[dict]]:
     """Transforma um `_source` da API em (linha de processos, linhas de eventos).
     Devolve (None, []) quando o processo é descartado; cada descarte e flag é contado em `contagem`."""
     numero = src["numeroProcesso"]
@@ -78,6 +85,8 @@ def processar(src: dict[str, Any], snapshot: date, familia: Familia, contagem: C
         flags.append("historico_curto")
     if movimentos and min(m["data"] for m in movimentos) < ajuizamento:
         flags.append("movimento_antes_do_ajuizamento")
+    if src.get("sistema", {}).get("nome") in set(sistemas_sem_julgamento):
+        flags.append("sistema_sem_julgamento")
     for fl in flags:
         contagem[f"flag: {fl}"] += 1
 
@@ -144,7 +153,8 @@ def relatorio(processos: pd.DataFrame, contagem: Counter, manifest: dict, snapsh
 def preparar(cfg: dict[str, Any], snapshot: str) -> None:
     raiz = Path(cfg["saida"]["raw"]) / snapshot
     manifest = json.loads((raiz / "manifest.json").read_text(encoding="utf-8"))
-    familia = ler_familia(cfg["evento_sentenca"]["tabela"])
+    familia = ler_familia(cfg["evento_sentenca"]["tabela"], cfg["evento_sentenca"].get("excluir_codigos", ()))
+    sistemas = cfg.get("preparo", {}).get("sistemas_sem_julgamento", ())
     data_snapshot = date.fromisoformat(snapshot)
 
     contagem: Counter = Counter()
@@ -155,7 +165,7 @@ def preparar(cfg: dict[str, Any], snapshot: str) -> None:
             contagem["hit duplicado na paginação removido"] += 1
             continue
         vistos.add(hit["_id"])
-        linha, movs = processar(hit["_source"], data_snapshot, familia, contagem)
+        linha, movs = processar(hit["_source"], data_snapshot, familia, contagem, sistemas)
         if linha:
             linhas.append(linha)
             eventos.extend(movs)

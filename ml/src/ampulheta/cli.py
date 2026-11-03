@@ -20,7 +20,7 @@ def construir_parser() -> argparse.ArgumentParser:
     pr = sub.add_parser("preparar", help="estágio 2: raw/<snapshot>/ -> data/*.parquet + relatório")
     pr.add_argument("--snapshot", required=True, help="pasta de raw/ a usar")
 
-    sub.add_parser("modelar", help="estágio 3: Parquet -> models/ e métricas")
+    sub.add_parser("modelar", help="estágio 3: Parquet -> models/ (Kaplan-Meier e Cox) e relatório do modelo")
     sub.add_parser("publicar", help="models/ -> data/publicado/curvas.json (contrato)")
     return p
 
@@ -40,8 +40,10 @@ def main(argv: list[str] | None = None) -> int:
         from .preparo import preparar
         preparar(cfg, args.snapshot)
     elif args.comando == "modelar":
+        from .cox import modelar as modelar_cox
         from .modelo import modelar
         modelar(cfg)
+        modelar_cox(cfg)
     elif args.comando == "publicar":
         from .publicar import publicar
         publicar(cfg)
