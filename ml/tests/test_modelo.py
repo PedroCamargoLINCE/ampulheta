@@ -45,6 +45,8 @@ def test_curva_km_respeita_invariantes_do_contrato():
     gw = c["greenwood_acumulado"]
     assert len(gw) == 61 and gw[0] == 0 and all(b >= a for a, b in zip(gw, gw[1:]))
     assert gw[12] > 0  # já houve eventos no primeiro ano
+    er = c["em_risco"]
+    assert len(er) == 61 and er[0] == 600 and all(b <= a for a, b in zip(er, er[1:])) and er[-1] < er[0]
     q = c["quantis_meses"]
     assert q["p50"] is not None and q["p50"] <= q["p80"]
     assert q["p90"] is None or q["p80"] <= q["p90"]

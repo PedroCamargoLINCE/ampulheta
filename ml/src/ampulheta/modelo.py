@@ -2,7 +2,7 @@
 
 Camada 1 (esta): Kaplan-Meier por vara, por classe e por vara × classe, avaliado numa grade
 mensal fixa (ADR-007), com IC 95% (escala log(−log S), padrão do lifelines), variância de
-Greenwood acumulada e quantis. Escreve `models/km.json` já no formato de curva
+Greenwood acumulada, número em risco por ponto da grade e quantis. Escreve `models/km.json` já no formato de curva
 do contrato; `publicar.py` só acrescenta o cabeçalho. Curvas com n < 30 não são geradas.
 Camadas 2 (Cox) e 3 (boosting) virão aqui, sempre com validação temporal (ADR-004).
 """
@@ -54,6 +54,7 @@ def curva_km(tempo_meses: pd.Series, evento: pd.Series, grade: list[int]) -> dic
         "ic_inferior": [round(x, 4) for x in lo],
         "ic_superior": [round(x, 4) for x in hi],
         "greenwood_acumulado": [round(float(g), 6) for g in greenwood],
+        "em_risco": [int((tempo_meses >= g).sum()) for g in grade],  # 0 depois do último tempo observado
         "quantis_meses": {"p50": quantil(0.5), "p80": quantil(0.8), "p90": quantil(0.9)},
     }
 

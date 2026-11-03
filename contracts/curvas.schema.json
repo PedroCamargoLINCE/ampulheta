@@ -1,7 +1,7 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://ampulheta.local/contracts/curvas.schema.json",
- "title": "Ampulheta — curvas publicadas (contrato 1.1.0)",
+ "title": "Ampulheta — curvas publicadas (contrato 1.2.0)",
  "type": "object",
  "required": [
   "contrato",
@@ -234,6 +234,14 @@
        "minimum": 0
       },
       "description": "Opcional (1.1.0). Variância de Greenwood acumulada σ²(t) = Σ d/(n(n−d)) nos pontos de grade_meses; não decrescente, começa em 0."
+     },
+     "em_risco": {
+      "type": "array",
+      "items": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "description": "Opcional (1.2.0). Processos ainda em risco (sem sentença e sem censura antes de t) em cada ponto de grade_meses; inteiros, não crescente, começa em n; 0 depois do último tempo observado, onde o Kaplan-Meier não é definido."
      }
     }
    }

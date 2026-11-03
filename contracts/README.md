@@ -1,4 +1,4 @@
-# Contrato de dados — versão 1.1.0
+# Contrato de dados — versão 1.2.0
 
 Este é o único ponto de contato entre `ml/` e `web/`. O ML produz
 `data/publicado/curvas.json` neste formato; o Web lê e nada mais.
@@ -41,6 +41,7 @@ Arquivos:
       "ic_inferior":   [1.0, 0.97, ...],  // IC 95%; ic_inferior <= sobrevivencia <= ic_superior
       "ic_superior":   [1.0, 0.99, ...],
       "greenwood_acumulado": [0.0, 0.00001, ...],  // opcional (1.1.0); σ²(t) = Σ d/(n(n−d)), não decrescente
+      "em_risco": [1820, 1790, ...],        // opcional (1.2.0); processos em risco em cada ponto da grade, não crescente, começa em n
       "quantis_meses": { "p50": 14.2, "p80": 27.9, "p90": null }   // null = não atingido na janela
     }
   ]
@@ -58,17 +59,24 @@ Regras:
 - `greenwood_acumulado` (opcional desde 1.1.0) é σ²(t) = Σ_{tᵢ ≤ t} dᵢ / (nᵢ (nᵢ − dᵢ)) avaliada
   na grade. Permite ao site calcular Var(log S(t+h)/S(t)) = σ²(t+h) − σ²(t) e daí o IC de
   P(sentença nos próximos h meses | tramita há t). Quando ausente, a UI diz que não há IC.
+- `em_risco` (opcional desde 1.2.0) é o número de processos ainda em risco em cada ponto da
+  grade: sem sentença e sem censura antes de *t*. Começa em `n` e vale `0` depois do último tempo
+  observado, onde o Kaplan-Meier não é definido e `S` apenas repete o último valor. A cauda de uma
+  curva com poucos em risco é instável (um único evento pode levar S a 0); o Web deve cortar a
+  curva e recusar número em Meu processo onde `em_risco` ficar abaixo de um limite seu (sugestão:
+  10 nos pontos *t* e *t+h*).
 - Como o Web usa: P(sentença nos próximos *h* meses | tramita há *t*) = `1 − S(t+h)/S(t)`,
   interpolando `S` linearmente entre pontos da grade. Se `S(t)` for `0`, a resposta é indefinida
   e a UI deve dizer isso em vez de mostrar número.
 
 ## Evolução
 
+- **1.2.0** (2026-11-03): campo opcional `em_risco` por curva.
 - **1.1.0** (2026-10-29): campo opcional `greenwood_acumulado` por curva; documentada a
   transformação dos `ic_*`.
 - **1.0.0** (2026-10-28): versão inicial.
 
-Mudanças compatíveis (campo novo opcional) sobem o *minor*: 1.1.0. Mudanças que
+Mudanças compatíveis (campo novo opcional) sobem o *minor*: 1.1.0, 1.2.0. Mudanças que
 quebram o Web sobem o *major*. Toda mudança: atualizar schema, validador, fixture, este
 README e abrir item em `docs/HANDOFF.md`. Candidatos já previstos para 1.x: tabela de
 hazard ratios do Cox, curvas por ano de ajuizamento, métricas de validação temporal.
