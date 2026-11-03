@@ -12,6 +12,8 @@ from ampulheta.publicar import montar_documento
 
 CFG = {
     "tribunal": "tjsp", "grau": "G1", "municipio": "Sorocaba",
+    "evento_sentenca": {"tabela": "tpu_julgamento.csv", "excluir_codigos": [198, 200, 871, 15408]},
+    "marcos": [{"nome": "audiencia", "rotulo": "Audiência", "codigos": [970, 12624]}],
     "classes": [{"codigo": 7, "nome": "Procedimento Comum Cível"}, {"codigo": 93, "nome": "Despejo"}],
     "varas": [{"codigo": 10671, "nome": "3ª Vara"}, {"codigo": 10672, "nome": "4ª Vara"}, {"codigo": 99, "nome": "sem dados"}],
 }
@@ -25,10 +27,15 @@ def processos_sinteticos(n=600, seed=0) -> pd.DataFrame:
     escala = np.where(vara == 10672, 600, 400)
     verdadeiro = rng.weibull(1.3, n) * escala
     censura = rng.uniform(200, 2000, n)
+    tempo = np.minimum(verdadeiro, censura).astype(int)
+    evento = (verdadeiro <= censura).astype(int)
+    censura_em = pd.Timestamp("2026-10-29")
+    ajuizamento = censura_em - pd.to_timedelta(censura.astype(int), unit="D")  # censurado = aberto no snapshot
     return pd.DataFrame({
         "vara_codigo": vara, "classe_codigo": classe,
-        "tempo_dias": np.minimum(verdadeiro, censura).astype(int),
-        "evento": (verdadeiro <= censura).astype(int),
+        "tempo_dias": tempo, "evento": evento,
+        "data_ajuizamento": ajuizamento.date,
+        "data_evento": pd.Series((ajuizamento + pd.to_timedelta(tempo, unit="D")).date).where(evento == 1, None),
         "data_censura": date(2026, 10, 29),
     })
 
@@ -69,10 +76,22 @@ def test_curvas_km_omite_grupos_pequenos_e_detecta_vara_lenta():
     assert km["logrank_entre_varas"]["p"] < 0.01
 
 
+def test_curvas_por_transicao_usam_o_marco_de_origem():
+    df = processos_sinteticos()
+    aj = pd.to_datetime(df.data_ajuizamento)
+    tem_audiencia = (df.index % 2 == 0) & (df.tempo_dias > 60)
+    df["data_audiencia"] = (aj + pd.Timedelta(days=60)).dt.date.where(tem_audiencia, None)
+    km = curvas_km(df, [("ajuizamento", "sentenca"), ("audiencia", "sentenca")])
+    ag = {(c["origem"], c["destino"]): c for c in km["curvas"] if c["vara"] is None and c["classe"] is None}
+    assert ag[("ajuizamento", "sentenca")]["n"] == 600 and ag[("audiencia", "sentenca")]["n"] < 600
+    assert ag[("audiencia", "sentenca")]["quantis_meses"]["p50"] < ag[("ajuizamento", "sentenca")]["quantis_meses"]["p50"]
+
+
 def test_documento_publicado_passa_no_validador_estrito(tmp_path):
     df = processos_sinteticos()
     doc = montar_documento(CFG, curvas_km(df), df, datetime(2026, 10, 29, 12, tzinfo=timezone.utc))
     assert doc["snapshot"] == "2026-10-29" and "28/10" not in doc["fonte"]["citacao"]
+    assert [m["codigo"] for m in doc["marcos"]] == ["ajuizamento", "sentenca", "audiencia"] and 219 in doc["marcos"][1]["codigos_tpu"]
     assert [v["codigo"] for v in doc["varas"]] == ["10671", "10672"]  # vara sem dados não entra
     arq = tmp_path / "curvas.json"
     arq.write_text(json.dumps(doc), encoding="utf-8")
