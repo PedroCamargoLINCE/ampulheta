@@ -60,7 +60,23 @@ export function criarBancada(painel: HTMLElement): { controles: HTMLElement; fol
   const folha = html('div', 'folha');
   bancada.append(controles, folha);
   painel.appendChild(bancada);
+  fixarColuna(controles);
   return { controles, folha };
+}
+
+/**
+ * A coluna de controles fica parada enquanto a folha rola. Se for mais alta que a janela,
+ * o `top` negativo faz ela rolar junto até mostrar o fim e só então parar, para nenhum
+ * controle ficar inalcançável.
+ */
+function fixarColuna(coluna: HTMLElement): void {
+  const ajustar = () => {
+    const margem = parseFloat(getComputedStyle(coluna).getPropertyValue('--margem-coluna')) || 0;
+    const topo = Math.min(margem, window.innerHeight - coluna.offsetHeight - margem);
+    coluna.style.setProperty('--topo-coluna', `${topo}px`);
+  };
+  new ResizeObserver(ajustar).observe(coluna);
+  window.addEventListener('resize', ajustar);
 }
 
 export const AVISO_PASSADO =

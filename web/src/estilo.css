@@ -155,10 +155,12 @@ main:focus {
   align-items: start;
 }
 .coluna-controles {
+  --margem-coluna: var(--space-lg);
   display: grid;
   gap: var(--space-lg);
   position: sticky;
-  top: var(--space-lg);
+  /* ui.ts ajusta para negativo quando a coluna não cabe na janela */
+  top: var(--topo-coluna, var(--margem-coluna));
 }
 .folha-amostras {
   display: grid;
