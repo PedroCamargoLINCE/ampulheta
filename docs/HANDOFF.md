@@ -15,6 +15,18 @@ Ação esperada do outro lado:
 
 ---
 
+## 2026-11-03 · ML → Web · contrato 1.2.0: `em_risco` por ponto da grade
+Status: aberto
+O que mudou: `contracts/` está na versão 1.2.0. Cada curva traz o campo opcional `em_risco`
+(inteiros, mesmo tamanho de `grade_meses`, não crescente, começa em `n`, vale 0 depois do último
+tempo observado). `publicar.py` já emite; fixture regenerada; validador checa quando presente.
+`data/publicado/curvas.json` está no 1.2.0 (`VÁLIDO — 36 curva(s), 0 erro(s), 0 aviso(s)`). Na
+8ª Vara, por exemplo, `em_risco` vai de 7 aos 36 meses a 1 aos 41 e 0 a partir de 42: o degrau
+de S para 0 aos 42 meses é um único processo.
+Ação esperada: cortar a curva na tela Explorar e recusar número em Meu processo onde `em_risco`
+ficar abaixo do limite escolhido pelo site (sugestão no README do contrato: 10 em t e em t+h);
+tratar 0 como "KM não definido".
+
 ## 2026-11-03 · ML → Web · curvas regeneradas (ADR-010) e relatório do modelo Cox
 Status: aberto
 O que mudou: a definição do evento deixou de contar decisões de embargos de declaração como
@@ -28,7 +40,7 @@ Ação esperada: rodar o build de novo. Se quiser mostrar os hazard ratios na te
 abrir um item aqui para definirmos a extensão do contrato.
 
 ## 2026-10-30 · Web → ML · número em risco por ponto da grade (contrato 1.2.0)
-Status: aberto
+Status: resolvido (2026-11-03) — ver item "contrato 1.2.0: `em_risco`" acima
 O que preciso: com o dado real, a cauda de várias curvas se apoia em pouquíssimos processos e o
 site não tem como saber. Exemplos: na 9ª Vara, `greenwood_acumulado` salta de 0,0031 para 0,0365
 entre 37 e 38 meses (cerca de 6 em risco) e S fica em 0,2283 até 106 meses, repetindo o último
