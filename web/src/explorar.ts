@@ -1,8 +1,26 @@
-// Tela Explorar: curva S(t) com IC, quantis e amostra; comparação de duas curvas.
+// Tela Explorar dados: processos ainda sem sentença ao longo do tempo, com intervalo de
+// confiança, prazos e base; comparação opcional com outro recorte (docs/DESIGN.md, seção 4).
 import { buscarCurva, rotuloCurva, type Contrato, type Curva } from './dados';
 import { desenharGrafico, type SerieGrafico } from './grafico';
-import { inteiro, meses, porcentagem } from './formato';
-import { AVISO_PASSADO, criarBancada, criarSelect, html, opcoesClasse, opcoesVara, paraCodigo } from './ui';
+import { dataIso, inteiro, meses, porcentagem } from './formato';
+import { ate, mesComBase, MIN_EM_RISCO } from './base';
+import {
+  TODAS,
+  aviso,
+  comoCalculamos,
+  criarBancada,
+  criarSelect,
+  deCodigo,
+  gravarEstado,
+  grau,
+  html,
+  limitacoes,
+  opcoesClasse,
+  opcoesVara,
+  paraCodigo,
+} from './ui';
+
+const ABA = 'explorar';
 
 interface Escolha {
   vara: string | null;
@@ -17,35 +35,38 @@ interface Item {
 
 const decimal = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
-function serie(doc: Contrato, escolha: Escolha, curva: Curva, cor: 'a' | 'b'): SerieGrafico {
+/** Série cortada onde a curva deixa de ter base (contrato 1.2.0, `em_risco`). */
+function serie(doc: Contrato, escolha: Escolha, curva: Curva, cor: 'a' | 'b'): SerieGrafico | null {
+  const corte = mesComBase(doc.grade_meses, curva);
+  if (corte === null) return null;
+  const s = ate(doc.grade_meses, curva.sobrevivencia, corte);
+  const n = s.grade.length;
   const p50 = curva.quantis_meses.p50;
   return {
     rotulo: rotuloCurva(doc, escolha),
     cor,
-    meses: doc.grade_meses,
-    valores: curva.sobrevivencia,
-    inferior: curva.ic_inferior,
-    superior: curva.ic_superior,
-    marcas: p50 === null ? [] : [{ mes: p50, valor: 0.5, rotulo: `${decimal.format(p50)} meses` }],
+    meses: s.grade,
+    valores: s.serie,
+    inferior: curva.ic_inferior.slice(0, n),
+    superior: curva.ic_superior.slice(0, n),
+    marcas: p50 === null || p50 > corte ? [] : [{ mes: p50, valor: 0.5, rotulo: `${decimal.format(p50)} meses` }],
   };
 }
 
-function descricao(doc: Contrato, itens: { escolha: Escolha; curva: Curva }[]): string {
-  const partes = itens.map(({ escolha, curva }) => {
-    const p50 = curva.quantis_meses.p50;
-    return `${rotuloCurva(doc, escolha)}, mediana ${p50 === null ? 'não atingida' : meses(p50)}`;
-  });
-  return `Curva de sobrevivência: proporção de processos ainda sem sentença ao longo dos meses. ${partes.join('; ')}.`;
+/** Prazo da tabela: valor, não atingido ou fora do trecho com base, sempre por extenso. */
+function prazo(valor: number | null, corte: number | null): string {
+  if (valor === null) return 'Não atingido no período observado';
+  if (corte === null || valor > corte) return 'Não estimado: base pequena nesse trecho';
+  return decimal.format(valor);
 }
 
-/** Quantis e amostra, uma coluna por curva, no jeito da tabela impressa. */
-function tabelaQuantis(doc: Contrato, itens: Item[]): HTMLTableElement {
+function tabelaPrazos(doc: Contrato, itens: Item[]): HTMLTableElement {
   const tabela = document.createElement('table');
   tabela.className = 'tabela tabela-quantis';
   const cab = tabela.createTHead().insertRow();
   const canto = document.createElement('th');
   canto.scope = 'col';
-  canto.textContent = 'Em meses desde o ajuizamento';
+  canto.textContent = 'Meses desde o ajuizamento';
   cab.appendChild(canto);
   for (const { escolha, cor } of itens) {
     const c = document.createElement('th');
@@ -67,33 +88,30 @@ function tabelaQuantis(doc: Contrato, itens: Item[]): HTMLTableElement {
     for (const { curva } of itens) {
       const td = tr.insertCell();
       td.className = 'num';
-      td.textContent = curva ? valor(curva) : 'sem curva';
+      td.textContent = curva ? valor(curva) : 'Sem estimativa para este recorte';
     }
   };
-  const q = (v: number | null) => (v === null ? '—' : decimal.format(v));
-  linha('Mediana', 'metade dos processos teve sentença até aqui', (c) => q(c.quantis_meses.p50));
-  linha('80%', 'quatro em cada cinco tiveram sentença até aqui', (c) => q(c.quantis_meses.p80));
-  linha('90%', 'nove em cada dez tiveram sentença até aqui', (c) => q(c.quantis_meses.p90));
-  linha('Processos', '', (c) => inteiro(c.n));
-  linha('Com sentença', '', (c) => inteiro(c.eventos));
-  linha('Ainda abertos no snapshot', 'censurados', (c) => inteiro(c.censurados));
-  linha('Parcela censurada', '', (c) => porcentagem(c.censurados / c.n));
-
-  const legenda = document.createElement('caption');
-  legenda.textContent = '— quantil não atingido na janela dos dados.';
-  tabela.appendChild(legenda);
+  const corte = (c: Curva) => mesComBase(doc.grade_meses, c);
+  linha('Mediana', 'metade dos processos teve sentença até aqui', (c) => prazo(c.quantis_meses.p50, corte(c)));
+  linha('80%', 'quatro em cada cinco tiveram sentença até aqui', (c) => prazo(c.quantis_meses.p80, corte(c)));
+  linha('90%', 'nove em cada dez tiveram sentença até aqui', (c) => prazo(c.quantis_meses.p90, corte(c)));
+  linha('Processos na base', '', (c) => inteiro(c.n));
+  linha('Com sentença observada', '', (c) => inteiro(c.eventos));
+  linha('Sem sentença até o fim do acompanhamento', '', (c) => `${inteiro(c.censurados)} (${porcentagem(c.censurados / c.n)})`);
   return tabela;
 }
 
-export function montarExplorar(painel: HTMLElement, doc: Contrato): void {
+export function montarExplorar(painel: HTMLElement, doc: Contrato): { aplicar: (params: URLSearchParams) => void } {
   const { controles, folha } = criarBancada(painel);
 
-  const titulo = html('h2', '', 'Quanto tempo cada vara leva até a sentença');
-  const intro = html(
-    'p',
-    'intro',
-    'A curva mostra, mês a mês desde o ajuizamento, a proporção de processos que ainda não tinham sentença. ' +
-      'Quanto mais rápido ela cai, mais rápida a vara. A faixa em volta é o intervalo de confiança de 95%.',
+  controles.append(
+    html('h2', '', 'Processos ainda sem sentença ao longo do tempo'),
+    html(
+      'p',
+      'intro',
+      'A curva mostra, mês a mês desde o ajuizamento, a proporção de processos do recorte que ainda não tinham sentença. ' +
+        'A faixa em volta é o intervalo de confiança de 95%.',
+    ),
   );
 
   const form = html('form', 'controles') as HTMLFormElement;
@@ -102,10 +120,10 @@ export function montarExplorar(painel: HTMLElement, doc: Contrato): void {
   const grupoA = html('fieldset', 'grupo') as HTMLFieldSetElement;
   const legendaA = html('legend', '');
   legendaA.innerHTML = '<span class="amostra cor-a" aria-hidden="true"></span>';
-  legendaA.append('Curva principal');
+  legendaA.append('Recorte');
   grupoA.appendChild(legendaA);
-  const varaA = criarSelect('explorar-vara-a', 'Vara', opcoesVara(doc), null);
-  const classeA = criarSelect('explorar-classe-a', 'Classe', opcoesClasse(doc), null);
+  const varaA = criarSelect('explorar-vara-a', 'Vara', opcoesVara(doc), TODAS);
+  const classeA = criarSelect('explorar-classe-a', 'Classe processual', opcoesClasse(doc), TODAS);
   grupoA.append(varaA.campo, classeA.campo);
 
   const grupoB = html('fieldset', 'grupo') as HTMLFieldSetElement;
@@ -113,103 +131,170 @@ export function montarExplorar(painel: HTMLElement, doc: Contrato): void {
   const comparar = document.createElement('input');
   comparar.type = 'checkbox';
   comparar.id = 'explorar-comparar';
+  comparar.setAttribute('aria-controls', 'explorar-campos-b');
   const rotuloComparar = document.createElement('label');
   rotuloComparar.htmlFor = comparar.id;
-  rotuloComparar.textContent = 'Comparar com outra curva';
+  rotuloComparar.textContent = 'Comparar com outro recorte';
   legendaB.append(comparar, rotuloComparar);
   legendaB.insertAdjacentHTML('beforeend', '<span class="amostra cor-b" aria-hidden="true"></span>');
   grupoB.appendChild(legendaB);
-  const varaB = criarSelect('explorar-vara-b', 'Vara', opcoesVara(doc), doc.varas[1]?.codigo ?? null);
-  const classeB = criarSelect('explorar-classe-b', 'Classe', opcoesClasse(doc), null);
-  grupoB.append(varaB.campo, classeB.campo);
+  const camposB = html('div', 'campos-b');
+  camposB.id = 'explorar-campos-b';
+  const varaB = criarSelect('explorar-vara-b', 'Vara', opcoesVara(doc), doc.varas[0]?.codigo ?? TODAS);
+  const classeB = criarSelect('explorar-classe-b', 'Classe processual', opcoesClasse(doc), TODAS);
+  camposB.append(varaB.campo, classeB.campo);
+  grupoB.appendChild(camposB);
 
   form.append(grupoA, grupoB);
-
-  const notaComparacao = html('p', 'nota');
-  const aviso = html('p', 'aviso-passado', AVISO_PASSADO);
-  controles.append(titulo, intro, form, notaComparacao);
+  controles.appendChild(form);
 
   const cabeca = html('div', 'folha-cabeca');
+  const titulo = html('h3', '');
   const amostras = html('div', 'folha-amostras');
   cabeca.append(
-    html('h3', '', 'Ainda sem sentença, mês a mês'),
-    html('p', '', `${doc.tribunal}, ${doc.grau === 'G1' ? '1º grau' : '2º grau'}. Curvas Kaplan-Meier com intervalo de confiança de 95%.`),
+    titulo,
+    html('p', 'citacao-resultado', `${doc.tribunal} · ${grau(doc)} · dados até ${dataIso(doc.snapshot)}`),
     amostras,
   );
-  const alvoGrafico = html('div', '');
+  const avisos = html('div', 'avisos');
+  const alvoGrafico = html('div', 'alvo-grafico');
   const alvoTabela = html('div', '');
-  const avisoFolha = html('div', '');
-  folha.append(cabeca, alvoGrafico, avisoFolha, alvoTabela, aviso);
+  folha.append(
+    cabeca,
+    avisos,
+    alvoGrafico,
+    alvoTabela,
+    html('p', 'limitacoes', limitacoes(doc) + ' A curva não mede a qualidade do trabalho de uma vara.'),
+    comoCalculamos(doc),
+  );
 
-  const atualizar = () => {
+  const atualizar = (gravar = true) => {
     const ativoB = comparar.checked;
-    varaB.select.disabled = !ativoB;
-    classeB.select.disabled = !ativoB;
-    grupoB.classList.toggle('inativo', !ativoB);
+    camposB.hidden = !ativoB;
 
-    const itens: Item[] = [{ escolha: { vara: paraCodigo(varaA.select.value), classe: paraCodigo(classeA.select.value) }, cor: 'a', curva: undefined }];
+    const itens: Item[] = [
+      { escolha: { vara: paraCodigo(varaA.controle.value), classe: paraCodigo(classeA.controle.value) }, cor: 'a', curva: undefined },
+    ];
     if (ativoB) {
-      itens.push({ escolha: { vara: paraCodigo(varaB.select.value), classe: paraCodigo(classeB.select.value) }, cor: 'b', curva: undefined });
+      itens.push({
+        escolha: { vara: paraCodigo(varaB.controle.value), classe: paraCodigo(classeB.controle.value) },
+        cor: 'b',
+        curva: undefined,
+      });
     }
     for (const item of itens) item.curva = buscarCurva(doc, item.escolha.vara, item.escolha.classe);
 
-    const desenhaveis = itens.filter((i): i is Item & { curva: Curva } => i.curva !== undefined);
+    const series = itens.flatMap(({ escolha, curva, cor }) => {
+      const s = curva ? serie(doc, escolha, curva, cor) : null;
+      return s ? [s] : [];
+    });
     const faltando = itens.filter((i) => i.curva === undefined);
 
+    titulo.textContent = itens.length === 2 ? 'Comparação de dois recortes' : rotuloCurva(doc, itens[0]!.escolha);
     amostras.replaceChildren(
-      ...desenhaveis.map(({ curva, cor }) => {
+      ...itens.flatMap(({ curva, cor, escolha }) => {
+        if (!curva) return [];
         const p = html('p', 'amostra-texto');
         p.innerHTML = `<span class="amostra cor-${cor}" aria-hidden="true"></span>`;
         p.append(
-          `${inteiro(curva.n)} processos: ${inteiro(curva.eventos)} com sentença e ` +
-            `${inteiro(curva.censurados)} ainda abertos no snapshot (${porcentagem(curva.censurados / curva.n)} censurados).`,
+          (itens.length === 2 ? `${rotuloCurva(doc, escolha)}: ` : '') +
+            `${inteiro(curva.n)} processos, ${inteiro(curva.eventos)} com sentença observada e ` +
+            `${inteiro(curva.censurados)} sem sentença até o fim do acompanhamento.`,
         );
-        return p;
+        return [p];
       }),
     );
 
-    avisoFolha.replaceChildren();
-    avisoFolha.hidden = faltando.length === 0;
+    avisos.replaceChildren();
     if (faltando.length > 0) {
-      avisoFolha.appendChild(
-        html(
-          'p',
-          'aviso',
-          `Não há curva publicada para ${faltando.map((i) => rotuloCurva(doc, i.escolha)).join(' nem para ')}. ` +
-            'Curvas com menos de 30 processos ficam de fora, por privacidade e porque seriam ruído. ' +
-            'Tente “Todas as varas” ou “Todas as classes”.',
+      avisos.appendChild(
+        aviso(
+          'info',
+          `Não há estimativa disponível para ${faltando.map((i) => rotuloCurva(doc, i.escolha)).join(' nem para ')}. ` +
+            'Combinações com menos de 30 processos na base não são publicadas.',
+          'Revise a vara ou a classe. “Todas as varas” e “Todas as classes” usam um conjunto mais amplo.',
         ),
       );
     }
+    if (itens.length === 2 && series.length === 2) {
+      const [a, b] = itens as [Item, Item];
+      if (a.escolha.classe !== b.escolha.classe) {
+        avisos.appendChild(
+          aviso(
+            'atencao',
+            'Os dois recortes têm classes diferentes. Parte da diferença entre as curvas pode vir do tipo de processo, e não da vara.',
+            'Para comparar varas, use a mesma classe nos dois recortes.',
+          ),
+        );
+      }
+      avisos.appendChild(
+        aviso(
+          'info',
+          'Diferenças entre curvas podem refletir o tipo de processo que cada vara recebe e outros fatores. ' +
+            'A sobreposição ou não das faixas de confiança não é um teste de diferença entre as curvas.',
+        ),
+      );
+    }
+    avisos.hidden = avisos.childElementCount === 0;
 
-    if (desenhaveis.length === 0) {
+    const cortadas = series.filter((s) => (s.meses.at(-1) ?? 0) < (doc.grade_meses.at(-1) ?? 0));
+    if (series.length === 0) {
       alvoGrafico.replaceChildren();
       alvoTabela.replaceChildren();
     } else {
-      desenharGrafico(
-        alvoGrafico,
-        desenhaveis.map(({ escolha, curva, cor }) => serie(doc, escolha, curva, cor)),
-        {
-          descricao: descricao(doc, desenhaveis),
-          rotuloX: 'meses desde o ajuizamento',
-          rotuloY: 'ainda sem sentença',
-        },
-      );
+      desenharGrafico(alvoGrafico, series, {
+        descricao:
+          'Proporção de processos ainda sem sentença a cada mês desde o ajuizamento. ' +
+          series
+            .map((s) => {
+              const m = s.marcas?.[0];
+              return `${s.rotulo}: metade teve sentença ${m ? `até ${meses(m.mes)}` : 'em prazo não estimado no período observado'}`;
+            })
+            .join('; ') +
+          '.',
+        rotuloX: 'meses desde o ajuizamento',
+        rotuloY: 'ainda sem sentença',
+        rotuloMes: (m) => meses(m),
+        nota: cortadas.length
+          ? `${series.length === 1 ? 'A curva termina' : 'Uma curva que termina antes do fim do gráfico para'} onde menos de ${MIN_EM_RISCO} processos do recorte seguiam em acompanhamento.`
+          : undefined,
+      });
       const rolagem = html('div', 'quantis-rolagem');
-      rolagem.appendChild(tabelaQuantis(doc, itens));
+      rolagem.appendChild(tabelaPrazos(doc, itens));
       alvoTabela.replaceChildren(rolagem);
     }
 
-    notaComparacao.textContent =
-      desenhaveis.length === 2
-        ? 'Como ler a comparação: onde as faixas não se encostam, a diferença dificilmente é acaso da amostra. ' +
-          'Onde elas se sobrepõem, os dados não bastam para afirmar que uma curva é mais lenta que a outra.'
-        : '';
-    notaComparacao.hidden = desenhaveis.length !== 2;
+    if (gravar) {
+      const params = new URLSearchParams({ vara: deCodigo(itens[0]!.escolha.vara), classe: deCodigo(itens[0]!.escolha.classe) });
+      if (ativoB) {
+        params.set('vara2', varaB.controle.value);
+        params.set('classe2', classeB.controle.value);
+      }
+      gravarEstado(ABA, params);
+    }
   };
 
-  for (const s of [varaA.select, classeA.select, varaB.select, classeB.select, comparar]) {
-    s.addEventListener('change', atualizar);
+  for (const s of [varaA.controle, classeA.controle, varaB.controle, classeB.controle, comparar]) {
+    s.addEventListener('change', () => atualizar());
   }
-  atualizar();
+  atualizar(false);
+
+  const valido = (s: HTMLSelectElement, v: string | null): v is string => v !== null && [...s.options].some((o) => o.value === v);
+  return {
+    aplicar(params) {
+      const pares: [HTMLSelectElement, string | null][] = [
+        [varaA.controle, params.get('vara')],
+        [classeA.controle, params.get('classe')],
+      ];
+      for (const [s, v] of pares) if (valido(s, v)) s.value = v;
+      const v2 = params.get('vara2');
+      const c2 = params.get('classe2');
+      comparar.checked = valido(varaB.controle, v2) && valido(classeB.controle, c2);
+      if (comparar.checked) {
+        varaB.controle.value = v2!;
+        classeB.controle.value = c2!;
+      }
+      atualizar(false);
+    },
+  };
 }

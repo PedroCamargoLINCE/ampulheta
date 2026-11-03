@@ -16,7 +16,9 @@ Ação esperada do outro lado:
 ---
 
 ## 2026-11-03 · ML → Web · contrato 1.2.0: `em_risco` por ponto da grade
-Status: aberto
+Status: resolvido (2026-11-03) — limite de 10 em t e em t+h (`web/src/base.ts`): Explorar dados
+corta a curva e marca os prazos além do corte como "não estimado"; Estimar tempo recusa número
+no horizonte sem base e mostra quantos seguiam em acompanhamento no tempo informado
 O que mudou: `contracts/` está na versão 1.2.0. Cada curva traz o campo opcional `em_risco`
 (inteiros, mesmo tamanho de `grade_meses`, não crescente, começa em `n`, vale 0 depois do último
 tempo observado). `publicar.py` já emite; fixture regenerada; validador checa quando presente.

@@ -5,6 +5,13 @@
 import { interpolar } from './sobrevivencia';
 import { porcentagem } from './formato';
 
+function html(tag: string, classe: string, texto: string): HTMLElement {
+  const n = document.createElement(tag);
+  n.className = classe;
+  n.textContent = texto;
+  return n;
+}
+
 export interface MarcaGrafico {
   mes: number;
   valor: number;
@@ -19,7 +26,7 @@ export interface SerieGrafico {
   valores: readonly number[];
   inferior?: readonly number[];
   superior?: readonly number[];
-  /** Pontos anotados na curva (ex.: a mediana), com rótulo em mono. */
+  /** Pontos anotados na curva (ex.: a mediana). */
   marcas?: readonly MarcaGrafico[];
 }
 
@@ -28,6 +35,10 @@ export interface OpcoesGrafico {
   descricao: string;
   rotuloX: string;
   rotuloY: string;
+  /** Como ler um mês do eixo X em voz alta e na tabela (ex.: "+3 meses"). */
+  rotuloMes?: (m: number) => string;
+  /** Nota curta sob a legenda (ex.: onde a curva termina e por quê). */
+  nota?: string;
 }
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -85,7 +96,7 @@ function faixa(s: SerieGrafico, x: (m: number) => number, y: (v: number) => numb
 function leitura(series: readonly SerieGrafico[], mes: number, rotuloMes: (m: number) => string): string {
   const partes = series.map((s) => {
     const v = interpolar(s.meses, s.valores, mes);
-    if (v === null) return `${s.rotulo}: fora da janela`;
+    if (v === null) return `${s.rotulo}: não estimado neste mês`;
     let texto = `${s.rotulo}: ${porcentagem(v)} ainda sem sentença`;
     if (s.inferior && s.superior) {
       const lo = interpolar(s.meses, s.inferior, mes)!;
@@ -129,7 +140,7 @@ function desenharNaLargura(
   const alturaUtil = ALTURA - M.topo - M.base;
   const x = (m: number) => M.esq + (m / ate) * larguraUtil;
   const y = (v: number) => M.topo + (1 - v) * alturaUtil;
-  const rotuloMes = (m: number) => `${m} ${m === 1 ? 'mês' : 'meses'}`;
+  const rotuloMes = opcoes.rotuloMes ?? ((m: number) => `${m} ${m === 1 ? 'mês' : 'meses'}`);
 
   const figura = document.createElement('figure');
   figura.className = 'grafico';
@@ -220,10 +231,11 @@ function desenharNaLargura(
   }
   if (series.some((s) => s.inferior)) {
     const li = document.createElement('li');
-    li.innerHTML = '<span class="amostra faixa-amostra" aria-hidden="true"></span>faixa = intervalo de confiança de 95%';
+    li.innerHTML = '<span class="amostra faixa-amostra" aria-hidden="true"></span>faixa: intervalo de confiança de 95%';
     legenda.appendChild(li);
   }
   figura.appendChild(legenda);
+  if (opcoes.nota) figura.appendChild(html('p', 'nota', opcoes.nota));
 
   const saida = document.createElement('p');
   saida.className = 'leitura';
@@ -266,12 +278,17 @@ function desenharNaLargura(
     ev.preventDefault();
   });
 
-  figura.appendChild(tabelaDados(series, ate, opcoes.rotuloX));
+  figura.appendChild(tabelaDados(series, ate, opcoes.rotuloX, rotuloMes));
   alvo.appendChild(figura);
 }
 
 /** Os mesmos números em tabela, para leitor de tela e para quem quer copiar. */
-function tabelaDados(series: readonly SerieGrafico[], ate: number, rotuloX: string): HTMLDetailsElement {
+function tabelaDados(
+  series: readonly SerieGrafico[],
+  ate: number,
+  rotuloX: string,
+  rotuloMes: (m: number) => string,
+): HTMLDetailsElement {
   const detalhes = document.createElement('details');
   detalhes.className = 'tabela-dados';
   const resumo = document.createElement('summary');
@@ -290,8 +307,8 @@ function tabelaDados(series: readonly SerieGrafico[], ate: number, rotuloX: stri
   };
   th(rotuloX, false);
   for (const s of series) {
-    th(`${s.rotulo}: sem sentença`, true);
-    if (s.inferior && s.superior) th('IC 95%', true);
+    th(`${s.rotulo}: ainda sem sentença`, true);
+    if (s.inferior && s.superior) th('Intervalo de confiança de 95%', true);
   }
   const corpo = tabela.createTBody();
   for (let m = 0; m <= ate; m++) {
@@ -299,24 +316,28 @@ function tabelaDados(series: readonly SerieGrafico[], ate: number, rotuloX: stri
     const cabLinha = document.createElement('th');
     cabLinha.scope = 'row';
     cabLinha.className = 'num';
-    cabLinha.textContent = String(m);
+    cabLinha.textContent = rotuloMes(m);
     linha.appendChild(cabLinha);
     for (const s of series) {
       const v = interpolar(s.meses, s.valores, m);
       const c = linha.insertCell();
       c.className = 'num';
-      c.textContent = v === null ? '—' : porcentagem(v);
+      c.textContent = v === null ? 'não estimado' : porcentagem(v);
       if (s.inferior && s.superior) {
         const lo = interpolar(s.meses, s.inferior, m);
         const hi = interpolar(s.meses, s.superior, m);
         const ci = linha.insertCell();
         ci.className = 'num';
-        ci.textContent = lo === null || hi === null ? '—' : `${porcentagem(lo)} a ${porcentagem(hi)}`;
+        ci.textContent = lo === null || hi === null ? 'não estimado' : `${porcentagem(lo)} a ${porcentagem(hi)}`;
       }
     }
   }
+  // Região rolável própria: a tabela larga rola aqui dentro, não na página, e o teclado alcança.
   const rolagem = document.createElement('div');
   rolagem.className = 'rolagem';
+  rolagem.tabIndex = 0;
+  rolagem.setAttribute('role', 'region');
+  rolagem.setAttribute('aria-label', 'Dados do gráfico em tabela, rolável');
   rolagem.appendChild(tabela);
   detalhes.appendChild(rolagem);
   return detalhes;

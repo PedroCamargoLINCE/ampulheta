@@ -189,10 +189,6 @@ main:focus {
 .grupo legend + * {
   clear: both;
 }
-/* Rótulos seguem legíveis; só o controle desativado esmaece. */
-.grupo.inativo .campo label {
-  color: var(--color-text-secondary);
-}
 .campo {
   display: grid;
   gap: var(--space-2xs);
@@ -203,7 +199,8 @@ main:focus {
   color: var(--color-text-secondary);
 }
 select,
-input[type='number'] {
+input[type='text'],
+input[type='date'] {
   width: 100%;
   min-height: var(--control-height);
   padding: 0 var(--space-sm);
@@ -216,17 +213,20 @@ input[type='number'] {
   font: var(--weight-regular) var(--text-md) / 1.2 var(--font-ui);
   transition: background-color var(--dur-micro) var(--ease-out);
 }
-input[type='number'] {
+input[type='text'],
+input[type='date'] {
   font-variant-numeric: tabular-nums;
 }
 @media (hover: hover) {
   select:hover,
-  input[type='number']:hover {
+  input[type='text']:hover,
+  input[type='date']:hover {
     background: var(--color-surface-muted);
   }
 }
 select:focus-visible,
-input[type='number']:focus-visible {
+input[type='text']:focus-visible,
+input[type='date']:focus-visible {
   outline-color: var(--color-focus);
   border-color: var(--color-text);
 }
@@ -237,9 +237,6 @@ select:disabled,
 input:disabled {
   opacity: 0.55;
   cursor: not-allowed;
-}
-input[type='number'][aria-invalid='true'] {
-  border-color: var(--color-error);
 }
 input[type='checkbox'] {
   width: 24px;
@@ -262,9 +259,84 @@ input[type='checkbox']:active {
   cursor: pointer;
 }
 .ajuda {
-  min-height: 1lh;
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
+}
+.erro {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-error);
+}
+select[aria-invalid='true'],
+input[aria-invalid='true'] {
+  border-color: var(--color-error);
+  border-width: var(--rule-bar);
+}
+.cobertura {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Confirmação: a caixa e o texto formam um alvo só, de 44 px. */
+.confirmacao-linha {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.confirmacao-linha label {
+  display: flex;
+  align-items: center;
+  min-height: var(--control-height);
+  font-size: var(--text-md);
+  color: var(--color-text);
+  cursor: pointer;
+}
+input[type='checkbox'][aria-invalid='true'] {
+  outline: var(--rule-bar) solid var(--color-error);
+  outline-offset: 2px;
+}
+
+/* Botões: uma ação principal por etapa. */
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+.botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--control-height);
+  padding: 0 var(--space-lg);
+  border: var(--rule-hair) solid transparent;
+  border-radius: var(--radius-control);
+  font: var(--weight-medium) var(--text-md) / 1.2 var(--font-ui);
+  cursor: pointer;
+  transition: background-color var(--dur-micro) var(--ease-out);
+}
+.botao-principal {
+  background: var(--color-action);
+  color: var(--color-on-action);
+}
+.botao-secundario {
+  background: transparent;
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+@media (hover: hover) {
+  .botao-principal:hover {
+    background: color-mix(in oklab, var(--color-action) 85%, var(--color-text));
+  }
+  .botao-secundario:hover {
+    background: var(--color-surface-muted);
+  }
+}
+.botao:active {
+  transform: translateY(1px);
+}
+.botao:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
 
 /* Amostra de série: identifica a curva sem tingir o texto. */
@@ -310,6 +382,7 @@ input[type='checkbox']:active {
 .grafico {
   margin: 0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-sm);
 }
 .grafico svg {
@@ -489,6 +562,7 @@ input[type='checkbox']:active {
 }
 
 .tabela-dados {
+  min-width: 0;
   font-size: var(--text-sm);
 }
 .tabela-dados summary {
@@ -514,9 +588,14 @@ input[type='checkbox']:active {
   outline-offset: 2px;
 }
 .rolagem {
+  max-width: 100%;
   max-height: 320px;
   overflow: auto;
   margin-top: var(--space-xs);
+}
+.rolagem:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
 .tabela-dados[open] .rolagem thead {
   position: sticky;
@@ -525,10 +604,37 @@ input[type='checkbox']:active {
   background: var(--color-surface);
 }
 
-.folha-resultado,
-.folha-notas {
+.alvo-grafico,
+.avisos {
   display: grid;
-  gap: var(--space-md);
+  gap: var(--space-sm);
+  min-width: 0;
+}
+.citacao-resultado {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.marca-sintetico {
+  color: var(--color-text);
+}
+
+/* Estado inicial: explica o que vai aparecer, sem número fictício. */
+.vazio {
+  display: grid;
+  gap: var(--space-xs);
+  padding: var(--space-lg) 0;
+}
+.vazio p {
+  color: var(--color-text-secondary);
+  max-width: 60ch;
+}
+
+/* Resultado da seleção anterior: continua legível, mas marcado. */
+.folha.desatualizado .probabilidades,
+.folha.desatualizado .prazos,
+.folha.desatualizado .alvo-grafico {
+  opacity: 0.6;
 }
 
 /* Meu processo: três números que se comparam, partidos por filetes. */
@@ -564,6 +670,13 @@ input[type='checkbox']:active {
   color: var(--color-text);
 }
 .probabilidade .valor.indisponivel {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-tight);
+  color: var(--color-text-secondary);
+}
+.probabilidade .rotulo-valor {
+  font-size: var(--text-sm);
   color: var(--color-text-secondary);
 }
 .probabilidade .ic {
@@ -571,11 +684,15 @@ input[type='checkbox']:active {
   font-variant-numeric: tabular-nums;
   color: var(--color-text);
 }
-.frase {
+.prazos {
   font-size: var(--text-lg);
   line-height: 1.45;
   color: var(--color-text);
   max-width: 60ch;
+}
+.prazos ul {
+  margin: var(--space-2xs) 0 0;
+  padding-left: var(--space-lg);
 }
 .amostra-texto {
   font-size: var(--text-sm);
@@ -583,25 +700,65 @@ input[type='checkbox']:active {
   max-width: 70ch;
 }
 
-/* Avisos e notas. */
+/* Avisos: motivo, impacto e próximo passo. O tipo vem escrito; a cor só reforça. */
 .aviso {
+  display: grid;
+  gap: var(--space-xs);
+  justify-items: start;
   padding: var(--space-sm) var(--space-md);
   background: var(--color-surface-muted);
-  border-top: var(--rule-bar) solid var(--color-text);
+  border-top: var(--rule-bar) solid var(--color-info);
   color: var(--color-text);
-  max-width: 70ch;
+  max-width: 65ch;
+}
+.aviso-atencao {
+  border-top-color: var(--color-warning);
+}
+.aviso-erro {
+  border-top-color: var(--color-error);
+}
+.aviso strong {
+  font-weight: var(--weight-strong);
+}
+.aviso-passo {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
 }
 .nota {
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
-  max-width: 70ch;
+  max-width: 65ch;
 }
-.aviso-passado {
+.limitacoes {
   padding-top: var(--space-md);
   border-top: var(--rule-hair) solid var(--color-border);
   font-size: var(--text-sm);
   color: var(--color-text);
-  max-width: 60ch;
+  max-width: 65ch;
+}
+
+/* Metodologia expansível. */
+.metodologia summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height);
+  cursor: pointer;
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+  text-decoration: underline;
+  text-decoration-color: var(--color-action);
+  text-underline-offset: 0.15em;
+}
+.metodologia summary:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.metodologia-corpo {
+  display: grid;
+  gap: var(--space-sm);
+  padding-top: var(--space-xs);
+  font-size: var(--text-sm);
+  max-width: 65ch;
 }
 
 /* Rodapé: o colofão, com a fonte e o snapshot. */
@@ -689,5 +846,42 @@ input[type='checkbox']:active {
   }
   .tabela tbody th span {
     max-width: 18ch;
+  }
+}
+
+/* Impressão e PDF: o resultado com sua linha de citação, sem controles. */
+@media print {
+  :root {
+    color-scheme: light;
+  }
+  body {
+    background: var(--color-surface);
+  }
+  .pular,
+  nav,
+  .coluna-controles,
+  .leitura,
+  .tabela-dados,
+  .metodologia {
+    display: none !important;
+  }
+  .bancada {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .folha {
+    padding: 0;
+  }
+  .folha.desatualizado .probabilidades,
+  .folha.desatualizado .prazos,
+  .folha.desatualizado .alvo-grafico {
+    opacity: 1;
+  }
+  .probabilidades,
+  .grafico,
+  .aviso {
+    break-inside: avoid;
+  }
+  main {
+    padding-block: var(--space-md);
   }
 }
