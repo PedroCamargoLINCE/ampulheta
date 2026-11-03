@@ -26,3 +26,15 @@ def test_validador_pega_s_crescente():
     doc = json.loads((RAIZ / "contracts" / "fixtures" / "curvas.exemplo.json").read_text(encoding="utf-8"))
     doc["curvas"][0]["sobrevivencia"][5] = 1.0  # quebra a monotonicidade
     assert any("não crescente" in e for e in validar.validar(doc).erros)
+
+
+def test_validador_pega_em_risco_crescente_ou_sem_comecar_em_n():
+    validar = _carregar_validador()
+    doc = json.loads((RAIZ / "contracts" / "fixtures" / "curvas.exemplo.json").read_text(encoding="utf-8"))
+    c = doc["curvas"][0]
+    assert "em_risco" in c and c["em_risco"][0] == c["n"]
+    c["em_risco"][3] = c["em_risco"][2] + 1
+    assert any("em_risco deve ser não crescente" in e for e in validar.validar(doc).erros)
+    c["em_risco"][3] = c["em_risco"][2]
+    c["em_risco"][0] = c["n"] - 1
+    assert any("em_risco[0]" in e for e in validar.validar(doc).erros)

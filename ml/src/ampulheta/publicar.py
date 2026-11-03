@@ -1,4 +1,4 @@
-"""Publicação. Junta `models/km.json` ao cabeçalho do contrato (`../contracts/`, versão 1.1.0)
+"""Publicação. Junta `models/km.json` ao cabeçalho do contrato (`../contracts/`, versão 1.2.0)
 e grava `../data/publicado/curvas.json`. Termina rodando o validador em modo estrito;
 se ele reprovar, nada é publicado.
 """
@@ -13,7 +13,7 @@ from typing import Any
 
 import pandas as pd
 
-CONTRATO = "1.1.0"
+CONTRATO = "1.2.0"
 
 
 def montar_documento(cfg: dict[str, Any], km: dict[str, Any], processos: pd.DataFrame, gerado_em: datetime) -> dict[str, Any]:
