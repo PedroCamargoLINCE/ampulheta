@@ -10,6 +10,8 @@ export DATAJUD_API_KEY=...        # chave pública, em datajud-wiki.cnj.jus.br/a
 
 ampulheta coletar  --snapshot 2026-10-29 --vara 10672     # estágio 1, uma vara; rode várias em paralelo
 ampulheta coletar  --snapshot 2026-10-29                  # rodada final: confere as varas e fecha o manifesto
+ampulheta coletar-g2 --snapshot 2026-10-29 --parte 1/4    # estágio 1b: 2º grau dos mesmos números; rode n partes em paralelo
+ampulheta coletar-g2 --snapshot 2026-10-29                # rodada final do 2º grau: confere os lotes e fecha o manifesto
 ampulheta preparar --snapshot 2026-10-29                  # estágio 2
 ampulheta modelar                                         # estágio 3
 ampulheta publicar                                        # gera e valida o JSON do contrato
@@ -33,14 +35,23 @@ cada arquivo); com manifesto presente a pasta é imutável e uma nova coleta exi
 Rodadas com `--vara` não escrevem o manifesto, então várias podem correr em paralelo (uma por
 processo); uma rodada final sem `--vara` confere cada vara e fecha o snapshot.
 
+**`coletor_g2.py`** (estágio 1b, ADR-013). Lê os números do snapshot de 1º grau fechado e baixa
+os registros de 2º grau dos mesmos números em lotes de 100 (`terms` em `numeroProcesso`), um
+`.jsonl.gz` por lote em `raw/<snapshot>-g2/<tribunal>/`; `--parte i/n` permite n processos em
+paralelo e a rodada final sem `--parte` fecha o `manifest.json`. É onde ficam o trânsito em julgado
+e a baixa quando há apelação.
+
 **`preparo.py`** (estágio 2). Lê os `.jsonl` do snapshot e gera em `../data/`:
 
 - `processos.parquet`, uma linha por processo: vara, classe, assunto, `data_ajuizamento`,
   `data_evento` (primeiro movimento da família Julgamento), `data_censura` (= snapshot),
   `tempo_dias`, `evento` (1 sentenciado, 0 censurado), `tipo_sentenca` e `com_merito`
   (ramo da TPU), `n_movimentos`, `flags`, e uma coluna `data_<marco>` por marco do config
-  (audiência, trânsito em julgado, início do cumprimento, extinção da execução; ADR-011).
-- `eventos.parquet`, uma linha por movimento, para modelar outros eventos depois.
+  (audiência, trânsito em julgado, início do cumprimento, extinção da execução; ADR-011). Com
+  `raw/<snapshot>-g2/` fechado, os marcos com `com_recurso` também olham os movimentos de 2º grau
+  até a data do snapshot, e o processo ganha `registros_recurso` e `classe_recurso` (ADR-013).
+- `eventos.parquet`, uma linha por movimento, com a coluna `grau` (G1 ou G2), para modelar outros
+  eventos depois.
 - `relatorio_qualidade.md`, gerado: contagem de cada regra de limpeza, censura por vara,
   classe e ano, distribuição dos tipos de sentença.
 

@@ -93,3 +93,15 @@ próprio. Publicar essas curvas superestimaria o tempo: o que não foi registrad
 Decisão: publicar por ora só ajuizamento → sentença e audiência → sentença; as datas dos marcos
 continuam no Parquet. Próximo passo: coletar o 2º grau dos mesmos números e medir se o trânsito
 fica completo; só então sentença → trânsito entra. A execução fica fora até haver como ligá-la.
+
+## ADR-013 — Coleta do 2º grau pelos mesmos números, fundida no preparo (2026-11-03)
+Para medir o trânsito em julgado quando há recurso (ADR-012), o pipeline ganha um estágio 1b:
+`coletar-g2` lê os números do snapshot de 1º grau fechado e baixa os registros de grau de recurso
+dos mesmos números em lotes de 100 (filtro `terms` em `numeroProcesso`), um arquivo por lote em
+`raw/<snapshot>-g2/`, com manifesto próprio e partes paralelas (`--parte i/n`). O snapshot de 1º
+grau continua imutável. No preparo, os movimentos de 2º grau entram só nos marcos marcados com
+`com_recurso` (hoje, trânsito em julgado), e tudo o que vier depois da data do snapshot de 1º grau
+é ignorado e contado: assim há uma única data de censura. O Parquet ganha `registros_recurso` e
+`classe_recurso`, e `eventos.parquet` ganha a coluna `grau`. A sentença segue sendo a de 1º grau.
+Uma transição com destino no trânsito só é publicada depois que o relatório de qualidade mostrar
+o registro completo o bastante por ano da sentença.

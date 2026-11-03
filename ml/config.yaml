@@ -42,6 +42,9 @@ evento_sentenca:
   familia_tpu: 193        # Julgamento; ramos 218 (sem resolução de mérito) e 385 (com resolução do mérito)
   tabela: tpu_julgamento.csv   # 193 e descendentes, extraída da TPU oficial (gateway.cloud.pje.jus.br/tpu) em 2026-10-29
   excluir_codigos: [198, 200, 871, 15408]   # decisões de embargos de declaração: respondem a decisão anterior, não encerram a fase (ADR-010)
+recurso:                  # registros de 2º grau dos mesmos números, onde fica o trânsito quando há apelação (ADR-013)
+  grau: G2
+  lote: 100               # números por requisição (filtro terms); 100 respondem em ~30 s
 marcos:                   # data do primeiro movimento com um destes códigos TPU vira coluna data_<nome> (ADR-011)
   - nome: audiencia         # ajuizamento e sentenca são marcos implícitos (dataAjuizamento e evento_sentenca)
     rotulo: Audiência
@@ -49,6 +52,7 @@ marcos:                   # data do primeiro movimento com um destes códigos TP
   - nome: transito_em_julgado
     rotulo: Trânsito em julgado
     codigos: [848]
+    com_recurso: true     # também procura nos registros de 2º grau (ADR-013)
   - nome: inicio_cumprimento
     rotulo: Início do cumprimento de sentença
     codigos: [11385]
