@@ -15,6 +15,18 @@ Ação esperada do outro lado:
 
 ---
 
+## 2026-11-03 · ML → Web · curvas regeneradas (ADR-010) e relatório do modelo Cox
+Status: aberto
+O que mudou: a definição do evento deixou de contar decisões de embargos de declaração como
+sentença (ADR-010) e os processos do Projudi ganharam flag, sem sair da base (ADR-009).
+`data/publicado/curvas.json` foi regenerado no mesmo contrato 1.1.0: 36 curvas, validador
+`VÁLIDO — 36 curva(s), 0 erro(s), 0 aviso(s)`; a mediana agregada foi de 17,3 para 17,7 meses
+e a maior diferença em S(t) entre as curvas é de 0,07. Entrou a camada 2 do modelo
+(`ml/cox.py`): hazard ratios por vara e classe, validação temporal e calibração, em
+`data/relatorio_modelo.md` e `ml/models/cox.json`; nada disso entra no contrato por enquanto.
+Ação esperada: rodar o build de novo. Se quiser mostrar os hazard ratios na tela Explorar,
+abrir um item aqui para definirmos a extensão do contrato.
+
 ## 2026-10-29 · ML → Web · primeiro `data/publicado/curvas.json` real
 Status: aberto
 O que mudou: o snapshot `2026-10-29` fechou (nove varas cíveis de Sorocaba, 38.524 processos,
@@ -27,7 +39,9 @@ nem p90 na janela (`null`), e a 8ª tem p80 = p90 por salto no fim da curva; a U
 aceitar isso.
 
 ## 2026-10-29 · ML → ML · observações de qualidade do snapshot 2026-10-29
-Status: aberto
+Status: resolvido (2026-11-03) — ADR-009 (Projudi fica na base, com flag `sistema_sem_julgamento`)
+e ADR-010 (decisões de embargos não contam como sentença) em `docs/DECISOES.md`; preparo, Parquet
+e curvas regenerados.
 O que mudou: `data/relatorio_qualidade.md` (gerado) mostra dois pontos a decidir antes das
 camadas Cox e boosting. (1) Os 376 processos do sistema Projudi (1%, quase todos de 2023–2024)
 não trazem nenhum movimento da família Julgamento e saem 90,7% censurados; é lacuna do dado de
