@@ -46,7 +46,10 @@ processo); uma rodada final sem `--vara` confere cada vara e fecha o snapshot.
 Regras, todas contadas: hit repetido na paginação é removido; ajuizamento fora de
 [1990, snapshot] descarta; sentença antes do ajuizamento descarta; movimento sem código TPU é ignorado; movimento de mesmo
 código no mesmo dia é deduplicado; menos de dois movimentos ou movimento anterior ao
-ajuizamento recebe flag (provável migração com histórico truncado).
+ajuizamento recebe flag (provável migração com histórico truncado); processo de sistema
+listado em `preparo.sistemas_sem_julgamento` recebe a flag `sistema_sem_julgamento` (ADR-009).
+Os códigos em `evento_sentenca.excluir_codigos` (decisões de embargos de declaração) não
+contam como sentença (ADR-010).
 
 **`tpu_julgamento.csv`**. Os 272 códigos da família Julgamento (193 e descendentes) extraídos
 da Tabela Processual Unificada oficial (`gateway.cloud.pje.jus.br/tpu`, versão de
@@ -58,7 +61,17 @@ operacional de "sentença" do projeto.
 vara, cada classe e cada vara × classe com n ≥ 30. S(t) é avaliada numa grade de meses
 inteiros comum a todas as curvas (ADR-007), com IC 95% e quantis p50, p80, p90 (`null` quando
 a curva não chega lá). Calcula também o log-rank entre varas. Escreve `models/km.json`.
-As camadas Cox e boosting entrarão aqui, sempre com validação temporal (ADR-004).
+
+**`cox.py`** (estágio 3, camada 2). Cox proporcional com `lifelines`, covariáveis vara e classe
+(referência: a primeira de cada lista do config; ano de ajuizamento fica de fora porque não
+extrapola para processos novos). Validação temporal (ADR-004): ajusta em ajuizados até 2021 e
+mede em 2022 em diante com concordance index, Brier integrado até 36 meses (`scikit-survival`,
+comparado à curva Kaplan-Meier do treino) e calibração por grupo de probabilidade prevista em 12
+e 24 meses. Dummies com menos de 30 processos no treino (varas criadas depois do corte) ficam
+fora do ajuste e caem na referência. O teste de proporcionalidade de Schoenfeld é reportado por
+covariável, não corrigido. O modelo final, com todos os processos, dá os hazard ratios
+publicados. Escreve `models/cox.json` e `../data/relatorio_modelo.md`. A camada de boosting
+entrará ao lado, com a mesma validação.
 
 **`publicar.py`**. Junta `models/km.json` ao cabeçalho exigido pelo contrato (snapshot,
 citação ao CNJ/DataJud, dicionário de varas e classes) e grava

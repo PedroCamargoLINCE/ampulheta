@@ -1,0 +1,252 @@
+{
+ "metodo": "cox",
+ "covariaveis": {
+  "vara": {
+   "referencia": "10669"
+  },
+  "classe": {
+   "referencia": "7"
+  }
+ },
+ "n": 38524,
+ "eventos": 30497,
+ "hazard_ratios": [
+  {
+   "covariavel": "vara_10670",
+   "hazard_ratio": 1.466,
+   "ic_inferior": 1.402,
+   "ic_superior": 1.532,
+   "p": 1.0682910848577012e-63
+  },
+  {
+   "covariavel": "vara_10671",
+   "hazard_ratio": 1.424,
+   "ic_inferior": 1.363,
+   "ic_superior": 1.488,
+   "p": 1.5891086777892764e-55
+  },
+  {
+   "covariavel": "vara_10672",
+   "hazard_ratio": 1.375,
+   "ic_inferior": 1.316,
+   "ic_superior": 1.438,
+   "p": 3.7084752418500716e-45
+  },
+  {
+   "covariavel": "vara_10673",
+   "hazard_ratio": 1.858,
+   "ic_inferior": 1.776,
+   "ic_superior": 1.942,
+   "p": 1.139920918708768e-162
+  },
+  {
+   "covariavel": "vara_10674",
+   "hazard_ratio": 1.256,
+   "ic_inferior": 1.201,
+   "ic_superior": 1.314,
+   "p": 1.7533648304027937e-23
+  },
+  {
+   "covariavel": "vara_10675",
+   "hazard_ratio": 1.672,
+   "ic_inferior": 1.6,
+   "ic_superior": 1.747,
+   "p": 6.067426383897818e-116
+  },
+  {
+   "covariavel": "vara_87759",
+   "hazard_ratio": 1.455,
+   "ic_inferior": 1.353,
+   "ic_superior": 1.565,
+   "p": 5.149712258743615e-24
+  },
+  {
+   "covariavel": "vara_87760",
+   "hazard_ratio": 1.344,
+   "ic_inferior": 1.246,
+   "ic_superior": 1.451,
+   "p": 2.6310966582492725e-14
+  },
+  {
+   "covariavel": "classe_93",
+   "hazard_ratio": 3.873,
+   "ic_inferior": 3.626,
+   "ic_superior": 4.138,
+   "p": 0.0
+  },
+  {
+   "covariavel": "classe_94",
+   "hazard_ratio": 1.696,
+   "ic_inferior": 1.598,
+   "ic_superior": 1.8,
+   "p": 2.6424974288894213e-67
+  }
+ ],
+ "proporcionalidade": [
+  {
+   "covariavel": "classe_93",
+   "p": 3.307625064925456e-113
+  },
+  {
+   "covariavel": "classe_94",
+   "p": 1.2117355274867038e-23
+  },
+  {
+   "covariavel": "vara_10670",
+   "p": 0.0064925698325337
+  },
+  {
+   "covariavel": "vara_10671",
+   "p": 3.071964352288987e-10
+  },
+  {
+   "covariavel": "vara_10672",
+   "p": 9.895538857526031e-06
+  },
+  {
+   "covariavel": "vara_10673",
+   "p": 1.067581602364393e-17
+  },
+  {
+   "covariavel": "vara_10674",
+   "p": 1.5330795904482104e-12
+  },
+  {
+   "covariavel": "vara_10675",
+   "p": 7.329919584428164e-06
+  },
+  {
+   "covariavel": "vara_87759",
+   "p": 0.001177797543939003
+  },
+  {
+   "covariavel": "vara_87760",
+   "p": 6.253767357974414e-10
+  }
+ ],
+ "validacao_temporal": {
+  "treino": {
+   "ate": 2021,
+   "n": 20684,
+   "eventos": 18862
+  },
+  "teste": {
+   "de": 2022,
+   "n": 17840,
+   "eventos": 11635
+  },
+  "covariaveis_fora_do_treino": [
+   "vara_87759",
+   "vara_87760"
+  ],
+  "concordance_index": {
+   "treino": 0.5732,
+   "teste": 0.5653
+  },
+  "brier_integrado": {
+   "cox": 0.1956,
+   "kaplan_meier": 0.2038,
+   "horizonte_meses": 36
+  },
+  "calibracao": [
+   {
+    "horizonte_meses": 12,
+    "grupo": 1,
+    "n": 6621,
+    "previsto": 0.342,
+    "observado": 0.217
+   },
+   {
+    "horizonte_meses": 12,
+    "grupo": 2,
+    "n": 2103,
+    "previsto": 0.403,
+    "observado": 0.209
+   },
+   {
+    "horizonte_meses": 12,
+    "grupo": 3,
+    "n": 1993,
+    "previsto": 0.429,
+    "observado": 0.246
+   },
+   {
+    "horizonte_meses": 12,
+    "grupo": 4,
+    "n": 2332,
+    "previsto": 0.452,
+    "observado": 0.229
+   },
+   {
+    "horizonte_meses": 12,
+    "grupo": 5,
+    "n": 2083,
+    "previsto": 0.463,
+    "observado": 0.342
+   },
+   {
+    "horizonte_meses": 12,
+    "grupo": 6,
+    "n": 1885,
+    "previsto": 0.504,
+    "observado": 0.419
+   },
+   {
+    "horizonte_meses": 12,
+    "grupo": 7,
+    "n": 823,
+    "previsto": 0.727,
+    "observado": 0.752
+   },
+   {
+    "horizonte_meses": 24,
+    "grupo": 1,
+    "n": 6621,
+    "previsto": 0.596,
+    "observado": 0.467
+   },
+   {
+    "horizonte_meses": 24,
+    "grupo": 2,
+    "n": 2103,
+    "previsto": 0.673,
+    "observado": 0.481
+   },
+   {
+    "horizonte_meses": 24,
+    "grupo": 3,
+    "n": 1993,
+    "previsto": 0.703,
+    "observado": 0.488
+   },
+   {
+    "horizonte_meses": 24,
+    "grupo": 4,
+    "n": 2332,
+    "previsto": 0.728,
+    "observado": 0.445
+   },
+   {
+    "horizonte_meses": 24,
+    "grupo": 5,
+    "n": 2083,
+    "previsto": 0.739,
+    "observado": 0.545
+   },
+   {
+    "horizonte_meses": 24,
+    "grupo": 6,
+    "n": 1885,
+    "previsto": 0.781,
+    "observado": 0.583
+   },
+   {
+    "horizonte_meses": 24,
+    "grupo": 7,
+    "n": 823,
+    "previsto": 0.928,
+    "observado": 0.849
+   }
+  ]
+ }
+}
