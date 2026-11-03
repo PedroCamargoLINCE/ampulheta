@@ -17,6 +17,7 @@ import {
   TODAS,
   aviso,
   botao,
+  cartaoProbabilidade,
   cobertura,
   comoCalculamos,
   criarBancada,
@@ -273,29 +274,18 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
     const resumos: string[] = [];
     for (const h of HORIZONTES) {
       const c = cartaoPara(curva, corte, e.t, h);
-      const item = html('div', 'probabilidade');
-      item.appendChild(html('dt', '', `Nos próximos ${h} meses`));
-      const dd = document.createElement('dd');
       if (c.tipo === 'ok') {
-        dd.append(html('span', 'valor', porcentagem(c.valor)), html('span', 'rotulo-valor', 'probabilidade estimada de sentença'));
-        dd.appendChild(
-          html(
-            'span',
-            'ic',
-            c.ic
-              ? `Intervalo de confiança de 95%: de ${porcentagem(c.ic.inferior)} a ${porcentagem(c.ic.superior)}`
-              : c.temGreenwood
-                ? 'Intervalo de confiança não calculável neste ponto'
-                : 'Sem intervalo de confiança publicado para esta curva',
-          ),
-        );
+        const intervalo = c.ic
+          ? `Intervalo de confiança de 95%: de ${porcentagem(c.ic.inferior)} a ${porcentagem(c.ic.superior)}`
+          : c.temGreenwood
+            ? 'Intervalo de confiança não calculável neste ponto'
+            : 'Sem intervalo de confiança publicado para esta curva';
+        lista.appendChild(cartaoProbabilidade(h, { tipo: 'ok', valor: porcentagem(c.valor), intervalo }));
         resumos.push(`${porcentagem(c.valor)} em ${h} meses`);
       } else {
-        dd.append(html('span', 'valor indisponivel', 'Sem estimativa'), html('span', 'ic', c.motivo));
+        lista.appendChild(cartaoProbabilidade(h, { tipo: 'sem-estimativa', motivo: c.motivo }));
         resumos.push(`sem estimativa em ${h} meses`);
       }
-      item.appendChild(dd);
-      lista.appendChild(item);
     }
     folha.appendChild(lista);
     folha.appendChild(

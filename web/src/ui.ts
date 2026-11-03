@@ -153,6 +153,28 @@ export function aviso(tipo: TipoAviso, texto: string, proximoPasso?: string): HT
   return caixa;
 }
 
+export type ConteudoCartao =
+  | { tipo: 'ok'; valor: string; intervalo: string }
+  | { tipo: 'sem-estimativa'; motivo: string };
+
+/** Resumo de estimativa: horizonte, probabilidade e intervalo, ou o motivo de não haver número. */
+export function cartaoProbabilidade(meses: number, c: ConteudoCartao): HTMLElement {
+  const item = html('div', 'probabilidade');
+  item.appendChild(html('dt', '', `Nos próximos ${meses} meses`));
+  const dd = document.createElement('dd');
+  if (c.tipo === 'ok') {
+    dd.append(
+      html('span', 'valor', c.valor),
+      html('span', 'rotulo-valor', 'probabilidade estimada de sentença'),
+      html('span', 'ic', c.intervalo),
+    );
+  } else {
+    dd.append(html('span', 'valor indisponivel', 'Sem estimativa'), html('span', 'ic', c.motivo));
+  }
+  item.appendChild(dd);
+  return item;
+}
+
 export function opcoesVara(doc: Contrato, instrucao?: string): Opcao[] {
   return [
     ...(instrucao ? [{ valor: NADA, texto: instrucao }] : []),

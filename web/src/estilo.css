@@ -630,12 +630,6 @@ input[type='checkbox'][aria-invalid='true'] {
   max-width: 60ch;
 }
 
-/* Resultado da seleção anterior: continua legível, mas marcado. */
-.folha.desatualizado .probabilidades,
-.folha.desatualizado .prazos,
-.folha.desatualizado .alvo-grafico {
-  opacity: 0.6;
-}
 
 /* Meu processo: três números que se comparam, partidos por filetes. */
 .probabilidades {
@@ -698,6 +692,25 @@ input[type='checkbox'][aria-invalid='true'] {
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
   max-width: 70ch;
+}
+
+/* Cartões empilham quando a própria folha é estreita, em qualquer janela. */
+.folha {
+  container-type: inline-size;
+}
+@container (max-width: 36rem) {
+  .probabilidades {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .probabilidade {
+    padding: var(--space-sm) 0;
+    border-left: 0;
+    border-top: var(--rule-hair) solid var(--color-border);
+  }
+  .probabilidade:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
 }
 
 /* Avisos: motivo, impacto e próximo passo. O tipo vem escrito; a cor só reforça. */
@@ -826,18 +839,6 @@ input[type='checkbox'][aria-invalid='true'] {
   .folha {
     padding: var(--space-md);
   }
-  .probabilidades {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .probabilidade {
-    padding: var(--space-sm) 0;
-    border-left: 0;
-    border-top: var(--rule-hair) solid var(--color-border);
-  }
-  .probabilidade:first-child {
-    padding-top: 0;
-    border-top: 0;
-  }
   .colofao {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -871,11 +872,6 @@ input[type='checkbox'][aria-invalid='true'] {
   .folha {
     padding: 0;
   }
-  .folha.desatualizado .probabilidades,
-  .folha.desatualizado .prazos,
-  .folha.desatualizado .alvo-grafico {
-    opacity: 1;
-  }
   .probabilidades,
   .grafico,
   .aviso {
@@ -884,4 +880,44 @@ input[type='checkbox'][aria-invalid='true'] {
   main {
     padding-block: var(--space-md);
   }
+}
+
+.botao:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Página interna de componentes (componentes.html, só em desenvolvimento). */
+.demo-foco {
+  outline: 2px solid var(--color-focus) !important;
+  outline-offset: 2px;
+}
+.catalogo {
+  display: grid;
+  gap: var(--space-3xl);
+  padding-block: var(--space-2xl) var(--space-3xl);
+}
+.catalogo-secao {
+  display: grid;
+  gap: var(--space-md);
+}
+.catalogo-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: var(--space-lg);
+  align-items: start;
+}
+.catalogo-exemplo > .botao {
+  justify-self: start;
+}
+.catalogo-exemplo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-xs);
+  min-width: 0;
+}
+.catalogo-rotulo {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
 }

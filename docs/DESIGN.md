@@ -187,6 +187,16 @@ Não atribuir toda ausência de curva a amostra pequena se o contrato não infor
 5. Criar uma página interna de componentes com estados normal, foco, erro, indisponível e carregamento.
 6. Atualizar este documento quando decisões intencionais mudarem.
 
+### Decisões tomadas na implementação (novembro de 2026)
+
+- Ao editar campos depois de calcular, o resultado anterior continua visível, com aviso “Este resultado é da seleção anterior” no topo da folha (também no impresso), até novo cálculo.
+- O link guarda o recorte calculado: `#estimar?vara=…&classe=…&t=…` e `#explorar?vara=…&classe=…&vara2=…&classe2=…`. `#meu-processo` continua abrindo Estimar tempo.
+- Exemplo só por ação explícita (“Preencher um exemplo”), que preenche os campos sem calcular.
+- O tempo pode vir da data do ajuizamento, convertida em meses completos até hoje.
+- Estimativa instável: com `em_risco` (contrato 1.2.0), não há número onde menos de 10 processos seguem em acompanhamento em *t* ou *t + h*; Explorar dados corta a curva no mesmo ponto (`web/src/base.ts`). Sem `em_risco`, S(*t*) < 5% vira aviso de instabilidade.
+- Os cartões de probabilidade empilham conforme a largura da folha (container query), não da janela.
+- A página interna de componentes é `web/componentes.html`, servida só em `npm run dev`.
+
 Manter `sobrevivencia.ts` e o contrato de dados separados da apresentação. Executar os testes existentes e o build após alterações; mudanças no significado estatístico exigem revisão específica.
 
 Uma ferramenta como Impeccable deve ler este documento e o código atual, propor mudanças delimitadas e verificar o resultado no navegador. Não deve inventar dados, remover incerteza para simplificar layout nem migrar a stack sem justificativa de produto.
