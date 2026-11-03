@@ -66,3 +66,18 @@ aparece antes da sentença. No snapshot 2026-10-29 isso acontecia em 433 process
 364 deles havia sentença de mérito depois, em mediana 430 dias mais tarde. O evento passa a
 ser o primeiro movimento da família Julgamento fora dessa lista (`evento_sentenca.excluir_codigos`
 no config). Um processo cuja única decisão da família é de embargos fica censurado.
+
+## ADR-011 — Marcos além da sentença e regra para transições (2026-11-03)
+O preparo passa a registrar, por processo, a data do primeiro movimento de cada marco listado em
+`marcos` no config: audiência (TPU 970 e 12624), trânsito em julgado (848), início do cumprimento
+de sentença (11385) e extinção da execução (196). A sentença continua definida pelo ADR-010. No
+snapshot 2026-10-29: trânsito em 13.030 processos (ordem coerente, 15 casos antes da sentença),
+início do cumprimento em 6.281, extinção da execução em 1.626, audiência em 2.991 (7,8%; a vara
+cível de Sorocaba quase não registra audiência). Baixa definitiva (22) fica fora: aparece em 4.307
+processos, 4.047 deles sem trânsito registrado, sinal de subnotificação que enviesaria a curva.
+"Citação" não existe no que o TJSP envia e o complemento da "Conclusão" raramente diz "para
+julgamento"; ambos descartados. Regra para as curvas por transição: o destino tem que ser um marco
+que quase todo processo alcança (sentença, trânsito em julgado, extinção da execução para quem
+iniciou o cumprimento); a origem pode ser qualquer marco. Transições publicadas: ajuizamento →
+sentença, ajuizamento → trânsito, sentença → trânsito, audiência → sentença, início do
+cumprimento → extinção da execução.

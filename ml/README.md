@@ -38,7 +38,8 @@ processo); uma rodada final sem `--vara` confere cada vara e fecha o snapshot.
 - `processos.parquet`, uma linha por processo: vara, classe, assunto, `data_ajuizamento`,
   `data_evento` (primeiro movimento da família Julgamento), `data_censura` (= snapshot),
   `tempo_dias`, `evento` (1 sentenciado, 0 censurado), `tipo_sentenca` e `com_merito`
-  (ramo da TPU), `n_movimentos`, `flags`.
+  (ramo da TPU), `n_movimentos`, `flags`, e uma coluna `data_<marco>` por marco do config
+  (audiência, trânsito em julgado, início do cumprimento, extinção da execução; ADR-011).
 - `eventos.parquet`, uma linha por movimento, para modelar outros eventos depois.
 - `relatorio_qualidade.md`, gerado: contagem de cada regra de limpeza, censura por vara,
   classe e ano, distribuição dos tipos de sentença.
