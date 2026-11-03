@@ -1,0 +1,330 @@
+# Recorte de São Paulo (roteiro, fase B): mesmas classes, janela e campos do config.yaml de Sorocaba;
+# varas cíveis descobertas na API em 2026-11-03 por agregação sobre orgaoJulgador.codigoMunicipioIBGE = 3550308
+# (nomes sem o prefixo 'Juízo Titular'; juizados especiais e varas não cíveis ficam de fora; entram também 14 códigos com nome antigo, tipo '43 CIVEL DE CENTRAL'). Brutos em raw/sao-paulo/.
+tribunal: tjsp
+grau: G1
+api:
+  url: https://api-publica.datajud.cnj.jus.br/api_publica_{tribunal}/_search
+  chave_env: DATAJUD_API_KEY
+  tamanho_pagina: 300
+  campos:
+  - numeroProcesso
+  - classe
+  - orgaoJulgador
+  - dataAjuizamento
+  - assuntos
+  - sistema
+  - grau
+  - tribunal
+  - formato
+  - nivelSigilo
+  - dataHoraUltimaAtualizacao
+  - '@timestamp'
+  - movimentos.codigo
+  - movimentos.nome
+  - movimentos.dataHora
+  req_por_minuto: 120
+  timeout_s: 150
+classes:
+- codigo: 7
+  nome: Procedimento Comum Cível
+- codigo: 93
+  nome: Despejo por Falta de Pagamento
+- codigo: 94
+  nome: Despejo por Falta de Pagamento Cumulado Com Cobrança
+varas:
+- codigo: 10382
+  nome: 1ª Vara Cível - Regional I - Santana
+- codigo: 10383
+  nome: 2ª Vara Cível - Regional I - Santana
+- codigo: 10384
+  nome: 3ª Vara Cível - Regional I - Santana
+- codigo: 10385
+  nome: 4ª Vara Cível - Regional I - Santana
+- codigo: 10386
+  nome: 5ª Vara Cível - Regional I - Santana
+- codigo: 10387
+  nome: 6ª Vara Cível - Regional I - Santana
+- codigo: 10388
+  nome: 7ª Vara Cível - Regional I - Santana
+- codigo: 10389
+  nome: 8ª Vara Cível - Regional I - Santana
+- codigo: 10390
+  nome: 9ª Vara Cível - Regional I - Santana
+- codigo: 10401
+  nome: 1ª Vara Cível - Regional II - Santo Amaro
+- codigo: 10402
+  nome: 2ª Vara Cível - Regional II - Santo Amaro
+- codigo: 10403
+  nome: 3ª Vara Cível - Regional II - Santo Amaro
+- codigo: 10404
+  nome: 4ª Vara Cível - Regional II - Santo Amaro
+- codigo: 10405
+  nome: 5ª Vara Cível - Regional II - Santo Amaro
+- codigo: 10406
+  nome: 6ª Vara Cível - Regional II - Santo Amaro
+- codigo: 10407
+  nome: 7ª Vara Cível - Regional II - Santo Amaro
+- codigo: 10408
+  nome: 8ª Vara Cível - Regional II - Santo Amaro
+- codigo: 10414
+  nome: 16ª Vara Cível - Regional II - Santo Amaro
+- codigo: 10418
+  nome: 1ª Vara Cível - Regional III - Jabaquara
+- codigo: 10419
+  nome: 02 CIVEL DE JABAQUARA
+- codigo: 10420
+  nome: 3ª Vara Cível - Regional III - Jabaquara
+- codigo: 10421
+  nome: 4ª Vara Cível - Regional III - Jabaquara
+- codigo: 10422
+  nome: 5ª Vara Cível - Regional III - Jabaquara
+- codigo: 10429
+  nome: 1ª Vara Cível - Regional IV - Lapa
+- codigo: 10430
+  nome: 2ª Vara Cível - Regional IV - Lapa
+- codigo: 10431
+  nome: 3ª Vara Cível - Regional IV - Lapa
+- codigo: 10432
+  nome: 4ª Vara Cível - Regional IV - Lapa
+- codigo: 10438
+  nome: 1ª Vara Cível - Regional V - São Miguel Paulista
+- codigo: 10439
+  nome: 2ª Vara Cível - Regional V - São Miguel Paulista
+- codigo: 10440
+  nome: 3ª Vara Cível - Regional V - São Miguel Paulista
+- codigo: 10441
+  nome: 4ª Vara Cível - Regional V - São Miguel Paulista
+- codigo: 10448
+  nome: 1ª Vara Cível - Regional VI - Penha de França
+- codigo: 10449
+  nome: 2ª Vara Cível - Regional VI - Penha de França
+- codigo: 10450
+  nome: 3ª Vara Cível - Regional VI - Penha de França
+- codigo: 10457
+  nome: 1ª Vara Cível - Regional VII - Itaquera
+- codigo: 10458
+  nome: 2ª Vara Cível - Regional VII - Itaquera
+- codigo: 10459
+  nome: 3ª Vara Cível - Regional VII - Itaquera
+- codigo: 10460
+  nome: 4ª Vara Cível - Regional VII - Itaquera
+- codigo: 10465
+  nome: 01 CIVEL DE TATUAPE
+- codigo: 10466
+  nome: 2ª Vara Cível - Regional VIII - Tatuapé
+- codigo: 10467
+  nome: 03 CIVEL DE TATUAPE
+- codigo: 10468
+  nome: 4ª Vara Cível - Regional VIII - Tatuapé
+- codigo: 10474
+  nome: 1ª Vara Cível - Regional IX - Vila Prudente
+- codigo: 10475
+  nome: 2ª Vara Cível - Regional IX - Vila Prudente
+- codigo: 10476
+  nome: 3ª Vara Cível - Regional IX - Vila Prudente
+- codigo: 10480
+  nome: 1ª Vara Cível - Regional X - Ipiranga
+- codigo: 10481
+  nome: 02 CIVEL DE IPIRANGA
+- codigo: 10482
+  nome: 3ª Vara Cível - Regional X - Ipiranga
+- codigo: 10486
+  nome: 1ª Vara Cível - Regional XI - Pinheiros
+- codigo: 10487
+  nome: 2ª Vara Cível - Regional XI - Pinheiros
+- codigo: 10488
+  nome: 3ª Vara Cível - Regional XI - Pinheiros
+- codigo: 10489
+  nome: 4ª Vara Cível - Regional XI - Pinheiros
+- codigo: 10490
+  nome: 5ª Vara Cível - Regional XI - Pinheiros
+- codigo: 10502
+  nome: 1ª Vara Cível - Regional XII - Nossa Senhora do Ó
+- codigo: 10503
+  nome: 2ª Vara Cível - Regional XII - Nossa Senhora do Ó
+- codigo: 10504
+  nome: 3ª Vara Cível - Regional XII - Nossa Senhora do Ó
+- codigo: 10565
+  nome: 1ª Vara Cível - Foro Central Cível
+- codigo: 10566
+  nome: 2ª Vara Cível - Foro Central Cível
+- codigo: 10567
+  nome: 3ª Vara Cível - Foro Central Cível
+- codigo: 10568
+  nome: 4ª Vara Cível - Foro Central Cível
+- codigo: 10569
+  nome: 5ª Vara Cível - Foro Central Cível
+- codigo: 10570
+  nome: 6ª Vara Cível - Foro Central Cível
+- codigo: 10571
+  nome: 7ª Vara Cível - Foro Central Cível
+- codigo: 10572
+  nome: 8ª Vara Cível - Foro Central Cível
+- codigo: 10573
+  nome: 09 CIVEL DE CENTRAL
+- codigo: 10574
+  nome: 10 CIVEL DE CENTRAL
+- codigo: 10575
+  nome: 11ª Vara Cível - Foro Central Cível
+- codigo: 10576
+  nome: 12ª Vara Cível - Foro Central Cível
+- codigo: 10577
+  nome: 13ª Vara Cível - Foro Central Cível
+- codigo: 10578
+  nome: 14ª Vara Cível - Foro Central Cível
+- codigo: 10579
+  nome: 15ª Vara Cível - Foro Central Cível
+- codigo: 10580
+  nome: 16 CIVEL DE CENTRAL
+- codigo: 10581
+  nome: 17 CIVEL DE CENTRAL
+- codigo: 10582
+  nome: 18ª Vara Cível - Foro Central Cível
+- codigo: 10583
+  nome: 19ª Vara Cível - Foro Central Cível
+- codigo: 10584
+  nome: 20ª Vara Cível - Foro Central Cível
+- codigo: 10585
+  nome: 21ª Vara Cível - Foro Central Cível
+- codigo: 10586
+  nome: 22ª Vara Cível - Foro Central Cível
+- codigo: 10587
+  nome: 23ª Vara Cível - Foro Central Cível
+- codigo: 10588
+  nome: 24ª Vara Cível - Foro Central Cível
+- codigo: 10589
+  nome: 25ª Vara Cível - Foro Central Cível
+- codigo: 10590
+  nome: 26ª Vara Cível - Foro Central Cível
+- codigo: 10591
+  nome: 27ª Vara Cível - Foro Central Cível
+- codigo: 10592
+  nome: 28 CIVEL DE CENTRAL
+- codigo: 10593
+  nome: 29ª Vara Cível - Foro Central Cível
+- codigo: 10594
+  nome: 30ª Vara Cível - Foro Central Cível
+- codigo: 10595
+  nome: 31ª Vara Cível - Foro Central Cível
+- codigo: 10596
+  nome: 32ª Vara Cível - Foro Central Cível
+- codigo: 10597
+  nome: 33ª Vara Cível - Foro Central Cível
+- codigo: 10598
+  nome: 34ª Vara Cível - Foro Central Cível
+- codigo: 10599
+  nome: 35ª Vara Cível - Foro Central Cível
+- codigo: 10600
+  nome: 36ª Vara Cível - Foro Central Cível
+- codigo: 10601
+  nome: 37ª Vara Cível - Foro Central Cível
+- codigo: 10602
+  nome: 38ª Vara Cível - Foro Central Cível
+- codigo: 10603
+  nome: 39ª Vara Cível - Foro Central Cível
+- codigo: 10604
+  nome: 40ª Vara Cível - Foro Central Cível
+- codigo: 10605
+  nome: 41ª Vara Cível - Foro Central Cível
+- codigo: 10606
+  nome: 42ª Vara Cível - Foro Central Cível
+- codigo: 11690
+  nome: 5ª Vara Cível - Regional VIII - Tatuapé
+- codigo: 16393
+  nome: 43 CIVEL DE CENTRAL
+- codigo: 16394
+  nome: 44ª Vara Cível - Foro Central Cível
+- codigo: 16395
+  nome: 45ª Vara Cível - Foro Central Cível
+- codigo: 17572
+  nome: 1ª Vara Cível - Regional XV - Butantã
+- codigo: 17576
+  nome: 2ª Vara Cível - Regional XV - Butantã
+- codigo: 17582
+  nome: 4ª Vara Cível - Regional XII - Nossa Senhora do Ó
+- codigo: 17583
+  nome: 4ª Vara Cível - Regional IX - Vila Prudente
+- codigo: 17584
+  nome: 4ª Vara Cível - Regional VI - Penha de França
+- codigo: 18231
+  nome: 5ª Vara Cível - Regional VII - Itaquera
+- codigo: 18356
+  nome: 3ª Vara Cível - Regional XV - Butantã
+- codigo: 59213
+  nome: 9ª Vara Cível - Regional II - Santo Amaro
+- codigo: 59215
+  nome: 10ª Vara Cível - Regional II - Santo Amaro
+- codigo: 59217
+  nome: 11ª Vara Cível - Regional II - Santo Amaro
+- codigo: 59219
+  nome: 12ª Vara Cível - Regional II - Santo Amaro
+- codigo: 59220
+  nome: 13 CIVEL DE SANTO AMARO
+- codigo: 59221
+  nome: 14ª Vara Cível - Regional II - Santo Amaro
+- codigo: 74679
+  nome: 6ª Vara Cível - Regional III - Jabaquara
+- codigo: 77115
+  nome: 00ª CJ - CAPITAL - VARA PLANTÃO - CAPITAL CÍVEL
+- codigo: 79442
+  nome: 15ª Vara Cível - Regional II - Santo Amaro
+- codigo: 84171
+  nome: 5ª Vara Cível - Regional XII - Nossa Senhora do Ó
+- codigo: 84172
+  nome: 6ª Vara Cível - Regional XII - Nossa Senhora do Ó
+- codigo: 84173
+  nome: 7ª Vara Cível - Regional XII - Nossa Senhora do Ó
+- codigo: 85277
+  nome: Juízo Titular I - Centro Jud. de Solução de Conflitos e Cidadania - Foro Central Cível
+- codigo: 91020
+  nome: Juízo Titular I - 3ª Vara Empresarial e Conflitos de Arbitragem - Foro Central Cível
+- codigo: 92773
+  nome: 5ª Vara Cível - Regional V - São Miguel Paulista
+municipio: São Paulo
+ajuizamento:
+  de: '2018-01-01'
+  ate: '2024-12-31'
+evento_sentenca:
+  familia_tpu: 193
+  tabela: tpu_julgamento.csv
+  excluir_codigos:
+  - 198
+  - 200
+  - 871
+  - 15408
+recurso:
+  grau: G2
+  lote: 100
+marcos:
+- nome: audiencia
+  rotulo: Audiência
+  codigos:
+  - 970
+  - 12624
+- nome: transito_em_julgado
+  rotulo: Trânsito em julgado
+  codigos:
+  - 848
+  com_recurso: true
+- nome: inicio_cumprimento
+  rotulo: Início do cumprimento de sentença
+  codigos:
+  - 11385
+- nome: extincao_execucao
+  rotulo: Extinção da execução
+  codigos:
+  - 196
+transicoes:
+- - ajuizamento
+  - sentenca
+- - audiencia
+  - sentenca
+preparo:
+  sistemas_sem_julgamento:
+  - Projudi
+saida:
+  raw: raw/sao-paulo
+  data: ../data
+  publicado: ../data/publicado
+  validador: ../contracts/validar.py

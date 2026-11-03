@@ -1,0 +1,112 @@
+# Recorte de Campinas (roteiro, fase B): mesmas classes, janela e campos do config.yaml de Sorocaba;
+# varas cíveis descobertas na API em 2026-11-03 por agregação sobre orgaoJulgador.codigoMunicipioIBGE = 3509502
+# (nomes sem o prefixo 'Juízo Titular'; juizados especiais e varas não cíveis ficam de fora). Brutos em raw/campinas/.
+tribunal: tjsp
+grau: G1
+api:
+  url: https://api-publica.datajud.cnj.jus.br/api_publica_{tribunal}/_search
+  chave_env: DATAJUD_API_KEY
+  tamanho_pagina: 300
+  campos:
+  - numeroProcesso
+  - classe
+  - orgaoJulgador
+  - dataAjuizamento
+  - assuntos
+  - sistema
+  - grau
+  - tribunal
+  - formato
+  - nivelSigilo
+  - dataHoraUltimaAtualizacao
+  - '@timestamp'
+  - movimentos.codigo
+  - movimentos.nome
+  - movimentos.dataHora
+  req_por_minuto: 120
+  timeout_s: 150
+classes:
+- codigo: 7
+  nome: Procedimento Comum Cível
+- codigo: 93
+  nome: Despejo por Falta de Pagamento
+- codigo: 94
+  nome: Despejo por Falta de Pagamento Cumulado Com Cobrança
+varas:
+- codigo: 9449
+  nome: 1ª Vara Civel- Regional de Vila Mimosa
+- codigo: 9450
+  nome: 2ª Vara Civel - Regional de Vila Mimosa
+- codigo: 9451
+  nome: 3ª Vara Civel - Regional de Vila Mimosa
+- codigo: 9452
+  nome: 1ª Vara Cível da Comarca de Campinas
+- codigo: 9453
+  nome: 2ª Vara Cível da Comarca de Campinas
+- codigo: 9454
+  nome: 3ª Vara Cível da Comarca de Campinas
+- codigo: 9455
+  nome: 4ª Vara Cível da Comarca de Campinas
+- codigo: 9456
+  nome: 5ª Vara Cível da Comarca de Campinas
+- codigo: 9458
+  nome: 7ª Vara Cível da Comarca de Campinas
+- codigo: 9459
+  nome: 8ª Vara Cível da Comarca de Campinas
+- codigo: 9460
+  nome: 9ª Vara Cível da Comarca de Campinas
+- codigo: 9461
+  nome: 10ª Vara Cível da Comarca de Campinas
+- codigo: 86207
+  nome: 11ª Vara Cível da Comarca de Campinas
+- codigo: 86208
+  nome: 12ª Vara Cível da Comarca de Campinas
+- codigo: 92331
+  nome: 4ª Vara Civel - Regional de Vila Mimosa
+municipio: Campinas
+ajuizamento:
+  de: '2018-01-01'
+  ate: '2024-12-31'
+evento_sentenca:
+  familia_tpu: 193
+  tabela: tpu_julgamento.csv
+  excluir_codigos:
+  - 198
+  - 200
+  - 871
+  - 15408
+recurso:
+  grau: G2
+  lote: 100
+marcos:
+- nome: audiencia
+  rotulo: Audiência
+  codigos:
+  - 970
+  - 12624
+- nome: transito_em_julgado
+  rotulo: Trânsito em julgado
+  codigos:
+  - 848
+  com_recurso: true
+- nome: inicio_cumprimento
+  rotulo: Início do cumprimento de sentença
+  codigos:
+  - 11385
+- nome: extincao_execucao
+  rotulo: Extinção da execução
+  codigos:
+  - 196
+transicoes:
+- - ajuizamento
+  - sentenca
+- - audiencia
+  - sentenca
+preparo:
+  sistemas_sem_julgamento:
+  - Projudi
+saida:
+  raw: raw/campinas
+  data: ../data
+  publicado: ../data/publicado
+  validador: ../contracts/validar.py
