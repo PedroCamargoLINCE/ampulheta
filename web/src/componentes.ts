@@ -8,7 +8,6 @@ import {
   botao,
   cartaoProbabilidade,
   comoCalculamos,
-  criarConfirmacao,
   criarEntrada,
   criarSelect,
   html,
@@ -66,16 +65,13 @@ erro.controle.value = '12,5';
 erro.erro('Informe um número inteiro de meses, sem vírgula. Por exemplo: 18.');
 const desabilitado = criarSelect('c-desab', 'Classe processual', [{ valor: '', texto: 'Escolha a classe' }], '');
 desabilitado.controle.disabled = true;
-const confirmacaoErro = criarConfirmacao('c-conf', 'O processo ainda não teve sentença de 1º grau');
-confirmacaoErro.erro('A estimativa só vale para processos ainda sem sentença de 1º grau. Marque para continuar.');
 secao(
   'Campo',
-  'Rótulo permanente, ajuda vinculada, valor, erro textual e estado desabilitado.',
+  'Rótulo permanente, ajuda atrás de “?”, valor, erro textual e estado desabilitado.',
   ['Normal', normal.campo],
   ['Foco', foco.campo],
   ['Erro', erro.campo],
   ['Desabilitado', desabilitado.campo],
-  ['Confirmação com erro', confirmacaoErro.campo],
 );
 
 // Botão
@@ -108,11 +104,6 @@ const lista = (...itens: HTMLElement[]) => {
   dl.append(...itens);
   return dl;
 };
-const desatualizado = emFolha(
-  aviso('info', 'Este resultado é da seleção anterior (exemplo, tramitando há 12 meses).', 'Clique em “Calcular estimativa” para atualizar.'),
-  lista(cartaoProbabilidade(3, { tipo: 'ok', valor: '10%', intervalo: 'Intervalo de confiança de 95%: de 8% a 12%' })),
-);
-desatualizado.classList.add('desatualizado');
 secao(
   'Resumo de estimativa',
   'Horizonte, probabilidade, intervalo disponível e contexto. Sem número quando não há base.',
@@ -120,13 +111,12 @@ secao(
     'Normal e indisponível',
     emFolha(
       lista(
-        cartaoProbabilidade(3, { tipo: 'ok', valor: '10%', intervalo: 'Intervalo de confiança de 95%: de 8% a 12%' }),
-        cartaoProbabilidade(6, { tipo: 'ok', valor: '<1%', intervalo: 'Intervalo de confiança não calculável neste ponto' }),
-        cartaoProbabilidade(12, { tipo: 'sem-estimativa', motivo: 'Menos de 10 processos seguiam em acompanhamento aos 24 meses.' }),
+        cartaoProbabilidade(3, { tipo: 'ok', valor: '10%', intervalo: 'entre 8% e 12%' }),
+        cartaoProbabilidade(6, { tipo: 'ok', valor: '<1%', intervalo: null }),
+        cartaoProbabilidade(12, { tipo: 'sem-estimativa', motivo: 'poucos processos acompanhados' }),
       ),
     ),
   ],
-  ['Resultado da seleção anterior', desatualizado],
 );
 
 // Estados de carregamento e vazio

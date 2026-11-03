@@ -39,6 +39,8 @@ export interface OpcoesGrafico {
   rotuloMes?: (m: number) => string;
   /** Nota curta sob a legenda (ex.: onde a curva termina e por quê). */
   nota?: string;
+  /** Mais baixo, para ficar abaixo dos números sem roubar a cena. */
+  compacto?: boolean;
 }
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -155,7 +157,9 @@ function desenharNaLargura(
   LARGURA: number,
 ): void {
   alvo.replaceChildren();
-  const ALTURA = Math.round(Math.min(420, Math.max(240, LARGURA * 0.52)));
+  const ALTURA = opcoes.compacto
+    ? Math.round(Math.min(300, Math.max(200, LARGURA * 0.36)))
+    : Math.round(Math.min(420, Math.max(240, LARGURA * 0.52)));
   const ate = limiteX(series);
   const larguraUtil = LARGURA - M.esq - M.dir;
   const alturaUtil = ALTURA - M.topo - M.base;
@@ -263,7 +267,8 @@ function desenharNaLargura(
   const saida = document.createElement('p');
   saida.className = 'leitura';
   saida.setAttribute('aria-live', 'polite');
-  saida.textContent = 'Toque, passe o mouse ou use as setas sobre o gráfico para ler os valores mês a mês.';
+  // Vazia até a pessoa tocar, passar o mouse ou usar as setas; a instrução está no rótulo acessível.
+  saida.textContent = '';
   figura.appendChild(saida);
 
   let mesAtual = 0;

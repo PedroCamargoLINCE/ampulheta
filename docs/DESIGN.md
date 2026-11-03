@@ -189,10 +189,13 @@ Não atribuir toda ausência de curva a amostra pequena se o contrato não infor
 
 ### Decisões tomadas na implementação (novembro de 2026)
 
-- Ao editar campos depois de calcular, o resultado anterior continua visível, com aviso “Este resultado é da seleção anterior” no topo da folha (também no impresso), até novo cálculo.
-- O link guarda o recorte calculado: `#estimar?vara=…&classe=…&t=…` e `#explorar?vara=…&classe=…&vara2=…&classe2=…`. `#meu-processo` continua abrindo Estimar tempo.
-- Exemplo só por ação explícita (“Preencher um exemplo”), que preenche os campos sem calcular.
-- O tempo pode vir da data do ajuizamento, convertida em meses completos até hoje.
+- **Resultado ao vivo (substitui o botão “Calcular estimativa” e a marcação de resultado anterior da seção 4).** O resultado aparece quando vara, classe e tempo estão informados e muda na hora a cada ajuste, então nunca há número de uma seleção anterior na tela. Nada vem preenchido: o tempo começa vazio e o controle deslizante fica com o polegar vazado até a pessoa escolher.
+- **Tempo** em controle deslizante com campo numérico ao lado; a data do ajuizamento fica atrás de “Sei a data do ajuizamento” e é convertida em meses completos até hoje.
+- **Condição “ainda sem sentença”** vai no próprio rótulo (“Há quanto tempo tramita sem sentença”) e na ajuda, sem caixa de confirmação.
+- **Menos texto na tela:** ajuda de cada campo e explicação do intervalo ficam atrás de um botão “?”; a folha mostra recorte e data numa linha, os três números com o intervalo em letra menor, uma frase de prazo, o gráfico e uma linha de limitações. Base, prazo de 80%, corte por base pequena e metodologia ficam em “Detalhes e metodologia”.
+- No celular, um resumo ao vivo dos três números aparece logo abaixo do tempo, porque o resultado completo fica abaixo do formulário.
+- Exemplo só por ação explícita (“Ver um exemplo”).
+- O link guarda o recorte: `#estimar?vara=…&classe=…&t=…` e `#explorar?vara=…&classe=…&vara2=…&classe2=…`. `#meu-processo` continua abrindo Estimar tempo. Dentro de um quadro (prévias), “Copiar link” mostra o endereço num campo, porque o navegador bloqueia a área de transferência ali.
 - Estimativa instável: com `em_risco` (contrato 1.2.0), não há número onde menos de 10 processos seguem em acompanhamento em *t* ou *t + h*; Explorar dados corta a curva no mesmo ponto (`web/src/base.ts`). Sem `em_risco`, S(*t*) < 5% vira aviso de instabilidade.
 - Os cartões de probabilidade empilham conforme a largura da folha (container query), não da janela.
 - A página interna de componentes é `web/componentes.html`, servida só em `npm run dev`.

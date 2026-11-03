@@ -55,8 +55,8 @@ function serie(doc: Contrato, escolha: Escolha, curva: Curva, cor: 'a' | 'b'): S
 
 /** Prazo da tabela: valor, não atingido ou fora do trecho com base, sempre por extenso. */
 function prazo(valor: number | null, corte: number | null): string {
-  if (valor === null) return 'Não atingido no período observado';
-  if (corte === null || valor > corte) return 'Não estimado: base pequena nesse trecho';
+  if (valor === null) return 'não atingido';
+  if (corte === null || valor > corte) return 'base pequena';
   return decimal.format(valor);
 }
 
@@ -92,12 +92,11 @@ function tabelaPrazos(doc: Contrato, itens: Item[]): HTMLTableElement {
     }
   };
   const corte = (c: Curva) => mesComBase(doc.grade_meses, c);
-  linha('Mediana', 'metade dos processos teve sentença até aqui', (c) => prazo(c.quantis_meses.p50, corte(c)));
-  linha('80%', 'quatro em cada cinco tiveram sentença até aqui', (c) => prazo(c.quantis_meses.p80, corte(c)));
-  linha('90%', 'nove em cada dez tiveram sentença até aqui', (c) => prazo(c.quantis_meses.p90, corte(c)));
+  linha('Metade com sentença até', '', (c) => prazo(c.quantis_meses.p50, corte(c)));
+  linha('80% com sentença até', '', (c) => prazo(c.quantis_meses.p80, corte(c)));
+  linha('90% com sentença até', '', (c) => prazo(c.quantis_meses.p90, corte(c)));
   linha('Processos na base', '', (c) => inteiro(c.n));
-  linha('Com sentença observada', '', (c) => inteiro(c.eventos));
-  linha('Sem sentença até o fim do acompanhamento', '', (c) => `${inteiro(c.censurados)} (${porcentagem(c.censurados / c.n)})`);
+  linha('Sem sentença observada', '', (c) => `${inteiro(c.censurados)} (${porcentagem(c.censurados / c.n)})`);
   return tabela;
 }
 
@@ -105,13 +104,8 @@ export function montarExplorar(painel: HTMLElement, doc: Contrato): { aplicar: (
   const { controles, folha } = criarBancada(painel);
 
   controles.append(
-    html('h2', '', 'Processos ainda sem sentença ao longo do tempo'),
-    html(
-      'p',
-      'intro',
-      'A curva mostra, mês a mês desde o ajuizamento, a proporção de processos do recorte que ainda não tinham sentença. ' +
-        'A faixa em volta é o intervalo de confiança de 95%.',
-    ),
+    html('h2', '', 'Quanto tempo leva até a sentença?'),
+    html('p', 'intro', 'Cada curva mostra quantos processos ainda estavam sem sentença, mês a mês desde o ajuizamento.'),
   );
 
   const form = html('form', 'controles') as HTMLFormElement;
@@ -150,12 +144,7 @@ export function montarExplorar(painel: HTMLElement, doc: Contrato): { aplicar: (
 
   const cabeca = html('div', 'folha-cabeca');
   const titulo = html('h3', '');
-  const amostras = html('div', 'folha-amostras');
-  cabeca.append(
-    titulo,
-    html('p', 'citacao-resultado', `${doc.tribunal} · ${grau(doc)} · dados até ${dataIso(doc.snapshot)}`),
-    amostras,
-  );
+  cabeca.append(titulo, html('p', 'citacao-resultado', `${doc.tribunal} · ${grau(doc)} · dados até ${dataIso(doc.snapshot)}`));
   const avisos = html('div', 'avisos');
   const alvoGrafico = html('div', 'alvo-grafico');
   const alvoTabela = html('div', '');
@@ -164,7 +153,7 @@ export function montarExplorar(painel: HTMLElement, doc: Contrato): { aplicar: (
     avisos,
     alvoGrafico,
     alvoTabela,
-    html('p', 'limitacoes', limitacoes(doc) + ' A curva não mede a qualidade do trabalho de uma vara.'),
+    html('p', 'limitacoes', `${limitacoes(doc)} Não mede a qualidade do trabalho de uma vara.`),
     comoCalculamos(doc),
   );
 
@@ -191,28 +180,12 @@ export function montarExplorar(painel: HTMLElement, doc: Contrato): { aplicar: (
     const faltando = itens.filter((i) => i.curva === undefined);
 
     titulo.textContent = itens.length === 2 ? 'Comparação de dois recortes' : rotuloCurva(doc, itens[0]!.escolha);
-    amostras.replaceChildren(
-      ...itens.flatMap(({ curva, cor, escolha }) => {
-        if (!curva) return [];
-        const p = html('p', 'amostra-texto');
-        p.innerHTML = `<span class="amostra cor-${cor}" aria-hidden="true"></span>`;
-        p.append(
-          (itens.length === 2 ? `${rotuloCurva(doc, escolha)}: ` : '') +
-            `${inteiro(curva.n)} processos, ${inteiro(curva.eventos)} com sentença observada e ` +
-            `${inteiro(curva.censurados)} sem sentença até o fim do acompanhamento.`,
-        );
-        return [p];
-      }),
-    );
-
     avisos.replaceChildren();
     if (faltando.length > 0) {
       avisos.appendChild(
         aviso(
           'info',
-          `Não há estimativa disponível para ${faltando.map((i) => rotuloCurva(doc, i.escolha)).join(' nem para ')}. ` +
-            'Combinações com menos de 30 processos na base não são publicadas.',
-          'Revise a vara ou a classe. “Todas as varas” e “Todas as classes” usam um conjunto mais amplo.',
+          `Sem curva para ${faltando.map((i) => rotuloCurva(doc, i.escolha)).join(' nem para ')}: menos de 30 processos na base.`,
         ),
       );
     }
@@ -220,20 +193,9 @@ export function montarExplorar(painel: HTMLElement, doc: Contrato): { aplicar: (
       const [a, b] = itens as [Item, Item];
       if (a.escolha.classe !== b.escolha.classe) {
         avisos.appendChild(
-          aviso(
-            'atencao',
-            'Os dois recortes têm classes diferentes. Parte da diferença entre as curvas pode vir do tipo de processo, e não da vara.',
-            'Para comparar varas, use a mesma classe nos dois recortes.',
-          ),
+          aviso('atencao', 'Classes diferentes: parte da diferença pode vir do tipo de processo, e não da vara.'),
         );
       }
-      avisos.appendChild(
-        aviso(
-          'info',
-          'Diferenças entre curvas podem refletir o tipo de processo que cada vara recebe e outros fatores. ' +
-            'A sobreposição ou não das faixas de confiança não é um teste de diferença entre as curvas.',
-        ),
-      );
     }
     avisos.hidden = avisos.childElementCount === 0;
 

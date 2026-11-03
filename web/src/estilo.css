@@ -145,15 +145,6 @@ main:focus {
   /* ui.ts ajusta para negativo quando a coluna não cabe na janela */
   top: var(--topo-coluna, var(--margem-coluna));
 }
-.folha-amostras {
-  display: grid;
-  gap: var(--space-2xs);
-  margin-top: var(--space-xs);
-}
-.folha-amostras .amostra {
-  margin-right: var(--space-xs);
-  vertical-align: middle;
-}
 .coluna-controles h2 {
   font-size: var(--text-2xl);
 }
@@ -273,36 +264,163 @@ input[aria-invalid='true'] {
   border-color: var(--color-error);
   border-width: var(--rule-bar);
 }
-.cobertura {
-  font-size: var(--text-sm);
+/* Rótulo com "?" ao lado: a ajuda fica recolhida até a pessoa pedir. */
+.rotulo-linha {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+.ajuda-botao {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: var(--rule-hair) solid var(--color-border-strong);
+  border-radius: 50%;
+  background: var(--color-surface);
   color: var(--color-text-secondary);
-}
-
-/* Confirmação: a caixa e o texto formam um alvo só, de 44 px. */
-.confirmacao-linha {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-}
-.confirmacao-linha label {
-  display: flex;
-  align-items: center;
-  min-height: var(--control-height);
-  font-size: var(--text-md);
-  color: var(--color-text);
+  font: var(--weight-strong) var(--text-sm) / 1 var(--font-ui);
   cursor: pointer;
 }
-input[type='checkbox'][aria-invalid='true'] {
-  outline: var(--rule-bar) solid var(--color-error);
+/* Alvo de toque de 44 px em volta do círculo de 24 px. */
+.ajuda-botao::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+}
+.ajuda-botao[aria-expanded='true'] {
+  background: var(--color-action);
+  border-color: var(--color-action);
+  color: var(--color-on-action);
+}
+.ajuda-botao:focus-visible {
+  outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
 
-/* Botões: uma ação principal por etapa. */
-.acoes {
+/* Tempo: controle deslizante e número lado a lado. */
+.tempo-linha {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+.campo-meses {
+  flex: 0 0 5.5rem;
+  width: 5.5rem !important;
+  text-align: center;
+}
+.slider {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: var(--control-height);
+  margin: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+.slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-border-strong);
+}
+.slider::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-border-strong);
+}
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 24px;
+  height: 24px;
+  margin-top: -10px;
+  border: 2px solid var(--color-surface);
+  border-radius: 50%;
+  background: var(--color-action);
+  box-shadow: 0 1px 3px color-mix(in oklab, var(--color-text) 35%, transparent);
+  transition: transform var(--dur-micro) var(--ease-out);
+}
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-surface);
+  border-radius: 50%;
+  background: var(--color-action);
+}
+.slider:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+/* Antes de a pessoa informar o tempo, o polegar fica vazado: não há valor escolhido. */
+.slider[data-vazio]::-webkit-slider-thumb {
+  background: var(--color-surface);
+  border-color: var(--color-border-strong);
+  box-shadow: none;
+}
+.slider[data-vazio]::-moz-range-thumb {
+  background: var(--color-surface);
+  border-color: var(--color-border-strong);
+}
+.slider:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Resumo ao vivo: só quando o resultado fica abaixo do formulário. */
+.resumo-vivo {
+  display: none;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  border-top: var(--rule-bar) solid var(--color-text);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+.resumo-vivo strong {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-strong);
+  color: var(--color-text);
+}
+@media (max-width: 60rem) {
+  .resumo-vivo:not([hidden]) {
+    display: block;
+  }
+}
+
+/* Atalhos discretos: data do ajuizamento e exemplo. */
+.atalhos {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-sm);
+  gap: 0 var(--space-lg);
 }
+.link-botao {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  font: var(--weight-medium) var(--text-sm) / 1.2 var(--font-ui);
+  text-decoration: underline;
+  text-decoration-color: var(--color-action);
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+@media (hover: hover) {
+  .link-botao:hover {
+    text-decoration-thickness: 2px;
+  }
+}
+.link-botao:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+
+
+/* Botões: uma ação principal por etapa. */
 .botao {
   display: inline-flex;
   align-items: center;
@@ -640,12 +758,28 @@ input[type='checkbox'][aria-invalid='true'] {
 /* Estado inicial: explica o que vai aparecer, sem número fictício. */
 .vazio {
   display: grid;
-  gap: var(--space-xs);
-  padding: var(--space-lg) 0;
+  gap: var(--space-lg);
+  padding: var(--space-xs) 0;
 }
-.vazio p {
+.vazio-texto {
+  font-size: var(--text-lg);
+  color: var(--color-text);
+  max-width: 40ch;
+}
+/* Cartões fantasma: mostram o formato do que vem, sem número nenhum. */
+.fantasmas .probabilidade {
+  gap: var(--space-xs);
+}
+.fantasma-rotulo {
+  font-size: var(--text-sm);
   color: var(--color-text-secondary);
-  max-width: 60ch;
+}
+.fantasma-valor {
+  display: block;
+  width: 4.5rem;
+  height: var(--text-4xl);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-muted);
 }
 
 
@@ -667,8 +801,8 @@ input[type='checkbox'][aria-invalid='true'] {
   border-left: 0;
 }
 .probabilidade dt {
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
+  font-size: var(--text-md);
+  color: var(--color-text);
 }
 .probabilidade dd {
   margin: 0;
@@ -687,29 +821,26 @@ input[type='checkbox'][aria-invalid='true'] {
   line-height: var(--leading-tight);
   color: var(--color-text-secondary);
 }
-.probabilidade .rotulo-valor {
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-}
 .probabilidade .ic {
   font: var(--text-sm) / 1.35 var(--font-ui);
   font-variant-numeric: tabular-nums;
-  color: var(--color-text);
-}
-.prazos {
-  font-size: var(--text-lg);
-  line-height: 1.45;
-  color: var(--color-text);
-  max-width: 60ch;
-}
-.prazos ul {
-  margin: var(--space-2xs) 0 0;
-  padding-left: var(--space-lg);
-}
-.amostra-texto {
-  font-size: var(--text-sm);
   color: var(--color-text-secondary);
-  max-width: 70ch;
+}
+.frase-resumo {
+  font-size: var(--text-xl);
+  line-height: 1.35;
+  color: var(--color-text);
+  max-width: 40ch;
+  text-wrap: balance;
+}
+.probabilidades-titulo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+  margin-bottom: calc(-1 * var(--space-sm));
 }
 
 /* Cartões empilham quando a própria folha é estreita, em qualquer janela. */
@@ -731,26 +862,28 @@ input[type='checkbox'][aria-invalid='true'] {
   }
 }
 
-/* Resultado da seleção anterior: o aviso acompanha a rolagem da folha. */
-.aviso-anterior {
-  position: sticky;
-  top: var(--space-md);
-  z-index: var(--z-raised);
-  max-width: none;
-  box-shadow: 0 var(--space-xs) var(--space-lg) calc(-1 * var(--space-xs)) color-mix(in oklab, var(--color-text) 18%, transparent);
-}
-.nota-anterior {
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--color-text);
-}
-
-/* Compartilhar: copiar o link e, no papel, o endereço por extenso. */
-.folha-acoes {
+/* Compartilhar: copiar o link na tela; no papel, o endereço por extenso. */
+.citacao-linha {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-sm);
+  gap: var(--space-2xs) var(--space-md);
+}
+.copiar-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+}
+.link-campo {
+  width: min(100%, 28rem);
+  min-height: var(--control-height);
+  padding: 0 var(--space-sm);
+  border: var(--rule-hair) solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--text-sm);
 }
 .url-impressa {
   display: none;
@@ -794,7 +927,8 @@ input[type='checkbox'][aria-invalid='true'] {
 }
 
 /* Metodologia expansível. */
-.metodologia summary {
+.metodologia summary,
+.detalhes summary {
   display: inline-flex;
   align-items: center;
   min-height: var(--control-height);
@@ -805,11 +939,18 @@ input[type='checkbox'][aria-invalid='true'] {
   text-decoration-color: var(--color-action);
   text-underline-offset: 0.15em;
 }
-.metodologia summary:focus-visible {
+.metodologia summary:focus-visible,
+.detalhes summary:focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
-.metodologia-corpo {
+.detalhes-corpo h4 {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-strong);
+}
+.metodologia-corpo,
+.detalhes-corpo {
   display: grid;
   gap: var(--space-sm);
   padding-top: var(--space-xs);
@@ -916,12 +1057,10 @@ input[type='checkbox'][aria-invalid='true'] {
   .folha {
     padding: 0;
   }
-  .aviso-anterior {
-    position: static;
-    box-shadow: none;
-  }
-  .folha-acoes {
-    display: none;
+  .copiar-link,
+  .ajuda-botao,
+  .detalhes {
+    display: none !important;
   }
   .url-impressa {
     display: block;

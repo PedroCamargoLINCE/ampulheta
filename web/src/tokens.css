@@ -46,7 +46,7 @@
   --text-xl: 1.25rem;   /* 20 · cabeça do resultado */
   --text-2xl: 1.5rem;   /* 24 · título de seção */
   --text-3xl: 1.75rem;  /* 28 · marca */
-  --text-4xl: 2.25rem;  /* 36 · probabilidades principais */
+  --text-4xl: 2.5rem;   /* 40 · probabilidades principais */
   --leading-body: 1.5;
   --leading-tight: 1.2;
   --weight-regular: 400;

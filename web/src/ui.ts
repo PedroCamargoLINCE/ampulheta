@@ -30,22 +30,46 @@ export interface Campo<T extends HTMLElement> {
   erro: (mensagem: string | null) => void;
 }
 
-/** Campo com rótulo permanente, ajuda vinculada e erro textual. */
+/**
+ * Botão "?" que mostra e esconde uma explicação curta (padrão de divulgação: funciona com
+ * teclado, toque e leitor de tela, sem depender de hover).
+ */
+export function ajudaRecolhida(id: string, assunto: string, texto: string): { botao: HTMLButtonElement; painel: HTMLElement } {
+  const painel = html('p', 'ajuda', texto);
+  painel.id = id;
+  painel.hidden = true;
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'ajuda-botao';
+  b.textContent = '?';
+  b.setAttribute('aria-label', `O que é ${assunto}?`);
+  b.setAttribute('aria-expanded', 'false');
+  b.setAttribute('aria-controls', id);
+  b.addEventListener('click', () => {
+    painel.hidden = !painel.hidden;
+    b.setAttribute('aria-expanded', String(!painel.hidden));
+  });
+  return { botao: b, painel };
+}
+
+/** Campo com rótulo permanente, ajuda recolhida atrás de "?" e erro textual. */
 function montarCampo<T extends HTMLElement>(id: string, rotulo: string, controle: T, ajuda?: string): Campo<T> {
   const campo = document.createElement('div');
   campo.className = 'campo';
+  const linha = html('div', 'rotulo-linha');
   const label = document.createElement('label');
   label.htmlFor = id;
   label.textContent = rotulo;
+  linha.appendChild(label);
   controle.id = id;
-  campo.append(label, controle);
+  campo.append(linha, controle);
 
   const descritores: string[] = [];
   if (ajuda) {
-    const p = html('p', 'ajuda', ajuda);
-    p.id = `${id}-ajuda`;
-    campo.appendChild(p);
-    descritores.push(p.id);
+    const { botao: b, painel } = ajudaRecolhida(`${id}-ajuda`, rotulo.toLowerCase(), ajuda);
+    linha.appendChild(b);
+    campo.appendChild(painel);
+    descritores.push(painel.id);
   }
   const msg = html('p', 'erro');
   msg.id = `${id}-erro`;
@@ -102,36 +126,6 @@ export function criarEntrada(
   return montarCampo(id, rotulo, input, ajuda);
 }
 
-/** Caixa de confirmação com alvo de 44 px no rótulo inteiro. */
-export function criarConfirmacao(id: string, texto: string): Campo<HTMLInputElement> {
-  const caixa = document.createElement('div');
-  caixa.className = 'campo confirmacao';
-  const input = document.createElement('input');
-  input.type = 'checkbox';
-  input.id = id;
-  const label = document.createElement('label');
-  label.htmlFor = id;
-  label.textContent = texto;
-  const msg = html('p', 'erro');
-  msg.id = `${id}-erro`;
-  msg.hidden = true;
-  const linha = html('div', 'confirmacao-linha');
-  linha.append(input, label);
-  caixa.append(linha, msg);
-  const erro = (mensagem: string | null) => {
-    msg.hidden = mensagem === null;
-    msg.textContent = mensagem ?? '';
-    if (mensagem === null) {
-      input.removeAttribute('aria-invalid');
-      input.removeAttribute('aria-describedby');
-    } else {
-      input.setAttribute('aria-invalid', 'true');
-      input.setAttribute('aria-describedby', msg.id);
-    }
-  };
-  return { campo: caixa as HTMLDivElement, controle: input, erro };
-}
-
 export function botao(texto: string, variante: 'principal' | 'secundario', tipo: 'submit' | 'button' = 'button'): HTMLButtonElement {
   const b = document.createElement('button');
   b.type = tipo;
@@ -155,25 +149,57 @@ export function aviso(tipo: TipoAviso, texto: string, proximoPasso?: string, aca
 }
 
 export type ConteudoCartao =
-  | { tipo: 'ok'; valor: string; intervalo: string }
+  | { tipo: 'ok'; valor: string; intervalo: string | null }
   | { tipo: 'sem-estimativa'; motivo: string };
 
-/** Resumo de estimativa: horizonte, probabilidade e intervalo, ou o motivo de não haver número. */
+/** Resumo de estimativa: horizonte, probabilidade e intervalo, ou o motivo curto de não haver número. */
 export function cartaoProbabilidade(meses: number, c: ConteudoCartao): HTMLElement {
   const item = html('div', 'probabilidade');
-  item.appendChild(html('dt', '', `Nos próximos ${meses} meses`));
+  item.appendChild(html('dt', '', `em ${meses} meses`));
   const dd = document.createElement('dd');
   if (c.tipo === 'ok') {
-    dd.append(
-      html('span', 'valor', c.valor),
-      html('span', 'rotulo-valor', 'probabilidade estimada de sentença'),
-      html('span', 'ic', c.intervalo),
-    );
+    dd.appendChild(html('span', 'valor', c.valor));
+    if (c.intervalo) dd.appendChild(html('span', 'ic', c.intervalo));
   } else {
-    dd.append(html('span', 'valor indisponivel', 'Sem estimativa'), html('span', 'ic', c.motivo));
+    dd.append(html('span', 'valor indisponivel', 'sem estimativa'), html('span', 'ic', c.motivo));
   }
   item.appendChild(dd);
   return item;
+}
+
+/**
+ * Copiar o link do resultado. Dentro de um quadro (prévia, artifact) o navegador pode
+ * bloquear a área de transferência: aí o link aparece num campo, selecionado, para copiar à mão.
+ */
+export function copiarLink(anunciar: (texto: string) => void): HTMLElement {
+  const caixa = html('div', 'copiar-link');
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'link-botao';
+  b.textContent = 'Copiar link';
+  const campo = document.createElement('input');
+  campo.type = 'text';
+  campo.readOnly = true;
+  campo.className = 'link-campo';
+  campo.setAttribute('aria-label', 'Link deste resultado');
+  campo.hidden = true;
+  b.addEventListener('click', async () => {
+    try {
+      if (window.top !== window.self) throw new Error('em quadro');
+      await navigator.clipboard.writeText(location.href);
+      b.textContent = 'Link copiado';
+      anunciar('Link copiado.');
+      setTimeout(() => (b.textContent = 'Copiar link'), 2000);
+    } catch {
+      campo.value = location.href;
+      campo.hidden = false;
+      campo.focus();
+      campo.select();
+      anunciar('Copie o link do campo selecionado.');
+    }
+  });
+  caixa.append(b, campo);
+  return caixa;
 }
 
 export function opcoesVara(doc: Contrato, instrucao?: string): Opcao[] {
@@ -237,9 +263,8 @@ export function cobertura(doc: Contrato): string {
 /** Limitação essencial, para ficar junto do resultado e não só no rodapé. */
 export function limitacoes(doc: Contrato): string {
   return (
-    `A estimativa descreve como processos deste recorte tramitaram até ${dataIso(doc.snapshot)}. ` +
-    'Mudanças de juiz, de sistema ou de lei podem tornar o futuro diferente. ' +
-    'Não prevê o resultado da decisão nem o tempo de recursos, e não substitui a avaliação de um advogado.'
+    `Baseado em como processos do recorte tramitaram até ${dataIso(doc.snapshot)}. ` +
+    'Não prevê o resultado da decisão nem o tempo de recursos.'
   );
 }
 
@@ -249,7 +274,13 @@ export function comoCalculamos(doc: Contrato): HTMLDetailsElement {
   d.className = 'metodologia';
   d.appendChild(html('summary', '', 'Como calculamos'));
   const corpo = html('div', 'metodologia-corpo');
-  const paragrafos = [
+  for (const t of paragrafosMetodologia(doc)) corpo.appendChild(html('p', '', t));
+  d.appendChild(corpo);
+  return d;
+}
+
+export function paragrafosMetodologia(doc: Contrato): string[] {
+  return [
     `Os dados são públicos, do ${doc.fonte.nome}, com data de referência ${dataIso(doc.snapshot)}. ` +
       `Cobrem ${cobertura(doc)}.`,
     `“Sentença” aqui é o ${doc.evento.charAt(0).toLowerCase()}${doc.evento.slice(1)}: o fim do 1º grau, não do processo. ` +
@@ -265,10 +296,8 @@ export function comoCalculamos(doc: Contrato): HTMLDetailsElement {
       'um único processo bastaria para mudar o resultado.',
     'Diferenças entre varas podem refletir o tipo de processo que cada uma recebe e outros fatores. A curva não mede a qualidade do trabalho de uma vara, ' +
       'e a sobreposição ou não das faixas de confiança não é um teste de diferença entre curvas.',
+    'A estimativa não substitui a avaliação de um advogado. Mudanças de juiz, de sistema ou de lei podem tornar o futuro diferente.',
   ];
-  for (const t of paragrafos) corpo.appendChild(html('p', '', t));
-  d.appendChild(corpo);
-  return d;
 }
 
 /** Estado no link: `#aba?chave=valor`. */
