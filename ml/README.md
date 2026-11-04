@@ -114,6 +114,7 @@ público com os dados. Cláusula 3.8: não explorar comercialmente a API nem inf
 sem autorização prévia por escrito do CNJ. Cláusula 3.13: no máximo 120 requisições por minuto.
 Fonte: formularios.cnj.jus.br/wp-content/uploads/2023/05/Termos-de-uso-api-publica-V1.1.pdf
 
-Ciência ao CNJ sobre o painel do Ampulheta dada em 3 de novembro de 2026, por e-mail ao DPJ
-(cláusula 3.9). Não há exploração comercial; se um dia houver, a cláusula 3.8 exige autorização
-prévia por escrito.
+Ciência ao CNJ sobre o painel do Ampulheta (cláusula 3.9) registrada na Ouvidoria/SIC do CNJ em
+4 de novembro de 2026, protocolo 582636, formalizando o e-mail enviado ao DPJ em 3 de novembro;
+o próprio DPJ orientou usar a Ouvidoria como canal oficial (Resoluções CNJ 215 e 432). Não há
+exploração comercial; se um dia houver, a cláusula 3.8 exige autorização prévia por escrito.
