@@ -107,6 +107,18 @@ validador reprovar, o comando falha.
 - O índice é atualizado durante a coleta (o total de uma vara mudou entre consultas no mesmo
   dia); o preparo deduplica por `_id`.
 
+## Brutos grandes (Git LFS)
+
+As páginas `.jsonl.gz` de São Paulo capital (`raw/sao-paulo/`) são objetos Git LFS (ADR-015).
+Um clone comum traz só os ponteiros, o manifesto e os totais; para ter as páginas:
+
+```bash
+git lfs install
+git lfs pull --include="ml/raw/sao-paulo/**"
+```
+
+Sorocaba e Campinas continuam como arquivos comuns no git.
+
 ## Termo de uso da API (obrigações)
 
 Cláusula 3.9: dar ciência ao CNJ de qualquer estudo, relatório ou painel disponibilizado ao

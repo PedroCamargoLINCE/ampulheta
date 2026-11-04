@@ -126,3 +126,15 @@ o manifesto registra os campos. O backoff ganha jitter (×0,5 a ×1,5) para proc
 repetirem em sincronia. Projetos abertos que usam a API (datajud-pipeline, datajud-mcp, juscraper)
 chegam às mesmas práticas: `search_after`, retry só em erro transitório, checagem de shards e
 limite de 120 req/min; nenhum tem truque além disso.
+
+## ADR-015 — Brutos grandes vão para o Git LFS, não para fora do git (2026-11-04)
+Substitui a última frase da ADR-008. O recorte de São Paulo capital (124 varas cíveis, cerca de
+870 mil processos) deve passar de 300 MB compactados, quase dez vezes o limite da ADR-008; tirar
+os brutos do git faria a coleta de São Paulo não ser retomável de uma sessão na nuvem, justamente
+o caso que a ADR-008 queria cobrir. Testado de ponta a ponta no repositório: `git lfs push`,
+clone limpo e `git lfs pull` devolvem os bytes íntegros. A partir daqui, páginas `.jsonl.gz` de
+recortes acima de ~100 MB são rastreadas como objetos LFS (`.gitattributes`), e `manifest.json`
+e `total_esperado.txt` continuam como texto comum, então quem clona sem LFS vê a estrutura e os
+totais. Quem precisa das páginas roda `git lfs pull`. O site não lê `ml/raw/`, e o checkout do CI
+não baixa objetos LFS, então a cota de banda do GitHub só é consumida por quem pede o bruto.
+Sorocaba e Campinas (30 e 45 MB) ficam como estão.
