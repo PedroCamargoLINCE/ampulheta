@@ -34,4 +34,3 @@ web/.vite/
 .impeccable/
 
 # Brutos de São Paulo (~870 mil processos, ~350 MB): fora do git até a decisão de armazenamento da fase B (ADR-008)
-ml/raw/sao-paulo/
