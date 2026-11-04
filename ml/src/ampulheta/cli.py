@@ -17,6 +17,10 @@ def construir_parser() -> argparse.ArgumentParser:
     c.add_argument("--snapshot", help="data AAAA-MM-DD; padrão é hoje")
     c.add_argument("--vara", type=int, action="append", help="coletar só esta(s) vara(s), sem fechar o snapshot; permite processos em paralelo")
 
+    g2 = sub.add_parser("coletar-g2", help="estágio 1b: registros de 2º grau dos números do snapshot -> raw/<snapshot>-g2/")
+    g2.add_argument("--snapshot", required=True, help="snapshot de 1º grau já fechado")
+    g2.add_argument("--parte", help="i/n: processa só os lotes i, i+n, …; permite n processos em paralelo")
+
     pr = sub.add_parser("preparar", help="estágio 2: raw/<snapshot>/ -> data/*.parquet + relatório")
     pr.add_argument("--snapshot", required=True, help="pasta de raw/ a usar")
 
@@ -36,6 +40,9 @@ def main(argv: list[str] | None = None) -> int:
         if args.vara:
             cfg["varas"] = [v for v in cfg["varas"] if v["codigo"] in args.vara]
         print(coletar(cfg, args.snapshot, fechar=not args.vara))
+    elif args.comando == "coletar-g2":
+        from .coletor_g2 import coletar_g2
+        coletar_g2(cfg, args.snapshot, args.parte)
     elif args.comando == "preparar":
         from .preparo import preparar
         preparar(cfg, args.snapshot)

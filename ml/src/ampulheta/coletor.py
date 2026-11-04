@@ -16,6 +16,7 @@ import gzip
 import hashlib
 import json
 import os
+import random
 import time
 from collections.abc import Callable, Iterator
 from datetime import UTC, date, datetime
@@ -42,6 +43,8 @@ def montar_query(cfg: dict[str, Any], vara: int, search_after: list | None = Non
                 "lte": aj["ate"].replace("-", "") + "235959"}}},
         ]}},
     }
+    if cfg["api"].get("campos"):  # só os campos que o pipeline usa: página menor e mais rápida (ADR-014)
+        q["_source"] = cfg["api"]["campos"]
     if search_after:
         q["search_after"] = search_after
     return q
@@ -80,9 +83,9 @@ def cliente_http(cfg: dict[str, Any]) -> Buscar:
                     motivo = f"HTTP {r.status_code}"
             except httpx.TransportError as e:  # timeout, conexão caída
                 motivo = type(e).__name__
-            espera = min(2**tentativa * 5, 60)  # a API oscila em janelas curtas; esperar mais só atrasa
+            espera = min(2**tentativa * 5, 60) * random.uniform(0.5, 1.5)  # janelas curtas; jitter desencontra os processos paralelos
             tentativa += 1
-            print(f"  {motivo}; tentativa {tentativa} em {espera}s")
+            print(f"  {motivo}; tentativa {tentativa} em {espera:.0f}s")
             time.sleep(espera)
 
     return buscar
@@ -153,6 +156,8 @@ def coletar(cfg: dict[str, Any], snapshot: str | None = None, buscar: Buscar | N
         "classes": cfg["classes"],
         "varas": cfg["varas"],
         "ajuizamento": cfg["ajuizamento"],
+        "tamanho_pagina": cfg["api"]["tamanho_pagina"],
+        "campos": cfg["api"].get("campos"),  # None = hits inteiros (snapshots até 2026-10-29)
         "total_por_vara": totais,
         "total_esperado_por_vara": esperados,  # hits.total da API; diferença = retomada com páginas duplicadas (preparo deduplica)
         "total": sum(totais.values()),

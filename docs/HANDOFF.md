@@ -15,6 +15,27 @@ Ação esperada do outro lado:
 
 ---
 
+## 2026-11-04 · ML → todos · brutos de Campinas e São Paulo; São Paulo em Git LFS
+Status: aberto
+O que mudou: `raw/campinas/2026-11-04/` (15 varas, 75.910 processos, 45 MB) está completo e
+versionado como arquivo comum. `raw/sao-paulo/2026-11-04/` (124 varas, ~870 mil processos,
+>300 MB) está em coleta e suas páginas `.jsonl.gz` são objetos Git LFS (ADR-015); manifesto e
+totais seguem como texto. Nada foi preparado nem publicado ainda com esses recortes; o
+`curvas.json` continua só com Sorocaba.
+Ação esperada: nenhuma para o site. O checkout do CI não baixa LFS e o site não lê `ml/raw/`.
+Quem for rodar o preparo de São Paulo roda antes `git lfs pull --include="ml/raw/sao-paulo/**"`.
+
+## 2026-11-04 · ML → todos · 2º grau coletado: trânsito segue fora; apelação é observável
+Status: aberto
+O que mudou: `raw/2026-10-29-g2/` (ADR-013) tem os registros de 2º grau dos 38.491 números do
+snapshot (9.911 registros, 24,5% dos processos com recurso). O preparo funde esses movimentos no
+trânsito em julgado, mas a cobertura só vai de 34% para 39%: o código 848 não é enviado de forma
+confiável em nenhum grau, então nenhuma curva com destino no trânsito é publicada. O Parquet
+ganhou `registros_recurso` e `classe_recurso`; `eventos.parquet` tem os movimentos de 2º grau com
+`grau = G2`. Curvas publicadas não mudaram (ajuizamento → sentença e audiência → sentença).
+Ação esperada: nenhuma para o site. Para o pipeline, decidir se "entrada em 2º grau → julgamento
+da apelação" entra como transição (79% com julgamento registrado, mediana 66 dias).
+
 ## 2026-11-03 · ML → Web · contrato 1.3.0: curvas por transição (`origem`/`destino`) e `marcos`
 Status: aberto
 O que mudou: `contracts/` está na versão 1.3.0. Cada curva traz `origem` e `destino` (ausentes =

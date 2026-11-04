@@ -11,7 +11,9 @@ códigos listados em `evento_sentenca.excluir_codigos` do config (decisões de e
 Processos de sistemas listados em `preparo.sistemas_sem_julgamento` recebem a flag
 `sistema_sem_julgamento` (ADR-009): ficam na base, e cada modelo decide se os usa.
 Cada marco de `marcos` no config (ADR-011) vira uma coluna `data_<nome>` com a data do primeiro
-movimento de seus códigos, ou nula.
+movimento de seus códigos, ou nula. Se existir `raw/<snapshot>-g2/` fechado (ADR-013), os
+movimentos de 2º grau do mesmo número entram nos marcos marcados com `com_recurso`, ignorando o
+que vier depois da data do snapshot, para manter uma única data de censura.
 """
 from __future__ import annotations
 
@@ -28,6 +30,7 @@ import pandas as pd
 
 Familia = dict[int, dict[str, str]]  # codigo -> {nome, ramo}
 Marcos = dict[str, set[int]]  # nome -> códigos TPU
+Recurso = dict[str, list[dict]]  # numeroProcesso -> movimentos de 2º grau (codigo, nome, data) e classe
 
 
 def ler_familia(caminho: str | Path, excluir: Iterable[int] = ()) -> Familia:
@@ -44,6 +47,18 @@ def ler_hits(raiz: Path):
                 yield json.loads(linha)
 
 
+def ler_recurso(raiz_g2: Path) -> Recurso:
+    """Movimentos de todos os registros de 2º grau, por número; `classe` guarda a do primeiro registro."""
+    recurso: Recurso = {}
+    for hit in ler_hits(raiz_g2):
+        src = hit["_source"]
+        r = recurso.setdefault(src["numeroProcesso"], {"classe": src["classe"]["nome"], "registros": 0, "movimentos": []})
+        r["registros"] += 1
+        r["movimentos"].extend({"codigo": m["codigo"], "nome": m.get("nome"), "data": data_movimento(m["dataHora"])}
+                               for m in src.get("movimentos", []) if "codigo" in m)
+    return recurso
+
+
 def data_ajuizamento(s: str) -> date:
     return datetime.strptime(s[:8], "%Y%m%d").date()
 
@@ -53,7 +68,8 @@ def data_movimento(s: str) -> date:
 
 
 def processar(src: dict[str, Any], snapshot: date, familia: Familia, contagem: Counter,
-              sistemas_sem_julgamento: Iterable[str] = (), marcos: Marcos | None = None) -> tuple[dict | None, list[dict]]:
+              sistemas_sem_julgamento: Iterable[str] = (), marcos: Marcos | None = None,
+              marcos_com_recurso: Iterable[str] = (), recurso: dict | None = None) -> tuple[dict | None, list[dict]]:
     """Transforma um `_source` da API em (linha de processos, linhas de eventos).
     Devolve (None, []) quando o processo é descartado; cada descarte e flag é contado em `contagem`."""
     numero = src["numeroProcesso"]
@@ -112,10 +128,22 @@ def processar(src: dict[str, Any], snapshot: date, familia: Familia, contagem: C
         "n_movimentos": len(movimentos),
         "flags": ",".join(flags),
     }
+    movs_recurso = []
+    if recurso:
+        for m in recurso["movimentos"]:
+            if m["data"] > snapshot:
+                contagem["movimento de 2º grau depois do snapshot ignorado"] += 1
+            else:
+                movs_recurso.append(m)
+    linha["registros_recurso"] = recurso["registros"] if recurso else 0
+    linha["classe_recurso"] = recurso["classe"] if recurso else None
     for nome, codigos in (marcos or {}).items():
-        datas = [m["data"] for m in movimentos if m["codigo"] in codigos]
+        fonte = movimentos + (movs_recurso if nome in set(marcos_com_recurso) else [])
+        datas = [m["data"] for m in fonte if m["codigo"] in codigos]
         linha[f"data_{nome}"] = min(datas) if datas else None
-    return linha, movimentos
+    eventos = [{**m, "grau": "G1"} for m in movimentos] + [
+        {"numero_processo": numero, "codigo": m["codigo"], "nome": m["nome"], "data": m["data"], "grau": "G2"} for m in movs_recurso]
+    return linha, eventos
 
 
 def tabela_marcos(processos: pd.DataFrame) -> pd.DataFrame:
@@ -127,6 +155,18 @@ def tabela_marcos(processos: pd.DataFrame) -> pd.DataFrame:
         linhas.append({"marco": col.removeprefix("data_"), "processos": len(d),
                        "%": round(100 * len(d) / len(processos), 1), "mediana_dias": dias.median() if len(d) else None})
     return pd.DataFrame(linhas)
+
+
+def tabela_transito_por_ano(processos: pd.DataFrame) -> pd.DataFrame:
+    """Entre os sentenciados, % com trânsito em julgado registrado, por ano da sentença: mede se o
+    registro está completo o bastante para a curva sentença → trânsito."""
+    s = processos[processos.evento == 1]
+    t = s.groupby(pd.to_datetime(s.data_evento).dt.year).agg(
+        sentenciados=("evento", "size"), com_transito=("data_transito_em_julgado", "count"),
+        com_recurso=("registros_recurso", lambda x: int((x > 0).sum())))
+    t["%_com_transito"] = (100 * t.com_transito / t.sentenciados).round(1)
+    t.index.name = "ano_sentenca"
+    return t
 
 
 def relatorio(processos: pd.DataFrame, contagem: Counter, manifest: dict, snapshot: str) -> str:
@@ -162,6 +202,11 @@ def relatorio(processos: pd.DataFrame, contagem: Counter, manifest: dict, snapsh
         "", "## Por classe", "", por_classe.to_markdown(),
         "", "## Por sistema de origem", "", por_sistema.to_markdown(),
         "", "## Marcos além da sentença (ADR-011)", "", tabela_marcos(processos).to_markdown(index=False),
+        *(["", "## Registros de 2º grau (ADR-013)", "",
+           f"{int((processos.registros_recurso > 0).sum())} processos ({100 * (processos.registros_recurso > 0).mean():.1f}%) têm registro de "
+           f"2º grau; classes mais comuns: " + "; ".join(f"{k} ({v})" for k, v in processos.classe_recurso.value_counts().head(4).items()) + ".",
+           "", "Trânsito em julgado entre os sentenciados, por ano da sentença:", "", tabela_transito_por_ano(processos).to_markdown()]
+          if "data_transito_em_julgado" in processos.columns else []),
         "", "## Por ano de ajuizamento", "", anos.to_markdown(),
         "", "## Tipo da primeira sentença (TPU)", "", tipos.to_markdown(),
         "",
@@ -174,6 +219,11 @@ def preparar(cfg: dict[str, Any], snapshot: str) -> None:
     familia = ler_familia(cfg["evento_sentenca"]["tabela"], cfg["evento_sentenca"].get("excluir_codigos", ()))
     sistemas = cfg.get("preparo", {}).get("sistemas_sem_julgamento", ())
     marcos = {m["nome"]: set(m["codigos"]) for m in cfg.get("marcos", [])}
+    com_recurso = {m["nome"] for m in cfg.get("marcos", []) if m.get("com_recurso")}
+    raiz_g2 = raiz.with_name(f"{snapshot}-g2")
+    recurso = ler_recurso(raiz_g2) if (raiz_g2 / "manifest.json").exists() else {}
+    if recurso:
+        print(f"2º grau: {len(recurso)} números com registro em {raiz_g2}")
     data_snapshot = date.fromisoformat(snapshot)
 
     contagem: Counter = Counter()
@@ -184,7 +234,8 @@ def preparar(cfg: dict[str, Any], snapshot: str) -> None:
             contagem["hit duplicado na paginação removido"] += 1
             continue
         vistos.add(hit["_id"])
-        linha, movs = processar(hit["_source"], data_snapshot, familia, contagem, sistemas, marcos)
+        linha, movs = processar(hit["_source"], data_snapshot, familia, contagem, sistemas, marcos,
+                                com_recurso, recurso.get(hit["_source"]["numeroProcesso"]))
         if linha:
             linhas.append(linha)
             eventos.extend(movs)

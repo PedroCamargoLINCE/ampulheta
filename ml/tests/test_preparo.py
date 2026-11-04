@@ -113,3 +113,19 @@ def test_marcos_viram_colunas_de_data(familia):
     ]), SNAPSHOT, familia, Counter(), marcos=marcos)
     assert linha["data_transito_em_julgado"] == date(2021, 4, 1)
     assert linha["data_audiencia"] is None
+
+
+def test_recurso_completa_o_transito_so_ate_o_snapshot(familia):
+    marcos = {"transito_em_julgado": {848}, "audiencia": {970}}
+    recurso = {"classe": "Apelação Cível", "registros": 1, "movimentos": [
+        {"codigo": 970, "nome": "Audiência", "data": date(2022, 1, 1)},     # audiência de 2º grau não conta (sem com_recurso)
+        {"codigo": 848, "nome": "Trânsito em julgado", "data": date(2027, 1, 1)},  # depois do snapshot: ignorado
+        {"codigo": 848, "nome": "Trânsito em julgado", "data": date(2023, 3, 1)},
+    ]}
+    c = Counter()
+    linha, eventos = processar(fonte(movimentos=[(26, "2020-01-16T10:00:00.000Z"), (219, "2021-01-15T10:00:00.000Z")]),
+                               SNAPSHOT, familia, c, marcos=marcos, marcos_com_recurso=["transito_em_julgado"], recurso=recurso)
+    assert linha["data_transito_em_julgado"] == date(2023, 3, 1) and linha["data_audiencia"] is None
+    assert linha["registros_recurso"] == 1 and linha["classe_recurso"] == "Apelação Cível"
+    assert c["movimento de 2º grau depois do snapshot ignorado"] == 1
+    assert [e["grau"] for e in eventos] == ["G1", "G1", "G2", "G2"]

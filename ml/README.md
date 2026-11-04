@@ -10,6 +10,8 @@ export DATAJUD_API_KEY=...        # chave pública, em datajud-wiki.cnj.jus.br/a
 
 ampulheta coletar  --snapshot 2026-10-29 --vara 10672     # estágio 1, uma vara; rode várias em paralelo
 ampulheta coletar  --snapshot 2026-10-29                  # rodada final: confere as varas e fecha o manifesto
+ampulheta coletar-g2 --snapshot 2026-10-29 --parte 1/4    # estágio 1b: 2º grau dos mesmos números; rode n partes em paralelo
+ampulheta coletar-g2 --snapshot 2026-10-29                # rodada final do 2º grau: confere os lotes e fecha o manifesto
 ampulheta preparar --snapshot 2026-10-29                  # estágio 2
 ampulheta modelar                                         # estágio 3
 ampulheta publicar                                        # gera e valida o JSON do contrato
@@ -33,14 +35,23 @@ cada arquivo); com manifesto presente a pasta é imutável e uma nova coleta exi
 Rodadas com `--vara` não escrevem o manifesto, então várias podem correr em paralelo (uma por
 processo); uma rodada final sem `--vara` confere cada vara e fecha o snapshot.
 
+**`coletor_g2.py`** (estágio 1b, ADR-013). Lê os números do snapshot de 1º grau fechado e baixa
+os registros de 2º grau dos mesmos números em lotes de 100 (`terms` em `numeroProcesso`), um
+`.jsonl.gz` por lote em `raw/<snapshot>-g2/<tribunal>/`; `--parte i/n` permite n processos em
+paralelo e a rodada final sem `--parte` fecha o `manifest.json`. É onde ficam o trânsito em julgado
+e a baixa quando há apelação.
+
 **`preparo.py`** (estágio 2). Lê os `.jsonl` do snapshot e gera em `../data/`:
 
 - `processos.parquet`, uma linha por processo: vara, classe, assunto, `data_ajuizamento`,
   `data_evento` (primeiro movimento da família Julgamento), `data_censura` (= snapshot),
   `tempo_dias`, `evento` (1 sentenciado, 0 censurado), `tipo_sentenca` e `com_merito`
   (ramo da TPU), `n_movimentos`, `flags`, e uma coluna `data_<marco>` por marco do config
-  (audiência, trânsito em julgado, início do cumprimento, extinção da execução; ADR-011).
-- `eventos.parquet`, uma linha por movimento, para modelar outros eventos depois.
+  (audiência, trânsito em julgado, início do cumprimento, extinção da execução; ADR-011). Com
+  `raw/<snapshot>-g2/` fechado, os marcos com `com_recurso` também olham os movimentos de 2º grau
+  até a data do snapshot, e o processo ganha `registros_recurso` e `classe_recurso` (ADR-013).
+- `eventos.parquet`, uma linha por movimento, com a coluna `grau` (G1 ou G2), para modelar outros
+  eventos depois.
 - `relatorio_qualidade.md`, gerado: contagem de cada regra de limpeza, censura por vara,
   classe e ano, distribuição dos tipos de sentença.
 
@@ -96,6 +107,18 @@ validador reprovar, o comando falha.
 - O índice é atualizado durante a coleta (o total de uma vara mudou entre consultas no mesmo
   dia); o preparo deduplica por `_id`.
 
+## Brutos grandes (Git LFS)
+
+As páginas `.jsonl.gz` de São Paulo capital (`raw/sao-paulo/`) são objetos Git LFS (ADR-015).
+Um clone comum traz só os ponteiros, o manifesto e os totais; para ter as páginas:
+
+```bash
+git lfs install
+git lfs pull --include="ml/raw/sao-paulo/**"
+```
+
+Sorocaba e Campinas continuam como arquivos comuns no git.
+
 ## Termo de uso da API (obrigações)
 
 Cláusula 3.9: dar ciência ao CNJ de qualquer estudo, relatório ou painel disponibilizado ao
@@ -103,6 +126,7 @@ público com os dados. Cláusula 3.8: não explorar comercialmente a API nem inf
 sem autorização prévia por escrito do CNJ. Cláusula 3.13: no máximo 120 requisições por minuto.
 Fonte: formularios.cnj.jus.br/wp-content/uploads/2023/05/Termos-de-uso-api-publica-V1.1.pdf
 
-Ciência ao CNJ sobre o painel do Ampulheta dada em 3 de novembro de 2026, por e-mail ao DPJ
-(cláusula 3.9). Não há exploração comercial; se um dia houver, a cláusula 3.8 exige autorização
-prévia por escrito.
+Ciência ao CNJ sobre o painel do Ampulheta (cláusula 3.9) registrada na Ouvidoria/SIC do CNJ em
+4 de novembro de 2026, protocolo 582636, formalizando o e-mail enviado ao DPJ em 3 de novembro;
+o próprio DPJ orientou usar a Ouvidoria como canal oficial (Resoluções CNJ 215 e 432). Não há
+exploração comercial; se um dia houver, a cláusula 3.8 exige autorização prévia por escrito.

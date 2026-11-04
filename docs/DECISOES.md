@@ -93,3 +93,48 @@ próprio. Publicar essas curvas superestimaria o tempo: o que não foi registrad
 Decisão: publicar por ora só ajuizamento → sentença e audiência → sentença; as datas dos marcos
 continuam no Parquet. Próximo passo: coletar o 2º grau dos mesmos números e medir se o trânsito
 fica completo; só então sentença → trânsito entra. A execução fica fora até haver como ligá-la.
+
+## ADR-013 — Coleta do 2º grau pelos mesmos números, fundida no preparo (2026-11-03)
+Para medir o trânsito em julgado quando há recurso (ADR-012), o pipeline ganha um estágio 1b:
+`coletar-g2` lê os números do snapshot de 1º grau fechado e baixa os registros de grau de recurso
+dos mesmos números em lotes de 100 (filtro `terms` em `numeroProcesso`), um arquivo por lote em
+`raw/<snapshot>-g2/`, com manifesto próprio e partes paralelas (`--parte i/n`). O snapshot de 1º
+grau continua imutável. No preparo, os movimentos de 2º grau entram só nos marcos marcados com
+`com_recurso` (hoje, trânsito em julgado), e tudo o que vier depois da data do snapshot de 1º grau
+é ignorado e contado: assim há uma única data de censura. O Parquet ganha `registros_recurso` e
+`classe_recurso`, e `eventos.parquet` ganha a coluna `grau`. A sentença segue sendo a de 1º grau.
+Uma transição com destino no trânsito só é publicada depois que o relatório de qualidade mostrar
+o registro completo o bastante por ano da sentença.
+Resultado (2026-11-04): 9.911 registros de 2º grau para 9.442 números (24,5% dos processos; 8.049
+apelações). A fusão subiu a cobertura do trânsito de 34% para 39% dos processos, e entre os
+sentenciados até 2023 ela fica em 46–60%; no próprio registro de 2º grau só 24% das apelações têm
+o código 848. O trânsito em julgado não é registrado de forma confiável em nenhum dos graus, então
+sentença → trânsito continua fora (ADR-012 confirmado). O que o 2º grau torna observável é a
+apelação: 79% dos registros de Apelação Cível têm movimento de julgamento (92–96% nas entradas de
+2024–2025), mediana de 66 dias da entrada ao julgamento. "Entrada em 2º grau → julgamento da
+apelação" é candidata a transição, com a ressalva da subnotificação nas coortes antigas.
+
+## ADR-014 — Páginas de 300 com `_source` enxuto e jitter no backoff (2026-11-03)
+Medido à noite numa vara de Sorocaba: página de 300 documentos inteira = 2,3 MB em 50 s; com
+`_source` restrito aos campos que o pipeline usa = 1,3 MB em 40 s; o snapshot 2026-10-29 usou
+páginas de 50 inteiras, seis vezes mais requisições. O servidor leva 30 a 50 s por consulta
+independentemente do tamanho, então o número de requisições é o que manda no tempo total. A
+partir daqui o coletor pede páginas de 300 com `api.campos` (lista no config); ficam de fora
+`complementosTabelados` e `movimentos.orgaoJulgador`, que nenhum estágio lê. Isso ajusta o
+ADR-008: o raw continua guardando o hit (`_id`, `_source`, `sort`), mas o `_source` é parcial, e
+o manifesto registra os campos. O backoff ganha jitter (×0,5 a ×1,5) para processos paralelos não
+repetirem em sincronia. Projetos abertos que usam a API (datajud-pipeline, datajud-mcp, juscraper)
+chegam às mesmas práticas: `search_after`, retry só em erro transitório, checagem de shards e
+limite de 120 req/min; nenhum tem truque além disso.
+
+## ADR-015 — Brutos grandes vão para o Git LFS, não para fora do git (2026-11-04)
+Substitui a última frase da ADR-008. O recorte de São Paulo capital (124 varas cíveis, cerca de
+870 mil processos) deve passar de 300 MB compactados, quase dez vezes o limite da ADR-008; tirar
+os brutos do git faria a coleta de São Paulo não ser retomável de uma sessão na nuvem, justamente
+o caso que a ADR-008 queria cobrir. Testado de ponta a ponta no repositório: `git lfs push`,
+clone limpo e `git lfs pull` devolvem os bytes íntegros. A partir daqui, páginas `.jsonl.gz` de
+recortes acima de ~100 MB são rastreadas como objetos LFS (`.gitattributes`), e `manifest.json`
+e `total_esperado.txt` continuam como texto comum, então quem clona sem LFS vê a estrutura e os
+totais. Quem precisa das páginas roda `git lfs pull`. O site não lê `ml/raw/`, e o checkout do CI
+não baixa objetos LFS, então a cota de banda do GitHub só é consumida por quem pede o bruto.
+Sorocaba e Campinas (30 e 45 MB) ficam como estão.
