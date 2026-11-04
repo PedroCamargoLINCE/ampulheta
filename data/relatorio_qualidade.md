@@ -9,6 +9,7 @@ Gerado por `ampulheta preparar`. Fonte: CNJ/DataJud, API Pública. Coleta em 202
 | flag: historico_curto | 149 |
 | flag: movimento_antes_do_ajuizamento | 9 |
 | flag: sistema_sem_julgamento | 376 |
+| movimento de 2º grau depois do snapshot ignorado | 4 |
 | movimento duplicado (mesmo código, mesmo dia) removido | 177833 |
 | movimento sem código TPU ignorado | 58 |
 
@@ -61,27 +62,27 @@ mediana 404 dias, p80 788, p90 1093.
 | marco               |   processos |    % |   mediana_dias |
 |:--------------------|------------:|-----:|---------------:|
 | audiencia           |        2992 |  7.8 |            127 |
-| transito_em_julgado |       13037 | 33.8 |            499 |
+| transito_em_julgado |       14927 | 38.7 |            545 |
 | inicio_cumprimento  |        6282 | 16.3 |            844 |
 | extincao_execucao   |        1626 |  4.2 |            598 |
 
 ## Registros de 2º grau (ADR-013)
 
-0 processos (0.0%) têm registro de 2º grau; classes mais comuns: .
+9442 processos (24.5%) têm registro de 2º grau; classes mais comuns: Apelação Cível (8045); Embargos de Declaração Cível (1100); Agravo Interno Cível (122); Apelação / Remessa Necessária (86).
 
 Trânsito em julgado entre os sentenciados, por ano da sentença:
 
 |   ano_sentenca |   sentenciados |   com_transito |   com_recurso |   %_com_transito |
 |---------------:|---------------:|---------------:|--------------:|-----------------:|
-|           2018 |            251 |            110 |             0 |             43.8 |
-|           2019 |           2782 |           1082 |             0 |             38.9 |
-|           2020 |           4876 |           2121 |             0 |             43.5 |
-|           2021 |           4763 |           2235 |             0 |             46.9 |
-|           2022 |           4555 |           2383 |             0 |             52.3 |
-|           2023 |           3676 |           2059 |             0 |             56   |
-|           2024 |           2092 |            592 |             0 |             28.3 |
-|           2025 |           4482 |           1567 |             0 |             35   |
-|           2026 |           3020 |            810 |             0 |             26.8 |
+|           2018 |            251 |            122 |            77 |             48.6 |
+|           2019 |           2782 |           1266 |          1020 |             45.5 |
+|           2020 |           4876 |           2433 |          1469 |             49.9 |
+|           2021 |           4763 |           2602 |          1420 |             54.6 |
+|           2022 |           4555 |           2689 |          1135 |             59   |
+|           2023 |           3676 |           2191 |           831 |             59.6 |
+|           2024 |           2092 |            839 |          1175 |             40.1 |
+|           2025 |           4482 |           1864 |          1781 |             41.6 |
+|           2026 |           3020 |            835 |           499 |             27.6 |
 
 ## Por ano de ajuizamento
 
