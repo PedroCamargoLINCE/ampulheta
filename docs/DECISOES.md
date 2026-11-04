@@ -105,6 +105,14 @@ grau continua imutável. No preparo, os movimentos de 2º grau entram só nos ma
 `classe_recurso`, e `eventos.parquet` ganha a coluna `grau`. A sentença segue sendo a de 1º grau.
 Uma transição com destino no trânsito só é publicada depois que o relatório de qualidade mostrar
 o registro completo o bastante por ano da sentença.
+Resultado (2026-11-04): 9.911 registros de 2º grau para 9.442 números (24,5% dos processos; 8.049
+apelações). A fusão subiu a cobertura do trânsito de 34% para 39% dos processos, e entre os
+sentenciados até 2023 ela fica em 46–60%; no próprio registro de 2º grau só 24% das apelações têm
+o código 848. O trânsito em julgado não é registrado de forma confiável em nenhum dos graus, então
+sentença → trânsito continua fora (ADR-012 confirmado). O que o 2º grau torna observável é a
+apelação: 79% dos registros de Apelação Cível têm movimento de julgamento (92–96% nas entradas de
+2024–2025), mediana de 66 dias da entrada ao julgamento. "Entrada em 2º grau → julgamento da
+apelação" é candidata a transição, com a ressalva da subnotificação nas coortes antigas.
 
 ## ADR-014 — Páginas de 300 com `_source` enxuto e jitter no backoff (2026-11-03)
 Medido à noite numa vara de Sorocaba: página de 300 documentos inteira = 2,3 MB em 50 s; com
