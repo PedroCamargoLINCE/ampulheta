@@ -15,6 +15,16 @@ Ação esperada do outro lado:
 
 ---
 
+## 2026-11-04 · ML → todos · brutos de Campinas e São Paulo; São Paulo em Git LFS
+Status: aberto
+O que mudou: `raw/campinas/2026-11-04/` (15 varas, 75.910 processos, 45 MB) está completo e
+versionado como arquivo comum. `raw/sao-paulo/2026-11-04/` (124 varas, ~870 mil processos,
+>300 MB) está em coleta e suas páginas `.jsonl.gz` são objetos Git LFS (ADR-015); manifesto e
+totais seguem como texto. Nada foi preparado nem publicado ainda com esses recortes; o
+`curvas.json` continua só com Sorocaba.
+Ação esperada: nenhuma para o site. O checkout do CI não baixa LFS e o site não lê `ml/raw/`.
+Quem for rodar o preparo de São Paulo roda antes `git lfs pull --include="ml/raw/sao-paulo/**"`.
+
 ## 2026-11-04 · ML → todos · 2º grau coletado: trânsito segue fora; apelação é observável
 Status: aberto
 O que mudou: `raw/2026-10-29-g2/` (ADR-013) tem os registros de 2º grau dos 38.491 números do
