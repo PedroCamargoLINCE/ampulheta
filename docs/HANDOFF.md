@@ -22,7 +22,8 @@ GET com um número CNJ do TJSP, dígitos verificadores conferidos, só a busca `
 parciais da API (shard recusado, visto em 2026-11-05) viram "tente de novo", como no coletor.
 Em Estimar tempo, a busca preenche vara, classe, fase (último marco de `marcos` atingido, pela
 data do primeiro movimento, como no preparo) e tempo; processo já sentenciado ou só com registro
-de 2º grau recebe aviso em vez de número. A função é publicada pelo workflow `consulta` quando
+de 2º grau recebe aviso em vez de número. Com a API cheia, o navegador tenta de novo sozinho
+por até 5 minutos (a função segue sem estado). A função é publicada pelo workflow `consulta` quando
 existem os segredos do Cloudflare e do DataJud, e o site só mostra a busca com a variável
 `CONSULTA_URL`; o passo a passo está em `consulta/README.md`
 O que mudou: testei a API Pública com preflight `OPTIONS` e com `POST` enviando `Origin`; ela

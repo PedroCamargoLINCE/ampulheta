@@ -319,6 +319,14 @@ input[aria-invalid='true'] {
 .consulta-linha .botao {
   flex: 0 0 auto;
 }
+.consulta-aviso {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+/* Com a busca em andamento (ou já respondida), a mensagem dela substitui o aviso fixo. */
+.consulta:has(.consulta-retorno:not(:empty)) .consulta-aviso {
+  display: none;
+}
 .consulta-retorno:empty {
   display: none;
 }

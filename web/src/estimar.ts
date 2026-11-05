@@ -40,8 +40,11 @@ import {
 const ABA = 'estimar';
 /** Endereço da função da consulta por número (consulta/); sem ele, a busca não aparece. */
 const URL_CONSULTA = import.meta.env.VITE_CONSULTA_URL?.trim() ?? '';
-/** A API do CNJ leva de 30 s a 1 min; a função espera até 90 s. */
+/** A API do CNJ leva de 30 s a 1 min; a função espera até 90 s por tentativa. */
 const LIMITE_CONSULTA_MS = 100_000;
+/** Com o CNJ cheio, o navegador tenta de novo sozinho, espaçado, até este total. */
+const LIMITE_TOTAL_MS = 5 * 60_000;
+const ESPERA_ENTRE_TENTATIVAS_MS = 20_000;
 const HORIZONTES = [3, 6, 12] as const;
 /** Só para contratos sem `em_risco`: S(t) baixo é sinal de instabilidade, não contagem de casos. */
 const S_SINAL_INSTAVEL = 0.05;
@@ -120,7 +123,16 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
   linhaNumero.append(numero.controle, buscar);
   const retornoConsulta = html('div', 'consulta-retorno');
   retornoConsulta.setAttribute('aria-live', 'polite');
-  formConsulta.append(numero.campo, retornoConsulta);
+  formConsulta.append(
+    numero.campo,
+    html(
+      'p',
+      'consulta-aviso',
+      'A base pública do CNJ é lenta: a busca leva de 1 a 2 minutos e, quando os servidores estão cheios, alguns minutos a mais. ' +
+        'Dá para preencher à mão enquanto isso.',
+    ),
+    retornoConsulta,
+  );
   if (URL_CONSULTA) controles.append(formConsulta, html('p', 'separador', 'ou preencha à mão'));
 
   const form = html('form', 'controles') as HTMLFormElement;
@@ -536,6 +548,7 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
 
   /** Toda mudança feita pela pessoa tira o aviso de link inválido e recalcula. */
   const pelaPessoa = (f: () => void) => () => {
+    if (consultaAtual) mexeuDurante = true;
     avisoLink = null;
     f();
     atualizar();
@@ -601,10 +614,12 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
     }),
   );
 
-  // Consulta: espera com contagem, cancelamento e mensagem clara se o CNJ estiver ocupado.
+  // Consulta: a base do CNJ é lenta e às vezes está cheia. A tela diz isso antes, mostra o
+  // tempo, tenta de novo sozinha por alguns minutos e não atropela quem preencheu à mão.
   let consultaAtual: AbortController | null = null;
+  let mexeuDurante = false;
   const mostrarRetorno = (...nos: Node[]) => retornoConsulta.replaceChildren(...nos);
-  const aplicarConsulta = (p: Preenchimento, n: string) => {
+  const aplicarConsulta = (p: Preenchimento) => {
     avisoLink = null;
     vara.controle.value = p.vara ?? NADA;
     classe.controle.value = p.classe ?? NADA;
@@ -614,6 +629,8 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
     data.controle.value = '';
     for (const c of [vara, classe, tempo, data]) c.erro(null);
     atualizar();
+  };
+  const mostrarAchado = (p: Preenchimento, n: string, perguntar: boolean) => {
     const caixa = html('div', 'consulta-fatos');
     caixa.append(html('p', '', `${formatarNumero(n)}: ${p.fatos}`));
     if (p.avisos.length) {
@@ -621,8 +638,29 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
       for (const a of p.avisos) lista.appendChild(html('li', '', a));
       caixa.appendChild(lista);
     }
+    if (perguntar) {
+      // A pessoa preencheu à mão enquanto esperava: o achado vira sugestão, não sobrescreve.
+      const usar = document.createElement('button');
+      usar.type = 'button';
+      usar.className = 'botao botao-secundario';
+      usar.textContent = 'Usar estes dados';
+      const nota = html('p', 'consulta-espera', 'Você mexeu nos campos durante a busca, então não trocamos nada.');
+      usar.addEventListener('click', () => {
+        aplicarConsulta(p);
+        nota.remove();
+        usar.remove();
+      });
+      caixa.append(nota, usar);
+    }
     mostrarRetorno(caixa);
   };
+  const relogio = (ms: number) => `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, '0')}`;
+  const esperar = (ms: number, sinal: AbortSignal) =>
+    new Promise<void>((ok, falha) => {
+      const id = window.setTimeout(ok, ms);
+      sinal.addEventListener('abort', () => (window.clearTimeout(id), falha(new DOMException('cancelada', 'AbortError'))), { once: true });
+    });
+
   const executarConsulta = async () => {
     const erro = erroNumero(numero.controle.value);
     numero.erro(erro);
@@ -634,39 +672,76 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
     consultaAtual?.abort();
     const controle = new AbortController();
     consultaAtual = controle;
-    const limite = window.setTimeout(() => controle.abort(), LIMITE_CONSULTA_MS);
+    mexeuDurante = false;
     const inicio = Date.now();
-    const espera = html('p', 'consulta-espera');
+
+    const linha = html('p', 'consulta-espera');
+    const detalhe = html('p', 'consulta-espera');
     const cancelar = document.createElement('button');
     cancelar.type = 'button';
     cancelar.className = 'link-botao';
-    cancelar.textContent = 'Cancelar';
+    cancelar.textContent = 'Cancelar busca';
     cancelar.addEventListener('click', () => controle.abort());
-    const contar = () => {
-      const s = Math.round((Date.now() - inicio) / 1000);
-      espera.textContent = `Consultando o DataJud… costuma levar de 30 segundos a 1 minuto (${s} s).`;
+    let texto = 'Consultando a base pública do CNJ. Costuma levar de 1 a 2 minutos.';
+    let proxima = 0;
+    const pintar = () => {
+      linha.textContent = `${texto} (${relogio(Date.now() - inicio)})`;
+      detalhe.textContent = proxima > Date.now() ? `Nova tentativa em ${Math.ceil((proxima - Date.now()) / 1000)} s.` : '';
+      detalhe.hidden = !detalhe.textContent;
     };
-    contar();
-    const relogio = window.setInterval(contar, 1000);
-    mostrarRetorno(espera, cancelar);
+    pintar();
+    const tique = window.setInterval(pintar, 1000);
+    mostrarRetorno(linha, detalhe, cancelar);
     buscar.disabled = true;
     buscar.textContent = 'Buscando…';
+
+    let tentativa = 0;
     try {
-      const r = await consultar(URL_CONSULTA, n, controle.signal);
-      aplicarConsulta(interpretar(doc, r), n);
-    } catch (e) {
-      if (controle.signal.aborted) {
-        mostrarRetorno(
-          html('p', 'consulta-espera', Date.now() - inicio >= LIMITE_CONSULTA_MS ? 'O DataJud não respondeu a tempo. Tente de novo em instantes.' : 'Consulta cancelada.'),
-        );
-      } else {
-        const msg = e instanceof ErroConsulta ? e.message : 'A consulta falhou.';
-        const caixa = aviso('atencao', msg, e instanceof ErroConsulta && e.tentarDeNovo ? 'A base do CNJ fica ocupada em alguns horários. Tente de novo em instantes ou preencha à mão.' : 'Você pode preencher os campos à mão.');
-        mostrarRetorno(caixa);
+      for (;;) {
+        tentativa += 1;
+        const rodada = new AbortController();
+        const repassar = () => rodada.abort();
+        controle.signal.addEventListener('abort', repassar, { once: true });
+        const limite = window.setTimeout(() => rodada.abort(), LIMITE_CONSULTA_MS);
+        try {
+          const r = await consultar(URL_CONSULTA, n, rodada.signal);
+          const p = interpretar(doc, r);
+          if (!mexeuDurante) aplicarConsulta(p);
+          mostrarAchado(p, n, mexeuDurante);
+          return;
+        } catch (e) {
+          if (controle.signal.aborted) throw e;
+          const ocupado = rodada.signal.aborted || (e instanceof ErroConsulta && e.tentarDeNovo);
+          if (!ocupado) {
+            mostrarRetorno(aviso('atencao', e instanceof ErroConsulta ? e.message : 'A busca falhou.', 'Você pode preencher os campos à mão.'));
+            return;
+          }
+          if (Date.now() - inicio + ESPERA_ENTRE_TENTATIVAS_MS >= LIMITE_TOTAL_MS) {
+            mostrarRetorno(
+              aviso(
+                'atencao',
+                `Os servidores públicos do CNJ continuam cheios (${tentativa} tentativas em ${relogio(Date.now() - inicio)}).`,
+                'Tente de novo mais tarde ou preencha os campos à mão.',
+              ),
+            );
+            return;
+          }
+          texto = `Os servidores públicos do CNJ estão cheios. Vamos tentar de novo sozinhos por até ${LIMITE_TOTAL_MS / 60000} minutos; pode preencher à mão enquanto isso.`;
+          proxima = Date.now() + ESPERA_ENTRE_TENTATIVAS_MS;
+          pintar();
+          await esperar(ESPERA_ENTRE_TENTATIVAS_MS, controle.signal);
+          proxima = 0;
+          texto = `Tentativa ${tentativa + 1}: consultando a base pública do CNJ de novo.`;
+          pintar();
+        } finally {
+          window.clearTimeout(limite);
+          controle.signal.removeEventListener('abort', repassar);
+        }
       }
+    } catch {
+      mostrarRetorno(html('p', 'consulta-espera', 'Busca cancelada.'));
     } finally {
-      window.clearTimeout(limite);
-      window.clearInterval(relogio);
+      window.clearInterval(tique);
       if (consultaAtual === controle) consultaAtual = null;
       buscar.disabled = false;
       buscar.textContent = 'Buscar';
