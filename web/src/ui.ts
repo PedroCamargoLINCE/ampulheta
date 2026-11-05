@@ -1,5 +1,5 @@
 // Componentes de interface compartilhados pelas telas (docs/DESIGN.md, seção 8).
-import type { Contrato } from './dados';
+import { nomeMarco, origensPara, type Contrato } from './dados';
 import { dataIso } from './formato';
 import { MIN_EM_RISCO } from './base';
 
@@ -95,6 +95,61 @@ function montarCampo<T extends HTMLElement>(id: string, rotulo: string, controle
 export interface Opcao {
   valor: string;
   texto: string;
+}
+
+/**
+ * Escolha entre poucas opções exclusivas, com cara de botões lado a lado. Por baixo são
+ * rádios nativos num fieldset: setas, Tab e leitor de tela funcionam como o navegador manda.
+ */
+export function criarEscolha(
+  nome: string,
+  legenda: string,
+  opcoes: Opcao[],
+  inicial: string,
+  ajuda?: string,
+): { campo: HTMLFieldSetElement; valor: () => string; definir: (v: string) => void; aoMudar: (f: () => void) => void } {
+  const campo = document.createElement('fieldset');
+  campo.className = 'escolha';
+  const leg = document.createElement('legend');
+  const linha = html('span', 'rotulo-linha');
+  linha.appendChild(html('span', '', legenda));
+  leg.appendChild(linha);
+  campo.appendChild(leg);
+  const grupo = html('div', 'segmentos');
+  const radios: HTMLInputElement[] = [];
+  for (const o of opcoes) {
+    const rotulo = document.createElement('label');
+    rotulo.className = 'segmento';
+    const r = document.createElement('input');
+    r.type = 'radio';
+    r.name = nome;
+    r.value = o.valor;
+    r.checked = o.valor === inicial;
+    rotulo.append(r, html('span', '', o.texto));
+    grupo.appendChild(rotulo);
+    radios.push(r);
+  }
+  campo.appendChild(grupo);
+  if (ajuda) {
+    const { botao: b, painel } = ajudaRecolhida(`${nome}-ajuda`, legenda, ajuda);
+    b.setAttribute('aria-label', `Ajuda: ${legenda}`);
+    linha.appendChild(b);
+    campo.appendChild(painel);
+    campo.setAttribute('aria-describedby', painel.id);
+  }
+  return {
+    campo,
+    valor: () => radios.find((r) => r.checked)?.value ?? inicial,
+    definir: (v) => radios.forEach((r) => (r.checked = r.value === v)),
+    aoMudar: (f) => radios.forEach((r) => r.addEventListener('change', f)),
+  };
+}
+
+const DESDE: Record<string, string> = { ajuizamento: 'desde o ajuizamento', audiencia: 'desde a audiência' };
+
+/** "desde o ajuizamento", "desde a audiência"; para marcos novos, cai no nome do contrato. */
+export function desde(doc: Contrato, origem: string): string {
+  return DESDE[origem] ?? `desde: ${nomeMarco(doc, origem).toLowerCase()}`;
 }
 
 export function criarSelect(
@@ -292,6 +347,13 @@ export function paragrafosMetodologia(doc: Contrato): string[] {
       'Na tela Estimar tempo, ela recomeça a partir do tempo informado: só entram os processos que chegaram a esse tempo sem sentença.',
     'O intervalo de confiança de 95% expressa a incerteza estatística da estimativa, calculada pela variância de Greenwood ' +
       'na escala log(−log). Ele vale sob as hipóteses do método. Não é uma garantia para um processo individual nem cobre mudanças futuras.',
+    ...origensPara(doc)
+      .filter((o) => o !== 'ajuizamento')
+      .map(
+        (o) =>
+          `Para quem já passou por ${nomeMarco(doc, o).toLowerCase()}, a estimativa usa só processos que também passaram por ela ` +
+          `e conta o tempo ${desde(doc, o)}. É a mesma pergunta, feita a partir do ponto em que o processo está.`,
+      ),
     `Onde menos de ${MIN_EM_RISCO} processos do recorte seguiam sem sentença e em acompanhamento, a curva é cortada e não mostramos número: ` +
       'um único processo bastaria para mudar o resultado.',
     'Diferenças entre varas podem refletir o tipo de processo que cada uma recebe e outros fatores. A curva não mede a qualidade do trabalho de uma vara, ' +

@@ -37,7 +37,12 @@ Ação esperada: nenhuma para o site. Para o pipeline, decidir se "entrada em 2�
 da apelação" entra como transição (79% com julgamento registrado, mediana 66 dias).
 
 ## 2026-11-03 · ML → Web · contrato 1.3.0: curvas por transição (`origem`/`destino`) e `marcos`
-Status: aberto
+Status: resolvido (2026-11-05) — `buscarCurva` filtra por origem e destino (sem origem, só
+ajuizamento → sentença); Explorar dados ganhou o seletor "Contar o tempo" (desde o ajuizamento ou
+desde a audiência, as duas curvas comparadas sempre na mesma contagem); Estimar tempo pergunta
+"Em que fase está?" e, com "Já teve audiência", usa a curva audiência → sentença com o tempo desde
+a audiência. As opções saem das origens publicadas e dos nomes em `marcos`; o link guarda
+`fase=`. Os códigos TPU de `marcos` ficam para a consulta por número (A4)
 O que mudou: `contracts/` está na versão 1.3.0. Cada curva traz `origem` e `destino` (ausentes =
 ajuizamento → sentença) e o documento traz `marcos`, a lista de etapas com os códigos TPU que as
 caracterizam. `data/publicado/curvas.json` tem agora 54 curvas: as 36 de ajuizamento → sentença de

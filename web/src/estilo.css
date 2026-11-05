@@ -300,6 +300,63 @@ input[aria-invalid='true'] {
   outline-offset: 2px;
 }
 
+/* Escolha entre poucas opções (fase): rádios nativos com cara de botões lado a lado. */
+.escolha {
+  display: grid;
+  gap: var(--space-xs);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.escolha legend {
+  padding: 0;
+  margin-bottom: var(--space-xs);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+.segmentos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+.segmento {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height);
+  padding: 0 var(--space-md);
+  border: var(--rule-hair) solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background-color var(--dur-micro) var(--ease-out);
+}
+.segmento input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+}
+@media (hover: hover) {
+  .segmento:hover {
+    background: var(--color-surface-muted);
+  }
+}
+.segmento:has(input:checked) {
+  border-color: var(--color-action);
+  background: var(--color-action);
+  color: var(--color-on-action);
+  font-weight: var(--weight-medium);
+}
+.segmento:has(input:focus-visible) {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
 /* Tempo: controle deslizante e número lado a lado. */
 .tempo-linha {
   display: flex;

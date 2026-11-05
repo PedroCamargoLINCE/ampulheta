@@ -9,6 +9,7 @@ import {
   cartaoProbabilidade,
   comoCalculamos,
   criarEntrada,
+  criarEscolha,
   criarSelect,
   html,
 } from './ui';
@@ -73,6 +74,19 @@ secao(
   ['Erro', erro.campo],
   ['Desabilitado', desabilitado.campo],
 );
+
+// Escolha (fase)
+const escolha = criarEscolha(
+  'c-fase',
+  'Em que fase está?',
+  [
+    { valor: 'a', texto: 'Ainda não teve audiência (ou não sei)' },
+    { valor: 'b', texto: 'Já teve audiência' },
+  ],
+  'a',
+  'Explicação curta, recolhida até a pessoa pedir.',
+);
+secao('Escolha', 'Poucas opções exclusivas: rádios nativos com cara de botões; setas trocam a opção.', ['Fase', escolha.campo]);
 
 // Botão
 const focoBotao = botao('Calcular estimativa', 'principal');
