@@ -1,0 +1,10 @@
+{
+  "name": "ampulheta-consulta",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Função mínima e sem estado da consulta por número (ADR-016).",
+  "scripts": {
+    "test": "node --test"
+  }
+}

@@ -32,3 +32,7 @@ web/.vite/
 
 # Relatórios locais do Impeccable (critique/polish)
 .impeccable/
+
+# Segredos locais da função da consulta (wrangler dev)
+consulta/.dev.vars
+consulta/.wrangler/

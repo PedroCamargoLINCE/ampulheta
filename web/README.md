@@ -19,6 +19,13 @@ npm run preview    # serve dist/ localmente
 e só então copia para `public/curvas.json`. Arquivo reprovado no validador derruba o build.
 Com a fixture, o site mostra uma faixa de "dado sintético" no topo.
 
+A busca por número só aparece quando `VITE_CONSULTA_URL` aponta para a função de
+`../consulta/` (no CI, a variável `CONSULTA_URL` do repositório; ver `../consulta/README.md`):
+
+```sh
+VITE_CONSULTA_URL=http://localhost:8787/ npm run dev
+```
+
 ## Stack e por quê
 
 - **TypeScript sem framework.** São duas telas com meia dúzia de controles; um
@@ -34,19 +41,23 @@ Com a fixture, o site mostra uma faixa de "dado sintético" no topo.
   PageUp/PageDown, Home/End), anuncia os valores em região `aria-live` e traz os
   mesmos números numa tabela.
 
-Sem dependência em produção e sem telemetria. O único recurso externo são as fontes
-(Hanken Grotesk), carregada do Google Fonts.
+Sem dependência em produção e sem telemetria. Recursos externos: a fonte (Hanken Grotesk, do
+Google Fonts) e, quando configurada, a função da consulta por número, chamada só quando a
+pessoa pede uma busca.
 
 ## Organização
 
 | Arquivo | Papel |
 | --- | --- |
 | `src/sobrevivencia.ts` | interpolação de S(t), P(sentença em h meses \| t) e seu IC 95%, quantis; puro e testado |
-| `src/dados.ts` | tipos do contrato, carga do JSON, busca de curva |
+| `src/dados.ts` | tipos do contrato, carga do JSON, busca de curva por transição |
+| `src/base.ts` | até onde cada curva tem base (`em_risco`) |
+| `src/consulta.ts` | consulta por número: validação do CNJ e leitura da resposta em vara, classe, fase e tempo |
 | `src/grafico.ts` | gráfico SVG acessível |
-| `src/explorar.ts` | tela Explorar: curva com IC, quantis, amostra, comparação de duas curvas |
-| `src/meu-processo.ts` | tela Meu processo: probabilidades em 3, 6 e 12 meses e curva condicional |
-| `src/main.ts` | abas, faixa de dado sintético, rodapé com a fonte e o snapshot |
+| `src/ui.ts` | componentes compartilhados (campo, escolha, aviso, cartão, link) |
+| `src/estimar.ts` | tela Estimar tempo: busca por número, fase, probabilidades em 3, 6 e 12 meses e curva condicional |
+| `src/explorar.ts` | tela Explorar dados: curvas com IC por transição, prazos e comparação de dois recortes |
+| `src/main.ts` | abas, faixa de dado sintético, rodapé com a fonte e a data dos dados |
 
 ## Regras que o site segue
 

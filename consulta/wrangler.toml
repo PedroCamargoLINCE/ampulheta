@@ -1,0 +1,10 @@
+# Função da consulta por número (ADR-016), no plano gratuito do Cloudflare Workers.
+# A chave da API Pública do DataJud entra como segredo (DATAJUD_API_KEY), nunca neste arquivo.
+name = "ampulheta-consulta"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[vars]
+# Origens que podem chamar a função pelo navegador: o site publicado e o `npm run dev`.
+ORIGENS_PERMITIDAS = "https://pedrocamargolince.github.io,http://localhost:5173"

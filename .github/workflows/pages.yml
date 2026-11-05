@@ -39,6 +39,10 @@ jobs:
       - run: npm test
       # valida o curvas.json com contracts/validar.py antes de gerar dist/
       - run: npm run build
+        env:
+          # Endereço da função da consulta por número (consulta/README.md). Vazio: a busca
+          # por número não aparece e o site funciona como antes.
+          VITE_CONSULTA_URL: ${{ vars.CONSULTA_URL }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web/dist
