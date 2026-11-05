@@ -43,7 +43,7 @@ e a baixa quando há apelação.
 
 **`preparo.py`** (estágio 2). Lê os `.jsonl` do snapshot e gera em `../data/`:
 
-- `processos.parquet`, uma linha por processo: vara, classe, assunto, `data_ajuizamento`,
+- `processos.parquet`, uma linha por processo: vara, classe, assunto principal (código e nome), `data_ajuizamento`,
   `data_evento` (primeiro movimento da família Julgamento), `data_censura` (= snapshot),
   `tempo_dias`, `evento` (1 sentenciado, 0 censurado), `tipo_sentenca` e `com_merito`
   (ramo da TPU), `n_movimentos`, `flags`, e uma coluna `data_<marco>` por marco do config
@@ -76,16 +76,22 @@ classe e cada vara × classe com n ≥ 30. S(t) é avaliada numa grade de meses
 inteiros comum a todas as curvas (ADR-007), com IC 95% e quantis p50, p80, p90 (`null` quando
 a curva não chega lá). Calcula também o log-rank entre varas. Escreve `models/km.json`.
 
-**`cox.py`** (estágio 3, camada 2). Cox proporcional com `lifelines`, covariáveis vara e classe
-(referência: a primeira de cada lista do config; ano de ajuizamento fica de fora porque não
-extrapola para processos novos). Validação temporal (ADR-004): ajusta em ajuizados até 2021 e
-mede em 2022 em diante com concordance index, Brier integrado até 36 meses (`scikit-survival`,
-comparado à curva Kaplan-Meier do treino) e calibração por grupo de probabilidade prevista em 12
-e 24 meses. Dummies com menos de 30 processos no treino (varas criadas depois do corte) ficam
-fora do ajuste e caem na referência. O teste de proporcionalidade de Schoenfeld é reportado por
-covariável, não corrigido. O modelo final, com todos os processos, dá os hazard ratios
-publicados. Escreve `models/cox.json` e `../data/relatorio_modelo.md`. A camada de boosting
-entrará ao lado, com a mesma validação.
+**`cox.py`** (estágio 3, camada 2). Cox proporcional com `lifelines`, um modelo por transição de
+`transicoes` (a fase atual não entra como covariável, para evitar viés de tempo imortal), com
+vara, classe e assunto principal (referências: a primeira vara e a primeira classe do config e
+"outros assuntos", os que têm menos de 1% dos processos), validação temporal (ADR-004: treino
+até 2021, teste 2022+) com concordance index, Brier integrado até 36 meses e calibração em 12 e
+24 meses, Schoenfeld reportado e dummies com menos de 30 processos na referência. Escreve
+`models/cox.json`.
+
+**`boosting.py`** (estágio 3, camada 3). `GradientBoostingSurvivalAnalysis` (`scikit-survival`,
+perda de Cox) com as mesmas covariáveis em one-hot e hiperparâmetros fixos, só para comparar
+desempenho com Kaplan-Meier e Cox na mesma validação temporal, mais a importância das variáveis
+por grupo; não publica curvas. Escreve `models/boosting.json`.
+
+**`relatorio.py`** (estágio 3). Junta `models/cox.json` e `models/boosting.json` em
+`../data/relatorio_modelo.md`: hazard ratios, validação e calibração por transição e a
+comparação das três camadas.
 
 **`publicar.py`**. Junta `models/km.json` ao cabeçalho exigido pelo contrato (snapshot,
 citação ao CNJ/DataJud, dicionário de varas e classes) e grava

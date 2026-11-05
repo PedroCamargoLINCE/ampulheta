@@ -116,6 +116,7 @@ def processar(src: dict[str, Any], snapshot: date, familia: Familia, contagem: C
         "classe_codigo": src["classe"]["codigo"],
         "classe_nome": src["classe"]["nome"],
         "assunto_principal": (src.get("assuntos") or [{}])[0].get("codigo"),
+        "assunto_principal_nome": (src.get("assuntos") or [{}])[0].get("nome"),
         "sistema": src.get("sistema", {}).get("nome"),
         "data_ajuizamento": ajuizamento,
         "data_evento": primeira["data"] if primeira else None,
