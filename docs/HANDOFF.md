@@ -15,6 +15,22 @@ Ação esperada do outro lado:
 
 ---
 
+## 2026-11-05 · ML → Web · consulta por número: a API não aceita CORS, precisa de função mínima
+Status: aberto
+O que mudou: testei a API Pública com preflight `OPTIONS` e com `POST` enviando `Origin`; ela
+responde sem nenhum `Access-Control-Allow-*`, então o navegador bloqueia a chamada direta. A
+decisão está em DECISOES.md (ADR-016): a tela "meu processo" consulta por número através de uma
+função mínima e sem estado, da frente do site, que recebe um número CNJ, faz à API uma busca
+`match` em `numeroProcesso` no índice `api_publica_tjsp` com a chave pública no header
+`Authorization: APIKey ...`, e devolve classe, órgão julgador, data de ajuizamento e os
+movimentos (código e data). Nada é gravado; nenhum outro tipo de consulta é aceito. A descoberta
+da fase é feita no navegador com `marcos` do contrato 1.3.0 (o código de cada marco já está no
+JSON publicado). A chave pública vigente está em datajud-wiki.cnj.jus.br/api-publica/acesso;
+nunca a coloque em arquivo versionado. A API demora 30 a 50 s e devolve 429/504 em pico:
+a função precisa de timeout generoso e a tela, de mensagem de espera.
+Ação esperada: escolher a hospedagem da função (sem custo e sem estado), implementar e marcar
+este item como resolvido. Nada muda no pipeline nem no contrato.
+
 ## 2026-11-04 · ML → todos · brutos de Campinas e São Paulo; São Paulo em Git LFS
 Status: aberto
 O que mudou: `raw/campinas/2026-11-04/` (15 varas, 75.910 processos, 45 MB) está completo e

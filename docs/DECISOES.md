@@ -138,3 +138,32 @@ e `total_esperado.txt` continuam como texto comum, então quem clona sem LFS vê
 totais. Quem precisa das páginas roda `git lfs pull`. O site não lê `ml/raw/`, e o checkout do CI
 não baixa objetos LFS, então a cota de banda do GitHub só é consumida por quem pede o bruto.
 Sorocaba e Campinas (30 e 45 MB) ficam como estão.
+
+## ADR-016 — Consulta por número passa por uma função mínima sem estado, não pelo navegador (2026-11-05)
+Testado em 2026-11-05: a API Pública responde ao preflight `OPTIONS` com 200 e `Allow: GET,POST`,
+mas sem nenhum cabeçalho `Access-Control-Allow-*`; o navegador bloqueia a chamada direta, então
+a tela "meu processo" não pode consultar `api-publica.datajud.cnj.jus.br` a partir do site
+estático. A consulta por número (A4 do roteiro) passa por uma função mínima e sem estado, da
+frente do site, que só faz uma coisa: recebe um número CNJ, repassa à API uma busca por
+`numeroProcesso` no índice do TJSP com a chave pública, e devolve ao navegador classe, vara,
+data de ajuizamento e a lista de movimentos (código e data). Nada é gravado em lugar nenhum;
+nenhum outro tipo de consulta é aceito; a chave fica na função, não no HTML (ela é pública, mas
+colocá-la no site convidaria a usá-lo como proxy genérico). A descoberta da fase é feita no
+navegador com os códigos de `marcos` do contrato 1.3.0, então o pipeline não precisa mudar.
+Se um dia o CNJ liberar CORS, a função some e a chamada volta para o navegador.
+
+## ADR-017 — Cox v2: assunto principal como covariável, um Cox por transição, boosting só como comparação (2026-11-05)
+Três escolhas para o A5 do roteiro. (1) O assunto principal entra como covariável categórica:
+assuntos com pelo menos 1% dos processos viram dummies e o resto é a referência "outros
+assuntos"; o preparo passa a guardar o nome do assunto para o relatório ser legível. (2) "Fase
+atual" não entra como covariável de baseline ("teve audiência"), porque a audiência acontece
+durante o acompanhamento e isso introduz viés de tempo imortal: processos que chegaram à
+audiência são, por construção, os que sobreviveram até ela. Em vez disso, ajusta-se um Cox por
+transição publicada (ajuizamento → sentença, audiência → sentença), com os mesmos tempos e
+eventos das curvas Kaplan-Meier; quem está numa fase usa o modelo cuja origem é essa fase, o
+mesmo princípio do contrato 1.3.0. (3) Gradient boosting de sobrevivência (scikit-survival,
+perda de Cox) entra como terceira camada, com as mesmas covariáveis, hiperparâmetros fixos e
+sem busca em grade, submetido à mesma validação temporal; ele só serve para medir se há ganho
+sobre o Cox em concordance index e Brier integrado. O que se publica continua sendo curva
+Kaplan-Meier e hazard ratio do Cox, que têm intervalo e leitura direta; o boosting não gera
+número para o site enquanto não mostrar ganho claro e calibração pelo menos igual.
