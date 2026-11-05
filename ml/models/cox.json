@@ -1,252 +1,1212 @@
 {
  "metodo": "cox",
+ "snapshot": "2026-10-29",
  "covariaveis": {
   "vara": {
    "referencia": "10669"
   },
   "classe": {
    "referencia": "7"
+  },
+  "assunto": {
+   "referencia": "outros assuntos",
+   "fracao_minima": 0.01,
+   "usados": [
+    {
+     "codigo": 7780,
+     "nome": "Indenização por Dano Material"
+    },
+    {
+     "codigo": 10462,
+     "nome": "Condomínio"
+    },
+    {
+     "codigo": 11811,
+     "nome": "Práticas Abusivas"
+    },
+    {
+     "codigo": 4703,
+     "nome": "Defeito, nulidade ou anulação"
+    },
+    {
+     "codigo": 7768,
+     "nome": "Rescisão do contrato e devolução do dinheiro"
+    },
+    {
+     "codigo": 7698,
+     "nome": "Perdas e Danos"
+    },
+    {
+     "codigo": 9596,
+     "nome": "Prestação de Serviços"
+    },
+    {
+     "codigo": 7779,
+     "nome": "Indenização por Dano Moral"
+    },
+    {
+     "codigo": 9593,
+     "nome": "Locação de Imóvel"
+    },
+    {
+     "codigo": 9597,
+     "nome": "Seguro"
+    },
+    {
+     "codigo": 6226,
+     "nome": "Inclusão Indevida em Cadastro de Inadimplentes"
+    },
+    {
+     "codigo": 6107,
+     "nome": "Auxílio-Acidente (Art. 86)"
+    },
+    {
+     "codigo": 7620,
+     "nome": "Estabelecimentos de Ensino"
+    },
+    {
+     "codigo": 7770,
+     "nome": "Interpretação / Revisão de Contrato"
+    },
+    {
+     "codigo": 9607,
+     "nome": "Contratos Bancários"
+    },
+    {
+     "codigo": 7691,
+     "nome": "Inadimplemento"
+    },
+    {
+     "codigo": 5632,
+     "nome": "Prescrição e Decadência"
+    },
+    {
+     "codigo": 11000,
+     "nome": "Cobrança de Aluguéis - Sem despejo"
+    },
+    {
+     "codigo": 10582,
+     "nome": "Rescisão / Resolução"
+    },
+    {
+     "codigo": 10468,
+     "nome": "Direitos / Deveres do Condômino"
+    },
+    {
+     "codigo": 14915,
+     "nome": "Despejo por Inadimplemento"
+    },
+    {
+     "codigo": 10433,
+     "nome": "Indenização por Dano Moral"
+    },
+    {
+     "codigo": 11974,
+     "nome": "Cláusulas Abusivas"
+    },
+    {
+     "codigo": 9587,
+     "nome": "Compra e Venda"
+    },
+    {
+     "codigo": 11806,
+     "nome": "Empréstimo consignado"
+    },
+    {
+     "codigo": 10450,
+     "nome": "Adjudicação Compulsória"
+    },
+    {
+     "codigo": 7752,
+     "nome": "Bancários"
+    },
+    {
+     "codigo": 8826,
+     "nome": "DIREITO PROCESSUAL CIVIL E DO TRABALHO"
+    },
+    {
+     "codigo": 7703,
+     "nome": "Pagamento"
+    },
+    {
+     "codigo": 10439,
+     "nome": "Indenização por Dano Material"
+    }
+   ]
   }
  },
- "n": 38524,
- "eventos": 30497,
- "hazard_ratios": [
+ "transicoes": [
   {
-   "covariavel": "vara_10670",
-   "hazard_ratio": 1.466,
-   "ic_inferior": 1.402,
-   "ic_superior": 1.532,
-   "p": 1.0682910848577012e-63
-  },
-  {
-   "covariavel": "vara_10671",
-   "hazard_ratio": 1.424,
-   "ic_inferior": 1.363,
-   "ic_superior": 1.488,
-   "p": 1.5891086777892764e-55
-  },
-  {
-   "covariavel": "vara_10672",
-   "hazard_ratio": 1.375,
-   "ic_inferior": 1.316,
-   "ic_superior": 1.438,
-   "p": 3.7084752418500716e-45
-  },
-  {
-   "covariavel": "vara_10673",
-   "hazard_ratio": 1.858,
-   "ic_inferior": 1.776,
-   "ic_superior": 1.942,
-   "p": 1.139920918708768e-162
-  },
-  {
-   "covariavel": "vara_10674",
-   "hazard_ratio": 1.256,
-   "ic_inferior": 1.201,
-   "ic_superior": 1.314,
-   "p": 1.7533648304027937e-23
-  },
-  {
-   "covariavel": "vara_10675",
-   "hazard_ratio": 1.672,
-   "ic_inferior": 1.6,
-   "ic_superior": 1.747,
-   "p": 6.067426383897818e-116
-  },
-  {
-   "covariavel": "vara_87759",
-   "hazard_ratio": 1.455,
-   "ic_inferior": 1.353,
-   "ic_superior": 1.565,
-   "p": 5.149712258743615e-24
-  },
-  {
-   "covariavel": "vara_87760",
-   "hazard_ratio": 1.344,
-   "ic_inferior": 1.246,
-   "ic_superior": 1.451,
-   "p": 2.6310966582492725e-14
-  },
-  {
-   "covariavel": "classe_93",
-   "hazard_ratio": 3.873,
-   "ic_inferior": 3.626,
-   "ic_superior": 4.138,
-   "p": 0.0
-  },
-  {
-   "covariavel": "classe_94",
-   "hazard_ratio": 1.696,
-   "ic_inferior": 1.598,
-   "ic_superior": 1.8,
-   "p": 2.6424974288894213e-67
-  }
- ],
- "proporcionalidade": [
-  {
-   "covariavel": "classe_93",
-   "p": 3.307625064925456e-113
-  },
-  {
-   "covariavel": "classe_94",
-   "p": 1.2117355274867038e-23
-  },
-  {
-   "covariavel": "vara_10670",
-   "p": 0.0064925698325337
-  },
-  {
-   "covariavel": "vara_10671",
-   "p": 3.071964352288987e-10
-  },
-  {
-   "covariavel": "vara_10672",
-   "p": 9.895538857526031e-06
-  },
-  {
-   "covariavel": "vara_10673",
-   "p": 1.067581602364393e-17
-  },
-  {
-   "covariavel": "vara_10674",
-   "p": 1.5330795904482104e-12
-  },
-  {
-   "covariavel": "vara_10675",
-   "p": 7.329919584428164e-06
-  },
-  {
-   "covariavel": "vara_87759",
-   "p": 0.001177797543939003
-  },
-  {
-   "covariavel": "vara_87760",
-   "p": 6.253767357974414e-10
-  }
- ],
- "validacao_temporal": {
-  "treino": {
-   "ate": 2021,
-   "n": 20684,
-   "eventos": 18862
-  },
-  "teste": {
-   "de": 2022,
-   "n": 17840,
-   "eventos": 11635
-  },
-  "covariaveis_fora_do_treino": [
-   "vara_87759",
-   "vara_87760"
-  ],
-  "concordance_index": {
-   "treino": 0.5732,
-   "teste": 0.5653
-  },
-  "brier_integrado": {
-   "cox": 0.1956,
-   "kaplan_meier": 0.2038,
-   "horizonte_meses": 36
-  },
-  "calibracao": [
-   {
-    "horizonte_meses": 12,
-    "grupo": 1,
-    "n": 6621,
-    "previsto": 0.342,
-    "observado": 0.217
-   },
-   {
-    "horizonte_meses": 12,
-    "grupo": 2,
-    "n": 2103,
-    "previsto": 0.403,
-    "observado": 0.209
-   },
-   {
-    "horizonte_meses": 12,
-    "grupo": 3,
-    "n": 1993,
-    "previsto": 0.429,
-    "observado": 0.246
-   },
-   {
-    "horizonte_meses": 12,
-    "grupo": 4,
-    "n": 2332,
-    "previsto": 0.452,
-    "observado": 0.229
-   },
-   {
-    "horizonte_meses": 12,
-    "grupo": 5,
-    "n": 2083,
-    "previsto": 0.463,
-    "observado": 0.342
-   },
-   {
-    "horizonte_meses": 12,
-    "grupo": 6,
-    "n": 1885,
-    "previsto": 0.504,
-    "observado": 0.419
-   },
-   {
-    "horizonte_meses": 12,
-    "grupo": 7,
-    "n": 823,
-    "previsto": 0.727,
-    "observado": 0.752
-   },
-   {
-    "horizonte_meses": 24,
-    "grupo": 1,
-    "n": 6621,
-    "previsto": 0.596,
-    "observado": 0.467
-   },
-   {
-    "horizonte_meses": 24,
-    "grupo": 2,
-    "n": 2103,
-    "previsto": 0.673,
-    "observado": 0.481
-   },
-   {
-    "horizonte_meses": 24,
-    "grupo": 3,
-    "n": 1993,
-    "previsto": 0.703,
-    "observado": 0.488
-   },
-   {
-    "horizonte_meses": 24,
-    "grupo": 4,
-    "n": 2332,
-    "previsto": 0.728,
-    "observado": 0.445
-   },
-   {
-    "horizonte_meses": 24,
-    "grupo": 5,
-    "n": 2083,
-    "previsto": 0.739,
-    "observado": 0.545
-   },
-   {
-    "horizonte_meses": 24,
-    "grupo": 6,
-    "n": 1885,
-    "previsto": 0.781,
-    "observado": 0.583
-   },
-   {
-    "horizonte_meses": 24,
-    "grupo": 7,
-    "n": 823,
-    "previsto": 0.928,
-    "observado": 0.849
+   "origem": "ajuizamento",
+   "destino": "sentenca",
+   "n": 38524,
+   "eventos": 30497,
+   "hazard_ratios": [
+    {
+     "covariavel": "vara_10670",
+     "hazard_ratio": 1.442,
+     "ic_inferior": 1.379,
+     "ic_superior": 1.507,
+     "p": 2.4509375975488783e-58
+    },
+    {
+     "covariavel": "vara_10671",
+     "hazard_ratio": 1.429,
+     "ic_inferior": 1.367,
+     "ic_superior": 1.493,
+     "p": 1.8117770528474267e-56
+    },
+    {
+     "covariavel": "vara_10672",
+     "hazard_ratio": 1.358,
+     "ic_inferior": 1.299,
+     "ic_superior": 1.42,
+     "p": 1.0215367256468301e-41
+    },
+    {
+     "covariavel": "vara_10673",
+     "hazard_ratio": 1.883,
+     "ic_inferior": 1.8,
+     "ic_superior": 1.969,
+     "p": 2.659842544151082e-169
+    },
+    {
+     "covariavel": "vara_10674",
+     "hazard_ratio": 1.235,
+     "ic_inferior": 1.181,
+     "ic_superior": 1.292,
+     "p": 2.5420337275045867e-20
+    },
+    {
+     "covariavel": "vara_10675",
+     "hazard_ratio": 1.693,
+     "ic_inferior": 1.62,
+     "ic_superior": 1.77,
+     "p": 1.9290197585783975e-121
+    },
+    {
+     "covariavel": "vara_87759",
+     "hazard_ratio": 1.625,
+     "ic_inferior": 1.51,
+     "ic_superior": 1.748,
+     "p": 1.0487045231936938e-38
+    },
+    {
+     "covariavel": "vara_87760",
+     "hazard_ratio": 1.488,
+     "ic_inferior": 1.378,
+     "ic_superior": 1.606,
+     "p": 2.2726699358219608e-24
+    },
+    {
+     "covariavel": "classe_93",
+     "hazard_ratio": 4.571,
+     "ic_inferior": 4.08,
+     "ic_superior": 5.122,
+     "p": 4.7878289607153835e-151
+    },
+    {
+     "covariavel": "classe_94",
+     "hazard_ratio": 1.947,
+     "ic_inferior": 1.749,
+     "ic_superior": 2.167,
+     "p": 3.783802618961189e-34
+    },
+    {
+     "covariavel": "assunto_7780",
+     "hazard_ratio": 0.921,
+     "ic_inferior": 0.873,
+     "ic_superior": 0.972,
+     "p": 0.0026410902978821317
+    },
+    {
+     "covariavel": "assunto_10462",
+     "hazard_ratio": 2.123,
+     "ic_inferior": 2.018,
+     "ic_superior": 2.234,
+     "p": 2.361802851922915e-186
+    },
+    {
+     "covariavel": "assunto_11811",
+     "hazard_ratio": 1.036,
+     "ic_inferior": 0.979,
+     "ic_superior": 1.098,
+     "p": 0.22289560030824754
+    },
+    {
+     "covariavel": "assunto_4703",
+     "hazard_ratio": 0.91,
+     "ic_inferior": 0.858,
+     "ic_superior": 0.964,
+     "p": 0.0014912413751120874
+    },
+    {
+     "covariavel": "assunto_7768",
+     "hazard_ratio": 0.815,
+     "ic_inferior": 0.765,
+     "ic_superior": 0.869,
+     "p": 4.1020614422092425e-10
+    },
+    {
+     "covariavel": "assunto_7698",
+     "hazard_ratio": 0.949,
+     "ic_inferior": 0.891,
+     "ic_superior": 1.011,
+     "p": 0.10530203319850766
+    },
+    {
+     "covariavel": "assunto_9596",
+     "hazard_ratio": 1.117,
+     "ic_inferior": 1.05,
+     "ic_superior": 1.189,
+     "p": 0.0004964665280832887
+    },
+    {
+     "covariavel": "assunto_7779",
+     "hazard_ratio": 1.006,
+     "ic_inferior": 0.941,
+     "ic_superior": 1.075,
+     "p": 0.863097476735706
+    },
+    {
+     "covariavel": "assunto_9593",
+     "hazard_ratio": 0.93,
+     "ic_inferior": 0.841,
+     "ic_superior": 1.028,
+     "p": 0.15350625974868615
+    },
+    {
+     "covariavel": "assunto_9597",
+     "hazard_ratio": 0.932,
+     "ic_inferior": 0.873,
+     "ic_superior": 0.996,
+     "p": 0.03765574154704778
+    },
+    {
+     "covariavel": "assunto_6226",
+     "hazard_ratio": 1.668,
+     "ic_inferior": 1.557,
+     "ic_superior": 1.787,
+     "p": 9.200264520816513e-48
+    },
+    {
+     "covariavel": "assunto_6107",
+     "hazard_ratio": 0.74,
+     "ic_inferior": 0.687,
+     "ic_superior": 0.798,
+     "p": 4.510286059982691e-15
+    },
+    {
+     "covariavel": "assunto_7620",
+     "hazard_ratio": 1.118,
+     "ic_inferior": 1.039,
+     "ic_superior": 1.204,
+     "p": 0.002992615239489524
+    },
+    {
+     "covariavel": "assunto_7770",
+     "hazard_ratio": 2.156,
+     "ic_inferior": 2.007,
+     "ic_superior": 2.316,
+     "p": 8.362704319127916e-98
+    },
+    {
+     "covariavel": "assunto_9607",
+     "hazard_ratio": 1.044,
+     "ic_inferior": 0.963,
+     "ic_superior": 1.131,
+     "p": 0.29676971741846997
+    },
+    {
+     "covariavel": "assunto_7691",
+     "hazard_ratio": 0.928,
+     "ic_inferior": 0.827,
+     "ic_superior": 1.042,
+     "p": 0.2058144763068815
+    },
+    {
+     "covariavel": "assunto_5632",
+     "hazard_ratio": 0.222,
+     "ic_inferior": 0.189,
+     "ic_superior": 0.26,
+     "p": 1.2858534800130807e-76
+    },
+    {
+     "covariavel": "assunto_11000",
+     "hazard_ratio": 0.752,
+     "ic_inferior": 0.687,
+     "ic_superior": 0.823,
+     "p": 7.78831138202104e-10
+    },
+    {
+     "covariavel": "assunto_10582",
+     "hazard_ratio": 0.82,
+     "ic_inferior": 0.749,
+     "ic_superior": 0.896,
+     "p": 1.2960354377421042e-05
+    },
+    {
+     "covariavel": "assunto_10468",
+     "hazard_ratio": 1.887,
+     "ic_inferior": 1.736,
+     "ic_superior": 2.051,
+     "p": 1.7976195463869634e-50
+    },
+    {
+     "covariavel": "assunto_14915",
+     "hazard_ratio": 0.775,
+     "ic_inferior": 0.679,
+     "ic_superior": 0.885,
+     "p": 0.00016159354873744185
+    },
+    {
+     "covariavel": "assunto_10433",
+     "hazard_ratio": 0.839,
+     "ic_inferior": 0.761,
+     "ic_superior": 0.924,
+     "p": 0.0003881570006017631
+    },
+    {
+     "covariavel": "assunto_11974",
+     "hazard_ratio": 1.556,
+     "ic_inferior": 1.413,
+     "ic_superior": 1.714,
+     "p": 3.210488242757719e-19
+    },
+    {
+     "covariavel": "assunto_9587",
+     "hazard_ratio": 0.961,
+     "ic_inferior": 0.869,
+     "ic_superior": 1.062,
+     "p": 0.4316041286207607
+    },
+    {
+     "covariavel": "assunto_11806",
+     "hazard_ratio": 1.345,
+     "ic_inferior": 1.215,
+     "ic_superior": 1.489,
+     "p": 1.1053656722069798e-08
+    },
+    {
+     "covariavel": "assunto_10450",
+     "hazard_ratio": 0.844,
+     "ic_inferior": 0.755,
+     "ic_superior": 0.943,
+     "p": 0.0027690373701581713
+    },
+    {
+     "covariavel": "assunto_7752",
+     "hazard_ratio": 1.221,
+     "ic_inferior": 1.095,
+     "ic_superior": 1.362,
+     "p": 0.0003429269262990143
+    },
+    {
+     "covariavel": "assunto_8826",
+     "hazard_ratio": 0.647,
+     "ic_inferior": 0.572,
+     "ic_superior": 0.732,
+     "p": 4.4460935985841796e-12
+    },
+    {
+     "covariavel": "assunto_7703",
+     "hazard_ratio": 1.213,
+     "ic_inferior": 1.088,
+     "ic_superior": 1.352,
+     "p": 0.00048715828977934344
+    },
+    {
+     "covariavel": "assunto_10439",
+     "hazard_ratio": 0.85,
+     "ic_inferior": 0.759,
+     "ic_superior": 0.952,
+     "p": 0.005074101527581754
+    }
+   ],
+   "proporcionalidade": [
+    {
+     "covariavel": "assunto_10433",
+     "p": 0.05756808852948168
+    },
+    {
+     "covariavel": "assunto_10439",
+     "p": 0.15415480888921237
+    },
+    {
+     "covariavel": "assunto_10450",
+     "p": 0.002082180430352348
+    },
+    {
+     "covariavel": "assunto_10462",
+     "p": 1.8765454614402875e-21
+    },
+    {
+     "covariavel": "assunto_10468",
+     "p": 0.00015545617612108332
+    },
+    {
+     "covariavel": "assunto_10582",
+     "p": 0.9278858142355142
+    },
+    {
+     "covariavel": "assunto_11000",
+     "p": 7.818018949276693e-11
+    },
+    {
+     "covariavel": "assunto_11806",
+     "p": 0.01632819479338495
+    },
+    {
+     "covariavel": "assunto_11811",
+     "p": 0.0003466538872921654
+    },
+    {
+     "covariavel": "assunto_11974",
+     "p": 0.13738194530908154
+    },
+    {
+     "covariavel": "assunto_14915",
+     "p": 0.32496742917650423
+    },
+    {
+     "covariavel": "assunto_4703",
+     "p": 0.7155139106217803
+    },
+    {
+     "covariavel": "assunto_5632",
+     "p": 5.3171906607802085e-21
+    },
+    {
+     "covariavel": "assunto_6107",
+     "p": 4.961551499173901e-43
+    },
+    {
+     "covariavel": "assunto_6226",
+     "p": 0.051260397429385415
+    },
+    {
+     "covariavel": "assunto_7620",
+     "p": 0.16775065621843255
+    },
+    {
+     "covariavel": "assunto_7691",
+     "p": 2.3600005130616392e-05
+    },
+    {
+     "covariavel": "assunto_7698",
+     "p": 0.08323054510051402
+    },
+    {
+     "covariavel": "assunto_7703",
+     "p": 0.0009685477290391727
+    },
+    {
+     "covariavel": "assunto_7752",
+     "p": 0.5270590439548597
+    },
+    {
+     "covariavel": "assunto_7768",
+     "p": 1.9821885293239855e-08
+    },
+    {
+     "covariavel": "assunto_7770",
+     "p": 0.20277501617680144
+    },
+    {
+     "covariavel": "assunto_7779",
+     "p": 0.42148767521531527
+    },
+    {
+     "covariavel": "assunto_7780",
+     "p": 2.2826105546456354e-11
+    },
+    {
+     "covariavel": "assunto_8826",
+     "p": 0.037095648818867615
+    },
+    {
+     "covariavel": "assunto_9587",
+     "p": 0.2983502979209977
+    },
+    {
+     "covariavel": "assunto_9593",
+     "p": 0.07844240489550093
+    },
+    {
+     "covariavel": "assunto_9596",
+     "p": 0.2183131898916336
+    },
+    {
+     "covariavel": "assunto_9597",
+     "p": 3.7565539468690985e-108
+    },
+    {
+     "covariavel": "assunto_9607",
+     "p": 0.016066238347933425
+    },
+    {
+     "covariavel": "classe_93",
+     "p": 1.1539116069713371e-40
+    },
+    {
+     "covariavel": "classe_94",
+     "p": 3.8950613978073314e-10
+    },
+    {
+     "covariavel": "vara_10670",
+     "p": 0.0017752743565057959
+    },
+    {
+     "covariavel": "vara_10671",
+     "p": 2.1479191239670298e-10
+    },
+    {
+     "covariavel": "vara_10672",
+     "p": 1.8646602246080775e-05
+    },
+    {
+     "covariavel": "vara_10673",
+     "p": 1.627516174108115e-17
+    },
+    {
+     "covariavel": "vara_10674",
+     "p": 2.146455069255095e-13
+    },
+    {
+     "covariavel": "vara_10675",
+     "p": 5.6780274871168854e-06
+    },
+    {
+     "covariavel": "vara_87759",
+     "p": 9.6300915660084e-06
+    },
+    {
+     "covariavel": "vara_87760",
+     "p": 4.169373218519333e-11
+    }
+   ],
+   "validacao_temporal": {
+    "treino": {
+     "ate": 2021,
+     "n": 20684,
+     "eventos": 18862
+    },
+    "teste": {
+     "de": 2022,
+     "n": 17840,
+     "eventos": 11635
+    },
+    "covariaveis_fora_do_treino": [
+     "vara_87759",
+     "vara_87760",
+     "assunto_14915",
+     "assunto_8826"
+    ],
+    "concordance_index": {
+     "treino": 0.6213,
+     "teste": 0.5828
+    },
+    "brier_integrado": {
+     "cox": 0.1957,
+     "kaplan_meier": 0.2038,
+     "horizonte_meses": 36
+    },
+    "calibracao": [
+     {
+      "horizonte_meses": 12,
+      "grupo": 1,
+      "n": 1989,
+      "previsto": 0.271,
+      "observado": 0.148
+     },
+     {
+      "horizonte_meses": 12,
+      "grupo": 2,
+      "n": 1628,
+      "previsto": 0.312,
+      "observado": 0.209
+     },
+     {
+      "horizonte_meses": 12,
+      "grupo": 3,
+      "n": 1751,
+      "previsto": 0.333,
+      "observado": 0.19
+     },
+     {
+      "horizonte_meses": 12,
+      "grupo": 4,
+      "n": 1844,
+      "previsto": 0.369,
+      "observado": 0.199
+     },
+     {
+      "horizonte_meses": 12,
+      "grupo": 5,
+      "n": 1731,
+      "previsto": 0.398,
+      "observado": 0.239
+     },
+     {
+      "horizonte_meses": 12,
+      "grupo": 6,
+      "n": 2048,
+      "previsto": 0.426,
+      "observado": 0.27
+     },
+     {
+      "horizonte_meses": 12,
+      "grupo": 7,
+      "n": 1560,
+      "previsto": 0.45,
+      "observado": 0.317
+     },
+     {
+      "horizonte_meses": 12,
+      "grupo": 8,
+      "n": 1746,
+      "previsto": 0.486,
+      "observado": 0.296
+     },
+     {
+      "horizonte_meses": 12,
+      "grupo": 9,
+      "n": 1803,
+      "previsto": 0.551,
+      "observado": 0.362
+     },
+     {
+      "horizonte_meses": 12,
+      "grupo": 10,
+      "n": 1740,
+      "previsto": 0.697,
+      "observado": 0.606
+     },
+     {
+      "horizonte_meses": 24,
+      "grupo": 1,
+      "n": 1989,
+      "previsto": 0.507,
+      "observado": 0.416
+     },
+     {
+      "horizonte_meses": 24,
+      "grupo": 2,
+      "n": 1628,
+      "previsto": 0.566,
+      "observado": 0.466
+     },
+     {
+      "horizonte_meses": 24,
+      "grupo": 3,
+      "n": 1751,
+      "previsto": 0.596,
+      "observado": 0.431
+     },
+     {
+      "horizonte_meses": 24,
+      "grupo": 4,
+      "n": 1844,
+      "previsto": 0.643,
+      "observado": 0.458
+     },
+     {
+      "horizonte_meses": 24,
+      "grupo": 5,
+      "n": 1731,
+      "previsto": 0.678,
+      "observado": 0.481
+     },
+     {
+      "horizonte_meses": 24,
+      "grupo": 6,
+      "n": 2048,
+      "previsto": 0.711,
+      "observado": 0.477
+     },
+     {
+      "horizonte_meses": 24,
+      "grupo": 7,
+      "n": 1560,
+      "previsto": 0.738,
+      "observado": 0.533
+     },
+     {
+      "horizonte_meses": 24,
+      "grupo": 8,
+      "n": 1746,
+      "previsto": 0.774,
+      "observado": 0.504
+     },
+     {
+      "horizonte_meses": 24,
+      "grupo": 9,
+      "n": 1803,
+      "previsto": 0.832,
+      "observado": 0.598
+     },
+     {
+      "horizonte_meses": 24,
+      "grupo": 10,
+      "n": 1740,
+      "previsto": 0.923,
+      "observado": 0.724
+     }
+    ]
    }
-  ]
- }
+  },
+  {
+   "origem": "audiencia",
+   "destino": "sentenca",
+   "n": 2957,
+   "eventos": 2765,
+   "hazard_ratios": [
+    {
+     "covariavel": "vara_10670",
+     "hazard_ratio": 1.163,
+     "ic_inferior": 0.958,
+     "ic_superior": 1.412,
+     "p": 0.12765926885045825
+    },
+    {
+     "covariavel": "vara_10671",
+     "hazard_ratio": 1.379,
+     "ic_inferior": 1.122,
+     "ic_superior": 1.694,
+     "p": 0.00227278917027965
+    },
+    {
+     "covariavel": "vara_10672",
+     "hazard_ratio": 1.088,
+     "ic_inferior": 0.892,
+     "ic_superior": 1.327,
+     "p": 0.40503533171976613
+    },
+    {
+     "covariavel": "vara_10673",
+     "hazard_ratio": 2.295,
+     "ic_inferior": 1.889,
+     "ic_superior": 2.789,
+     "p": 6.356826642666295e-17
+    },
+    {
+     "covariavel": "vara_10674",
+     "hazard_ratio": 1.098,
+     "ic_inferior": 0.897,
+     "ic_superior": 1.344,
+     "p": 0.36439665501689544
+    },
+    {
+     "covariavel": "vara_10675",
+     "hazard_ratio": 1.476,
+     "ic_inferior": 1.233,
+     "ic_superior": 1.765,
+     "p": 2.0970616591500708e-05
+    },
+    {
+     "covariavel": "vara_87759",
+     "hazard_ratio": 1.592,
+     "ic_inferior": 1.204,
+     "ic_superior": 2.105,
+     "p": 0.0010990109895780199
+    },
+    {
+     "covariavel": "assunto_7780",
+     "hazard_ratio": 1.093,
+     "ic_inferior": 0.917,
+     "ic_superior": 1.302,
+     "p": 0.3208831524126343
+    },
+    {
+     "covariavel": "assunto_10462",
+     "hazard_ratio": 1.184,
+     "ic_inferior": 1.042,
+     "ic_superior": 1.345,
+     "p": 0.009660464018716116
+    },
+    {
+     "covariavel": "assunto_11811",
+     "hazard_ratio": 1.287,
+     "ic_inferior": 0.926,
+     "ic_superior": 1.786,
+     "p": 0.13254992416486513
+    },
+    {
+     "covariavel": "assunto_4703",
+     "hazard_ratio": 1.086,
+     "ic_inferior": 0.861,
+     "ic_superior": 1.369,
+     "p": 0.4869464134701854
+    },
+    {
+     "covariavel": "assunto_7768",
+     "hazard_ratio": 0.966,
+     "ic_inferior": 0.76,
+     "ic_superior": 1.227,
+     "p": 0.7752539395043261
+    },
+    {
+     "covariavel": "assunto_7698",
+     "hazard_ratio": 0.724,
+     "ic_inferior": 0.595,
+     "ic_superior": 0.882,
+     "p": 0.0013566619638398498
+    },
+    {
+     "covariavel": "assunto_9596",
+     "hazard_ratio": 0.754,
+     "ic_inferior": 0.666,
+     "ic_superior": 0.853,
+     "p": 7.521103910134354e-06
+    },
+    {
+     "covariavel": "assunto_7779",
+     "hazard_ratio": 1.387,
+     "ic_inferior": 1.13,
+     "ic_superior": 1.703,
+     "p": 0.0017909499578104694
+    },
+    {
+     "covariavel": "assunto_9593",
+     "hazard_ratio": 1.069,
+     "ic_inferior": 0.744,
+     "ic_superior": 1.535,
+     "p": 0.7178521064266509
+    },
+    {
+     "covariavel": "assunto_6226",
+     "hazard_ratio": 2.039,
+     "ic_inferior": 1.544,
+     "ic_superior": 2.691,
+     "p": 5.014108442490686e-07
+    },
+    {
+     "covariavel": "assunto_7620",
+     "hazard_ratio": 0.664,
+     "ic_inferior": 0.555,
+     "ic_superior": 0.794,
+     "p": 7.521009058465302e-06
+    },
+    {
+     "covariavel": "assunto_11000",
+     "hazard_ratio": 0.849,
+     "ic_inferior": 0.63,
+     "ic_superior": 1.144,
+     "p": 0.2831776387243141
+    },
+    {
+     "covariavel": "assunto_10582",
+     "hazard_ratio": 0.915,
+     "ic_inferior": 0.696,
+     "ic_superior": 1.204,
+     "p": 0.5268096324946606
+    },
+    {
+     "covariavel": "assunto_10468",
+     "hazard_ratio": 1.321,
+     "ic_inferior": 1.099,
+     "ic_superior": 1.589,
+     "p": 0.0030797806897603277
+    },
+    {
+     "covariavel": "assunto_10433",
+     "hazard_ratio": 1.005,
+     "ic_inferior": 0.787,
+     "ic_superior": 1.283,
+     "p": 0.9696785378777792
+    },
+    {
+     "covariavel": "assunto_9587",
+     "hazard_ratio": 0.927,
+     "ic_inferior": 0.662,
+     "ic_superior": 1.3,
+     "p": 0.661565894147798
+    },
+    {
+     "covariavel": "assunto_7703",
+     "hazard_ratio": 0.934,
+     "ic_inferior": 0.693,
+     "ic_superior": 1.258,
+     "p": 0.653306972311561
+    },
+    {
+     "covariavel": "assunto_10439",
+     "hazard_ratio": 0.743,
+     "ic_inferior": 0.537,
+     "ic_superior": 1.028,
+     "p": 0.07335471050690169
+    }
+   ],
+   "proporcionalidade": [
+    {
+     "covariavel": "assunto_10433",
+     "p": 0.7262764054724651
+    },
+    {
+     "covariavel": "assunto_10439",
+     "p": 0.27433560013899283
+    },
+    {
+     "covariavel": "assunto_10462",
+     "p": 0.13927882478532003
+    },
+    {
+     "covariavel": "assunto_10468",
+     "p": 0.28596703033415916
+    },
+    {
+     "covariavel": "assunto_10582",
+     "p": 0.8247922106783632
+    },
+    {
+     "covariavel": "assunto_11000",
+     "p": 0.633309169359225
+    },
+    {
+     "covariavel": "assunto_11811",
+     "p": 0.19133678992547282
+    },
+    {
+     "covariavel": "assunto_4703",
+     "p": 0.07073555350906921
+    },
+    {
+     "covariavel": "assunto_6226",
+     "p": 0.07028714202588385
+    },
+    {
+     "covariavel": "assunto_7620",
+     "p": 0.0006746354664558796
+    },
+    {
+     "covariavel": "assunto_7698",
+     "p": 0.3824159049211264
+    },
+    {
+     "covariavel": "assunto_7703",
+     "p": 0.44700188522794726
+    },
+    {
+     "covariavel": "assunto_7768",
+     "p": 0.461032566791557
+    },
+    {
+     "covariavel": "assunto_7779",
+     "p": 0.4787464190862655
+    },
+    {
+     "covariavel": "assunto_7780",
+     "p": 0.31315571127110087
+    },
+    {
+     "covariavel": "assunto_9587",
+     "p": 0.4737195706330899
+    },
+    {
+     "covariavel": "assunto_9593",
+     "p": 0.3424807223871461
+    },
+    {
+     "covariavel": "assunto_9596",
+     "p": 7.300399688272098e-07
+    },
+    {
+     "covariavel": "vara_10670",
+     "p": 0.26982557858063955
+    },
+    {
+     "covariavel": "vara_10671",
+     "p": 0.6930257459324308
+    },
+    {
+     "covariavel": "vara_10672",
+     "p": 0.46175094127860095
+    },
+    {
+     "covariavel": "vara_10673",
+     "p": 0.9532026258281139
+    },
+    {
+     "covariavel": "vara_10674",
+     "p": 0.808707510085732
+    },
+    {
+     "covariavel": "vara_10675",
+     "p": 0.5342968429398409
+    },
+    {
+     "covariavel": "vara_87759",
+     "p": 0.6289280104669264
+    }
+   ],
+   "validacao_temporal": {
+    "treino": {
+     "ate": 2021,
+     "n": 2561,
+     "eventos": 2458
+    },
+    "teste": {
+     "de": 2022,
+     "n": 396,
+     "eventos": 307
+    },
+    "covariaveis_fora_do_treino": [
+     "vara_87759",
+     "vara_87760",
+     "classe_93",
+     "classe_94",
+     "assunto_11811",
+     "assunto_9597",
+     "assunto_6107",
+     "assunto_7770",
+     "assunto_9607",
+     "assunto_7691",
+     "assunto_5632",
+     "assunto_14915",
+     "assunto_11974",
+     "assunto_11806",
+     "assunto_10450",
+     "assunto_7752",
+     "assunto_8826"
+    ],
+    "concordance_index": {
+     "treino": 0.5932,
+     "teste": 0.5887
+    },
+    "brier_integrado": {
+     "cox": 0.1253,
+     "kaplan_meier": 0.1356,
+     "horizonte_meses": 36
+    },
+    "calibracao": [
+     {
+      "horizonte_meses": 12,
+      "grupo": 1,
+      "n": 46,
+      "previsto": 0.438,
+      "observado": 0.677
+     },
+     {
+      "horizonte_meses": 12,
+      "grupo": 2,
+      "n": 58,
+      "previsto": 0.504,
+      "observado": 0.561
+     },
+     {
+      "horizonte_meses": 12,
+      "grupo": 3,
+      "n": 16,
+      "previsto": 0.512,
+      "observado": 0.708
+     },
+     {
+      "horizonte_meses": 12,
+      "grupo": 4,
+      "n": 47,
+      "previsto": 0.55,
+      "observado": 0.745
+     },
+     {
+      "horizonte_meses": 12,
+      "grupo": 5,
+      "n": 31,
+      "previsto": 0.578,
+      "observado": 0.629
+     },
+     {
+      "horizonte_meses": 12,
+      "grupo": 6,
+      "n": 63,
+      "previsto": 0.627,
+      "observado": 0.628
+     },
+     {
+      "horizonte_meses": 12,
+      "grupo": 7,
+      "n": 23,
+      "previsto": 0.651,
+      "observado": 0.765
+     },
+     {
+      "horizonte_meses": 12,
+      "grupo": 8,
+      "n": 85,
+      "previsto": 0.754,
+      "observado": 0.937
+     },
+     {
+      "horizonte_meses": 12,
+      "grupo": 9,
+      "n": 27,
+      "previsto": 0.786,
+      "observado": 0.92
+     },
+     {
+      "horizonte_meses": 24,
+      "grupo": 1,
+      "n": 46,
+      "previsto": 0.673,
+      "observado": 0.853
+     },
+     {
+      "horizonte_meses": 24,
+      "grupo": 2,
+      "n": 58,
+      "previsto": 0.745,
+      "observado": 0.714
+     },
+     {
+      "horizonte_meses": 24,
+      "grupo": 3,
+      "n": 16,
+      "previsto": 0.752,
+      "observado": 1.0
+     },
+     {
+      "horizonte_meses": 24,
+      "grupo": 4,
+      "n": 47,
+      "previsto": 0.789,
+      "observado": 0.913
+     },
+     {
+      "horizonte_meses": 24,
+      "grupo": 5,
+      "n": 31,
+      "previsto": 0.813,
+      "observado": 0.675
+     },
+     {
+      "horizonte_meses": 24,
+      "grupo": 6,
+      "n": 63,
+      "previsto": 0.854,
+      "observado": 0.785
+     },
+     {
+      "horizonte_meses": 24,
+      "grupo": 7,
+      "n": 23,
+      "previsto": 0.871,
+      "observado": 0.883
+     },
+     {
+      "horizonte_meses": 24,
+      "grupo": 8,
+      "n": 85,
+      "previsto": 0.934,
+      "observado": 0.937
+     },
+     {
+      "horizonte_meses": 24,
+      "grupo": 9,
+      "n": 27,
+      "previsto": 0.949,
+      "observado": 0.92
+     }
+    ]
+   }
+  }
+ ]
 }
