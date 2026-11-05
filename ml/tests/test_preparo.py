@@ -42,6 +42,7 @@ def test_sentenciado_conta_ate_a_primeira_sentenca(familia):
     assert linha["data_evento"] == date(2021, 1, 15)
     assert linha["tipo_sentenca"] == "Procedência" and linha["com_merito"] is True
     assert len(movs) == 3 and linha["flags"] == ""
+    assert linha["assunto_principal"] == 4862 and linha["assunto_principal_nome"] is None  # nome ausente no raw fica nulo
 
 
 def test_censurado_conta_ate_o_snapshot(familia):
