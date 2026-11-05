@@ -1,6 +1,6 @@
 // Tela Explorar dados: processos ainda sem sentença ao longo do tempo, com intervalo de
 // confiança, prazos e base; comparação opcional com outro recorte (docs/DESIGN.md, seção 4).
-import { buscarCurva, rotuloCurva, type Contrato, type Curva } from './dados';
+import { ORIGEM_PADRAO, buscarCurva, origensPara, rotuloCurva, type Contrato, type Curva } from './dados';
 import { desenharGrafico, type SerieGrafico } from './grafico';
 import { dataIso, inteiro, meses, porcentagem } from './formato';
 import { ate, mesComBase, MIN_EM_RISCO } from './base';
@@ -9,8 +9,10 @@ import {
   aviso,
   comoCalculamos,
   criarBancada,
+  criarEscolha,
   criarSelect,
   deCodigo,
+  desde,
   gravarEstado,
   grau,
   html,
@@ -60,13 +62,13 @@ function prazo(valor: number | null, corte: number | null): string {
   return decimal.format(valor);
 }
 
-function tabelaPrazos(doc: Contrato, itens: Item[]): HTMLTableElement {
+function tabelaPrazos(doc: Contrato, itens: Item[], origem: string): HTMLTableElement {
   const tabela = document.createElement('table');
   tabela.className = 'tabela tabela-quantis';
   const cab = tabela.createTHead().insertRow();
   const canto = document.createElement('th');
   canto.scope = 'col';
-  canto.textContent = 'Meses desde o ajuizamento';
+  canto.textContent = `Meses ${desde(doc, origem)}`;
   cab.appendChild(canto);
   for (const { escolha, cor } of itens) {
     const c = document.createElement('th');
@@ -105,11 +107,27 @@ export function montarExplorar(painel: HTMLElement, doc: Contrato): { aplicar: (
 
   controles.append(
     html('h2', '', 'Quanto tempo leva até a sentença?'),
-    html('p', 'intro', 'Cada curva mostra quantos processos ainda estavam sem sentença, mês a mês desde o ajuizamento.'),
+    html('p', 'intro', 'Cada curva mostra quantos processos ainda estavam sem sentença, mês a mês.'),
   );
 
   const form = html('form', 'controles') as HTMLFormElement;
   form.addEventListener('submit', (ev) => ev.preventDefault());
+
+  // Seletor de fase (contrato 1.3.0): de onde se conta o tempo. Só aparece se houver mais de uma.
+  const origens = origensPara(doc);
+  const fase =
+    origens.length > 1
+      ? criarEscolha(
+          'explorar-fase',
+          'Contar o tempo',
+          origens.map((o) => ({ valor: o, texto: desde(doc, o).replace(/^d/, 'D') })),
+          ORIGEM_PADRAO,
+          'Desde a audiência usa só processos que tiveram audiência e conta o tempo a partir dela. ' +
+            'As duas curvas comparadas usam sempre a mesma contagem.',
+        )
+      : null;
+  if (fase) form.appendChild(fase.campo);
+  const origemAtual = () => fase?.valor() ?? ORIGEM_PADRAO;
 
   const grupoA = html('fieldset', 'grupo') as HTMLFieldSetElement;
   const legendaA = html('legend', '');
@@ -144,7 +162,8 @@ export function montarExplorar(painel: HTMLElement, doc: Contrato): { aplicar: (
 
   const cabeca = html('div', 'folha-cabeca');
   const titulo = html('h3', '');
-  cabeca.append(titulo, html('p', 'citacao-resultado', `${doc.tribunal} · ${grau(doc)} · dados até ${dataIso(doc.snapshot)}`));
+  const citacao = html('p', 'citacao-resultado');
+  cabeca.append(titulo, citacao);
   const avisos = html('div', 'avisos');
   const alvoGrafico = html('div', 'alvo-grafico');
   const alvoTabela = html('div', '');
@@ -171,7 +190,9 @@ export function montarExplorar(painel: HTMLElement, doc: Contrato): { aplicar: (
         curva: undefined,
       });
     }
-    for (const item of itens) item.curva = buscarCurva(doc, item.escolha.vara, item.escolha.classe);
+    const origem = origemAtual();
+    for (const item of itens) item.curva = buscarCurva(doc, item.escolha.vara, item.escolha.classe, origem);
+    citacao.textContent = `${doc.tribunal} · ${grau(doc)} · tempo ${desde(doc, origem)} · dados até ${dataIso(doc.snapshot)}`;
 
     const series = itens.flatMap(({ escolha, curva, cor }) => {
       const s = curva ? serie(doc, escolha, curva, cor) : null;
@@ -206,7 +227,7 @@ export function montarExplorar(painel: HTMLElement, doc: Contrato): { aplicar: (
     } else {
       desenharGrafico(alvoGrafico, series, {
         descricao:
-          'Proporção de processos ainda sem sentença a cada mês desde o ajuizamento. ' +
+          `Proporção de processos ainda sem sentença a cada mês ${desde(doc, origem)}. ` +
           series
             .map((s) => {
               const m = s.marcas?.[0];
@@ -214,7 +235,7 @@ export function montarExplorar(painel: HTMLElement, doc: Contrato): { aplicar: (
             })
             .join('; ') +
           '.',
-        rotuloX: 'meses desde o ajuizamento',
+        rotuloX: `meses ${desde(doc, origem)}`,
         rotuloY: 'ainda sem sentença',
         rotuloMes: (m) => meses(m),
         nota: cortadas.length
@@ -225,7 +246,7 @@ export function montarExplorar(painel: HTMLElement, doc: Contrato): { aplicar: (
       rolagem.tabIndex = 0;
       rolagem.setAttribute('role', 'region');
       rolagem.setAttribute('aria-label', 'Prazos e base de cada recorte, rolável');
-      rolagem.appendChild(tabelaPrazos(doc, itens));
+      rolagem.appendChild(tabelaPrazos(doc, itens, origem));
       alvoTabela.replaceChildren(rolagem);
     }
 
@@ -235,6 +256,7 @@ export function montarExplorar(painel: HTMLElement, doc: Contrato): { aplicar: (
         params.set('vara2', varaB.controle.value);
         params.set('classe2', classeB.controle.value);
       }
+      if (origem !== ORIGEM_PADRAO) params.set('fase', origem);
       gravarEstado(ABA, params);
     }
   };
@@ -242,6 +264,7 @@ export function montarExplorar(painel: HTMLElement, doc: Contrato): { aplicar: (
   for (const s of [varaA.controle, classeA.controle, varaB.controle, classeB.controle, comparar]) {
     s.addEventListener('change', () => atualizar());
   }
+  fase?.aoMudar(() => atualizar());
   atualizar(false);
 
   const valido = (s: HTMLSelectElement, v: string | null): v is string => v !== null && [...s.options].some((o) => o.value === v);
@@ -252,6 +275,8 @@ export function montarExplorar(painel: HTMLElement, doc: Contrato): { aplicar: (
         [classeA.controle, params.get('classe')],
       ];
       for (const [s, v] of pares) if (valido(s, v)) s.value = v;
+      const f = params.get('fase');
+      fase?.definir(f && origens.includes(f) ? f : ORIGEM_PADRAO);
       const v2 = params.get('vara2');
       const c2 = params.get('classe2');
       comparar.checked = valido(varaB.controle, v2) && valido(classeB.controle, c2);

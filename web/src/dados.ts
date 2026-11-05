@@ -11,9 +11,20 @@ export interface Classe {
   nome: string;
 }
 
+/** Etapa do processo usada como origem ou destino de uma curva (contrato 1.3.0). */
+export interface Marco {
+  codigo: string;
+  nome: string;
+  codigos_tpu: number[];
+}
+
 export interface Curva {
   vara: string | null;
   classe: string | null;
+  /** Opcional desde 1.3.0: marco em que o tempo começa; ausente = ajuizamento. */
+  origem?: string;
+  /** Opcional desde 1.3.0: marco que é o evento; ausente = sentença. */
+  destino?: string;
   metodo: 'kaplan-meier';
   n: number;
   eventos: number;
@@ -40,6 +51,8 @@ export interface Contrato {
   grade_meses: number[];
   varas: Vara[];
   classes: Classe[];
+  /** Opcional desde 1.3.0. */
+  marcos?: Marco[];
   curvas: Curva[];
 }
 
@@ -57,8 +70,52 @@ export async function carregar(url = './curvas.json'): Promise<Contrato> {
   return doc;
 }
 
-export function buscarCurva(doc: Contrato, vara: string | null, classe: string | null): Curva | undefined {
-  return doc.curvas.find((c) => c.vara === vara && c.classe === classe);
+export const ORIGEM_PADRAO = 'ajuizamento';
+export const DESTINO_PADRAO = 'sentenca';
+
+export function origemDe(c: Pick<Curva, 'origem'>): string {
+  return c.origem ?? ORIGEM_PADRAO;
+}
+
+export function destinoDe(c: Pick<Curva, 'destino'>): string {
+  return c.destino ?? DESTINO_PADRAO;
+}
+
+/**
+ * Curva do recorte numa transição. Desde o 1.3.0 o mesmo recorte pode ter várias curvas
+ * (uma por origem/destino); sem filtrar, o site misturaria ajuizamento → sentença com
+ * audiência → sentença.
+ */
+export function buscarCurva(
+  doc: Contrato,
+  vara: string | null,
+  classe: string | null,
+  origem = ORIGEM_PADRAO,
+  destino = DESTINO_PADRAO,
+): Curva | undefined {
+  return doc.curvas.find(
+    (c) => c.vara === vara && c.classe === classe && origemDe(c) === origem && destinoDe(c) === destino,
+  );
+}
+
+/**
+ * Origens publicadas para um destino, na ordem dos `marcos` (do mais cedo ao mais tarde).
+ * Toda transição publicada tem a curva agregada, então basta olhar as curvas.
+ */
+export function origensPara(doc: Contrato, destino = DESTINO_PADRAO): string[] {
+  const publicadas = new Set(doc.curvas.filter((c) => destinoDe(c) === destino).map(origemDe));
+  const ordem = (doc.marcos ?? []).map((m) => m.codigo);
+  return [...publicadas].sort((a, b) => {
+    const ia = ordem.indexOf(a);
+    const ib = ordem.indexOf(b);
+    return (ia === -1 ? Infinity : ia) - (ib === -1 ? Infinity : ib);
+  });
+}
+
+/** Nome do marco para a interface ("Audiência"); cai no código se o contrato não o listar. */
+export function nomeMarco(doc: Contrato, codigo: string): string {
+  if (codigo === ORIGEM_PADRAO && !doc.marcos) return 'Ajuizamento';
+  return doc.marcos?.find((m) => m.codigo === codigo)?.nome ?? codigo;
 }
 
 export function nomeVara(doc: Contrato, codigo: string | null): string {

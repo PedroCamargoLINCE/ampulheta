@@ -1,7 +1,7 @@
 // Tela Estimar tempo: probabilidade estimada de sentença nos próximos 3, 6 e 12 meses
 // para um processo que segue sem sentença depois de t meses. O resultado acompanha os
 // campos ao vivo: nunca há número de uma seleção anterior na tela (docs/DESIGN.md, seção 4).
-import { buscarCurva, rotuloCurva, type Contrato, type Curva } from './dados';
+import { ORIGEM_PADRAO, buscarCurva, nomeMarco, origensPara, rotuloCurva, type Contrato, type Curva } from './dados';
 import { desenharGrafico } from './grafico';
 import { dataIso, inteiro, meses, porcentagem } from './formato';
 import {
@@ -22,8 +22,10 @@ import {
   copiarLink,
   criarBancada,
   criarEntrada,
+  criarEscolha,
   criarSelect,
   deCodigo,
+  desde,
   gravarEstado,
   grau,
   html,
@@ -42,6 +44,8 @@ const S_SINAL_INSTAVEL = 0.05;
 interface Escolha {
   vara: string | null;
   classe: string | null;
+  /** Marco de onde se conta o tempo (contrato 1.3.0): ajuizamento ou a fase já atingida. */
+  origem: string;
   t: number;
 }
 
@@ -113,6 +117,57 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
     'O tipo de ação, como “Procedimento Comum Cível” ou um despejo. Aparece na capa do processo e na consulta processual.',
   );
 
+  // Fase (contrato 1.3.0): quem já passou por um marco usa a curva que começa nele.
+  const origens = origensPara(doc);
+  const outras = origens.filter((o) => o !== ORIGEM_PADRAO);
+  const fase =
+    outras.length > 0
+      ? criarEscolha(
+          'estimar-fase',
+          'Em que fase está?',
+          origens.map((o) => ({
+            valor: o,
+            texto:
+              o === ORIGEM_PADRAO
+                ? outras.length === 1
+                  ? `Ainda não teve ${nomeMarco(doc, outras[0]!).toLowerCase()} (ou não sei)`
+                  : 'Nenhuma das outras (ou não sei)'
+                : `Já teve ${nomeMarco(doc, o).toLowerCase()}`,
+          })),
+          ORIGEM_PADRAO,
+          'Se o processo já teve audiência, a estimativa usa só processos que também tiveram e conta o tempo a partir dela. ' +
+            'Se não sabe, a estimativa desde o ajuizamento continua valendo.',
+        )
+      : null;
+  const origemAtual = () => fase?.valor() ?? ORIGEM_PADRAO;
+
+  /** Textos que dependem de onde se conta o tempo. */
+  const textos = (o: string) => {
+    const d = desde(doc, o);
+    const daData = d.replace(/^desde (o|a) /, (_, art: string) => (art === 'o' ? 'do ' : 'da '));
+    return o === ORIGEM_PADRAO
+      ? {
+          rotulo: 'Há quanto tempo tramita sem sentença',
+          ajuda: `Meses completos desde o ajuizamento, de 0 a ${fim}. A estimativa vale para processos que ainda não tiveram sentença de 1º grau.`,
+          slider: 'Meses sem sentença',
+          data: 'Sei a data do ajuizamento',
+          dataRotulo: 'Data do ajuizamento',
+          falta: 'o tempo sem sentença',
+          tempo: (t: number) => meses(t),
+          situacao: (t: number) => `há ${meses(t)} sem sentença`,
+        }
+      : {
+          rotulo: `Tempo ${d}`,
+          ajuda: `Meses completos ${d} até hoje, de 0 a ${fim}. A estimativa vale para processos que ainda não tiveram sentença de 1º grau.`,
+          slider: `Meses ${d}`,
+          data: daData === d ? `Sei a data (${nomeMarco(doc, o).toLowerCase()})` : `Sei a data ${daData}`,
+          dataRotulo: `Data ${daData === d ? `(${nomeMarco(doc, o).toLowerCase()})` : daData}`,
+          falta: `o tempo ${d}`,
+          tempo: (t: number) => `${meses(t)} ${d}`,
+          situacao: (t: number) => `${meses(t)} ${d}, sem sentença`,
+        };
+  };
+
   // Tempo: controle deslizante e campo numérico, sempre iguais. Começa vazio: nada de 12 meses inventado.
   const tempo = criarEntrada(
     'estimar-meses',
@@ -162,7 +217,19 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
   resumoVivo.setAttribute('aria-hidden', 'true');
   resumoVivo.hidden = true;
 
-  form.append(vara.campo, classe.campo, tempo.campo, resumoVivo, data.campo, atalhos);
+  form.append(vara.campo, classe.campo, ...(fase ? [fase.campo] : []), tempo.campo, resumoVivo, data.campo, atalhos);
+
+  /** Ao trocar de fase, os textos do tempo acompanham. */
+  const aplicarTextosFase = () => {
+    const tx = textos(origemAtual());
+    tempo.campo.querySelector('label')!.textContent = tx.rotulo;
+    const ajuda = tempo.campo.querySelector('.ajuda');
+    if (ajuda) ajuda.textContent = tx.ajuda;
+    tempo.campo.querySelector('.ajuda-botao')?.setAttribute('aria-label', `O que é ${tx.rotulo.toLowerCase()}?`);
+    slider.setAttribute('aria-label', tx.slider);
+    abrirData.textContent = tx.data;
+    data.campo.querySelector('label')!.textContent = tx.dataRotulo;
+  };
   controles.appendChild(form);
 
   // Anúncio curto e espaçado: quem usa leitor de tela ouve o resultado quando para de mexer.
@@ -204,13 +271,27 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
     return { tipo: 'ok', valor: r.valor, ic: gw ? intervaloSentenca(doc.grade_meses, curva.sobrevivencia, gw, t, h) : null };
   };
 
+  /** Um clique para o recorte mais amplo que tenha curva e base no tempo informado. */
   const acaoAmpliar = (e: Escolha): HTMLButtonElement | undefined => {
-    const alvo = e.vara !== null ? { ...e, vara: null } : e.classe !== null ? { ...e, classe: null } : null;
-    if (!alvo) return undefined;
+    const candidatos: [Partial<Escolha>, string][] = [
+      [{ vara: null }, 'Ver com todas as varas'],
+      [{ classe: null }, 'Ver com todas as classes'],
+      [{ vara: null, classe: null }, 'Ver com todas as varas e classes'],
+    ];
+    const achado = candidatos
+      .map(([mudanca, texto]) => [{ ...e, ...mudanca }, texto] as const)
+      .find(([alvo]) => {
+        if (alvo.vara === e.vara && alvo.classe === e.classe) return false;
+        const c = buscarCurva(doc, alvo.vara, alvo.classe, alvo.origem);
+        const corte = c ? mesComBase(doc.grade_meses, c) : null;
+        return corte !== null && alvo.t <= corte;
+      });
+    if (!achado) return undefined;
+    const [alvo, texto] = achado;
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'botao botao-secundario';
-    b.textContent = e.vara !== null ? 'Ver com todas as varas' : 'Ver com todas as classes';
+    b.textContent = texto;
     b.addEventListener('click', () => {
       vara.controle.value = deCodigo(alvo.vara);
       classe.controle.value = deCodigo(alvo.classe);
@@ -221,28 +302,33 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
 
   const mostrar = (e: Escolha) => {
     const rotulo = rotuloCurva(doc, e);
-    gravarEstado(ABA, new URLSearchParams({ vara: deCodigo(e.vara), classe: deCodigo(e.classe), t: String(e.t) }));
+    const tx = textos(e.origem);
+    const params = new URLSearchParams({ vara: deCodigo(e.vara), classe: deCodigo(e.classe), t: String(e.t) });
+    if (e.origem !== ORIGEM_PADRAO) params.set('fase', e.origem);
+    gravarEstado(ABA, params);
 
     const cabeca = html('div', 'folha-cabeca');
     const linhaCitacao = html('div', 'citacao-linha');
     const citacao = html(
       'p',
       'citacao-resultado',
-      `${doc.tribunal} · ${grau(doc)} · há ${meses(e.t)} sem sentença · dados até ${dataIso(doc.snapshot)}`,
+      `${doc.tribunal} · ${grau(doc)} · ${tx.situacao(e.t)} · dados até ${dataIso(doc.snapshot)}`,
     );
     if (doc.sintetico) citacao.prepend(html('strong', 'marca-sintetico', 'Dado sintético · '));
     linhaCitacao.append(citacao, copiarLink((t) => anunciar(t, true)));
     cabeca.append(html('h3', '', rotulo), linhaCitacao, html('p', 'url-impressa', `Link deste resultado: ${location.href}`));
     const partes: Node[] = [cabeca];
 
-    const curva = buscarCurva(doc, e.vara, e.classe);
+    const curva = buscarCurva(doc, e.vara, e.classe, e.origem);
     const corte = curva ? mesComBase(doc.grade_meses, curva) : null;
     const st = curva ? interpolar(doc.grade_meses, curva.sobrevivencia, e.t)! : 0;
 
     if (!curva || corte === null || e.t > corte || st <= 0) {
       const texto = !curva
-        ? 'Não há estimativa para esta combinação: ela tem menos de 30 processos na base.'
-        : `Poucos processos deste recorte chegaram a ${meses(e.t)} sem sentença para estimar a partir daqui.`;
+        ? e.origem === ORIGEM_PADRAO
+          ? 'Não há estimativa para esta combinação: ela tem menos de 30 processos na base.'
+          : `Não há estimativa ${desde(doc, e.origem)} para esta combinação: menos de 30 processos dela têm ${nomeMarco(doc, e.origem).toLowerCase()} registrada.`
+        : `Poucos processos deste recorte chegaram a ${tx.tempo(e.t)} sem sentença para estimar a partir daqui.`;
       const passo =
         curva && e.vara === null && e.classe === null && corte !== null ? `Neste recorte, há base até ${meses(corte)}.` : undefined;
       partes.push(aviso('atencao', texto, passo, acaoAmpliar(e)));
@@ -250,7 +336,7 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
       anteriores = new Map();
       resumoVivo.textContent = 'Sem estimativa para este recorte. Veja abaixo.';
       resumoVivo.hidden = false;
-      anunciar(`Sem estimativa para ${rotulo} com ${meses(e.t)}.`);
+      anunciar(`Sem estimativa para ${rotulo} com ${tx.tempo(e.t)}.`);
       return;
     }
 
@@ -329,7 +415,7 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
         'p',
         '',
         `Base: ${inteiro(curva.n)} processos deste recorte, ${inteiro(curva.eventos)} com sentença observada.` +
-          (emRisco === null ? '' : ` Com ${meses(e.t)}, ${inteiro(emRisco)} seguiam sem sentença e em acompanhamento.`),
+          (emRisco === null ? '' : ` Com ${tx.tempo(e.t)}, ${inteiro(emRisco)} seguiam sem sentença e em acompanhamento.`),
       ),
       html(
         'p',
@@ -382,7 +468,7 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
         ],
         {
           descricao:
-            `Proporção dos processos de ${rotulo} que chegaram a ${meses(e.t)} sem sentença e continuam sem sentença ` +
+            `Proporção dos processos de ${rotulo} que chegaram a ${tx.tempo(e.t)} sem sentença e continuam sem sentença ` +
             'em cada mês a partir de agora.',
           rotuloX: 'meses a partir de agora',
           rotuloY: 'ainda sem sentença',
@@ -391,7 +477,7 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
         },
       );
     }
-    anunciar(`${rotulo}, ${meses(e.t)} sem sentença: ${resumos.join(', ')}.`);
+    anunciar(`${rotulo}, ${tx.situacao(e.t)}: ${resumos.join(', ')}.`);
   };
 
   /** Lê os campos; o resultado só aparece com vara, classe e tempo informados. */
@@ -409,7 +495,7 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
     }
 
     if (v === NADA || c === NADA || t === null) {
-      const falta = [v === NADA && 'a vara', c === NADA && 'a classe', bruto === '' && 'o tempo sem sentença'].filter(Boolean);
+      const falta = [v === NADA && 'a vara', c === NADA && 'a classe', bruto === '' && textos(origemAtual()).falta].filter(Boolean);
       vazio(
         falta.length
           ? `Escolha ${falta.join(', ').replace(/, ([^,]*)$/, ' e $1')} para ver a estimativa.`
@@ -417,7 +503,7 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
       );
       return;
     }
-    mostrar({ vara: paraCodigo(v), classe: paraCodigo(c), t });
+    mostrar({ vara: paraCodigo(v), classe: paraCodigo(c), origem: origemAtual(), t });
   };
 
   /** Toda mudança feita pela pessoa tira o aviso de link inválido e recalcula. */
@@ -457,6 +543,15 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
     }),
   );
   for (const s of [vara.controle, classe.controle]) s.addEventListener('change', pelaPessoa(() => {}));
+  // O tempo informado muda de sentido com a fase: zera em vez de reinterpretar o número.
+  fase?.aoMudar(
+    pelaPessoa(() => {
+      definirTempo(null);
+      data.controle.value = '';
+      data.erro(null);
+      aplicarTextosFase();
+    }),
+  );
   data.controle.addEventListener(
     'change',
     pelaPessoa(() => {
@@ -472,6 +567,8 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
     pelaPessoa(() => {
       vara.controle.value = TODAS;
       classe.controle.value = TODAS;
+      fase?.definir(ORIGEM_PADRAO);
+      aplicarTextosFase();
       definirTempo(12);
     }),
   );
@@ -484,13 +581,16 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
       const v = params.get('vara') ?? '';
       const c = params.get('classe') ?? '';
       const t = params.get('t') ?? '';
-      if (!opcaoExiste(vara.controle, v) || !opcaoExiste(classe.controle, c) || !/^\d+$/.test(t) || Number(t) > fim) {
+      const f = params.get('fase') ?? ORIGEM_PADRAO;
+      if (!origens.includes(f) || !opcaoExiste(vara.controle, v) || !opcaoExiste(classe.controle, c) || !/^\d+$/.test(t) || Number(t) > fim) {
         avisoLink = aviso('info', `Este link tem um recorte que não existe nos dados de ${dataIso(doc.snapshot)}. Escolha os filtros ao lado.`);
         atualizar();
         return;
       }
       vara.controle.value = v;
       classe.controle.value = c;
+      fase?.definir(f);
+      aplicarTextosFase();
       definirTempo(Number(t));
       atualizar();
     },
