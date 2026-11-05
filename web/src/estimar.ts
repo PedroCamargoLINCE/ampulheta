@@ -3,7 +3,7 @@
 // campos ao vivo: nunca há número de uma seleção anterior na tela (docs/DESIGN.md, seção 4).
 import { ORIGEM_PADRAO, buscarCurva, nomeMarco, origensPara, rotuloCurva, type Contrato, type Curva } from './dados';
 import { desenharGrafico } from './grafico';
-import { dataIso, inteiro, meses, porcentagem } from './formato';
+import { dataIso, inteiro, meses, mesesCompletos, porcentagem } from './formato';
 import {
   curvaCondicional,
   horizonte,
@@ -13,6 +13,7 @@ import {
   quantilCondicional,
 } from './sobrevivencia';
 import { ate, emRiscoEm, mesComBase, MIN_EM_RISCO } from './base';
+import { ErroConsulta, consultar, erroNumero, formatarNumero, interpretar, normalizarNumero, type Preenchimento } from './consulta';
 import {
   NADA,
   TODAS,
@@ -37,6 +38,13 @@ import {
 } from './ui';
 
 const ABA = 'estimar';
+/** Endereço da função da consulta por número (consulta/); sem ele, a busca não aparece. */
+const URL_CONSULTA = import.meta.env.VITE_CONSULTA_URL?.trim() ?? '';
+/** A API do CNJ leva de 30 s a 1 min; a função espera até 90 s por tentativa. */
+const LIMITE_CONSULTA_MS = 100_000;
+/** Com o CNJ cheio, o navegador tenta de novo sozinho, espaçado, até este total. */
+const LIMITE_TOTAL_MS = 5 * 60_000;
+const ESPERA_ENTRE_TENTATIVAS_MS = 20_000;
 const HORIZONTES = [3, 6, 12] as const;
 /** Só para contratos sem `em_risco`: S(t) baixo é sinal de instabilidade, não contagem de casos. */
 const S_SINAL_INSTAVEL = 0.05;
@@ -52,15 +60,6 @@ interface Escolha {
 type Cartao =
   | { tipo: 'ok'; valor: number; ic: { inferior: number; superior: number } | null }
   | { tipo: 'sem'; motivo: string };
-
-/** Meses completos entre a data (aaaa-mm-dd) e hoje; null se a data é inválida ou futura. */
-function mesesAteHoje(iso: string, hoje = new Date()): number | null {
-  const [a, m, d] = iso.split('-').map(Number);
-  if (!a || !m || !d) return null;
-  let total = (hoje.getFullYear() - a) * 12 + (hoje.getMonth() + 1 - m);
-  if (hoje.getDate() < d) total -= 1;
-  return total < 0 ? null : total;
-}
 
 function hojeIso(): string {
   const h = new Date();
@@ -96,8 +95,45 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
 
   controles.append(
     html('h2', '', 'Quanto falta para a sentença?'),
-    html('p', 'intro', 'Escolha vara e classe e ajuste há quanto tempo o processo está sem sentença.'),
+    html(
+      'p',
+      'intro',
+      URL_CONSULTA
+        ? 'Busque pelo número do processo ou escolha vara e classe e ajuste há quanto tempo ele está sem sentença.'
+        : 'Escolha vara e classe e ajuste há quanto tempo o processo está sem sentença.',
+    ),
   );
+
+  // Consulta por número (ADR-016): preenche os campos abaixo com os dados públicos do DataJud.
+  const formConsulta = html('form', 'consulta') as HTMLFormElement;
+  const numero = criarEntrada(
+    'estimar-numero',
+    'Número do processo',
+    { type: 'text', inputMode: 'numeric', autocomplete: 'off' },
+    'Com o número, consultamos o DataJud, a base pública do CNJ, e preenchemos vara, classe, fase e tempo. ' +
+      'O número não é guardado nem vai para o link.',
+  );
+  numero.controle.placeholder = '0000000-00.0000.8.26.0000';
+  const buscar = document.createElement('button');
+  buscar.type = 'submit';
+  buscar.className = 'botao botao-principal';
+  buscar.textContent = 'Buscar';
+  const linhaNumero = html('div', 'consulta-linha');
+  numero.controle.replaceWith(linhaNumero);
+  linhaNumero.append(numero.controle, buscar);
+  const retornoConsulta = html('div', 'consulta-retorno');
+  retornoConsulta.setAttribute('aria-live', 'polite');
+  formConsulta.append(
+    numero.campo,
+    html(
+      'p',
+      'consulta-aviso',
+      'A base pública do CNJ é lenta: a busca leva de 1 a 2 minutos e, quando os servidores estão cheios, alguns minutos a mais. ' +
+        'Dá para preencher à mão enquanto isso.',
+    ),
+    retornoConsulta,
+  );
+  if (URL_CONSULTA) controles.append(formConsulta, html('p', 'separador', 'ou preencha à mão'));
 
   const form = html('form', 'controles') as HTMLFormElement;
   form.addEventListener('submit', (ev) => ev.preventDefault());
@@ -246,6 +282,8 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
   let anteriores = new Map<number, number>();
   let detalhesAberto = false;
   let avisoLink: HTMLElement | null = null;
+  /** Durante a montagem o link ainda não foi lido (main.ts); não se mexe nele. */
+  let montada = false;
 
   const vazio = (texto: string) => {
     const caixa = html('div', 'vazio');
@@ -260,6 +298,8 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
     folha.replaceChildren(...(avisoLink ? [avisoLink] : []), caixa);
     anteriores = new Map();
     resumoVivo.hidden = true;
+    // Sem resultado na tela, o link não pode carregar o recorte de antes.
+    if (montada && !avisoLink) gravarEstado(ABA, null);
   };
 
   const cartaoPara = (curva: Curva, corte: number, t: number, h: number): Cartao => {
@@ -508,6 +548,7 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
 
   /** Toda mudança feita pela pessoa tira o aviso de link inválido e recalcula. */
   const pelaPessoa = (f: () => void) => () => {
+    if (consultaAtual) mexeuDurante = true;
     avisoLink = null;
     f();
     atualizar();
@@ -556,7 +597,7 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
     'change',
     pelaPessoa(() => {
       if (!data.controle.value) return data.erro(null);
-      const m = mesesAteHoje(data.controle.value);
+      const m = mesesCompletos(data.controle.value);
       if (m === null) return data.erro('A data não pode estar no futuro.');
       data.erro(null);
       definirTempo(m);
@@ -573,7 +614,147 @@ export function montarEstimar(painel: HTMLElement, doc: Contrato): { aplicar: (p
     }),
   );
 
+  // Consulta: a base do CNJ é lenta e às vezes está cheia. A tela diz isso antes, mostra o
+  // tempo, tenta de novo sozinha por alguns minutos e não atropela quem preencheu à mão.
+  let consultaAtual: AbortController | null = null;
+  let mexeuDurante = false;
+  const mostrarRetorno = (...nos: Node[]) => retornoConsulta.replaceChildren(...nos);
+  const aplicarConsulta = (p: Preenchimento) => {
+    avisoLink = null;
+    vara.controle.value = p.vara ?? NADA;
+    classe.controle.value = p.classe ?? NADA;
+    fase?.definir(p.origem ?? ORIGEM_PADRAO);
+    aplicarTextosFase();
+    definirTempo(p.sentenca ? null : (p.t ?? null));
+    data.controle.value = '';
+    for (const c of [vara, classe, tempo, data]) c.erro(null);
+    atualizar();
+  };
+  const mostrarAchado = (p: Preenchimento, n: string, perguntar: boolean) => {
+    const caixa = html('div', 'consulta-fatos');
+    caixa.append(html('p', '', `${formatarNumero(n)}: ${p.fatos}`));
+    if (p.avisos.length) {
+      const lista = document.createElement('ul');
+      for (const a of p.avisos) lista.appendChild(html('li', '', a));
+      caixa.appendChild(lista);
+    }
+    if (perguntar) {
+      // A pessoa preencheu à mão enquanto esperava: o achado vira sugestão, não sobrescreve.
+      const usar = document.createElement('button');
+      usar.type = 'button';
+      usar.className = 'botao botao-secundario';
+      usar.textContent = 'Usar estes dados';
+      const nota = html('p', 'consulta-espera', 'Você mexeu nos campos durante a busca, então não trocamos nada.');
+      usar.addEventListener('click', () => {
+        aplicarConsulta(p);
+        nota.remove();
+        usar.remove();
+      });
+      caixa.append(nota, usar);
+    }
+    mostrarRetorno(caixa);
+  };
+  const relogio = (ms: number) => `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, '0')}`;
+  const esperar = (ms: number, sinal: AbortSignal) =>
+    new Promise<void>((ok, falha) => {
+      const id = window.setTimeout(ok, ms);
+      sinal.addEventListener('abort', () => (window.clearTimeout(id), falha(new DOMException('cancelada', 'AbortError'))), { once: true });
+    });
+
+  const executarConsulta = async () => {
+    const erro = erroNumero(numero.controle.value);
+    numero.erro(erro);
+    if (erro) {
+      numero.controle.focus();
+      return;
+    }
+    const n = normalizarNumero(numero.controle.value)!;
+    consultaAtual?.abort();
+    const controle = new AbortController();
+    consultaAtual = controle;
+    mexeuDurante = false;
+    const inicio = Date.now();
+
+    const linha = html('p', 'consulta-espera');
+    const detalhe = html('p', 'consulta-espera');
+    const cancelar = document.createElement('button');
+    cancelar.type = 'button';
+    cancelar.className = 'link-botao';
+    cancelar.textContent = 'Cancelar busca';
+    cancelar.addEventListener('click', () => controle.abort());
+    let texto = 'Consultando a base pública do CNJ. Costuma levar de 1 a 2 minutos.';
+    let proxima = 0;
+    const pintar = () => {
+      linha.textContent = `${texto} (${relogio(Date.now() - inicio)})`;
+      detalhe.textContent = proxima > Date.now() ? `Nova tentativa em ${Math.ceil((proxima - Date.now()) / 1000)} s.` : '';
+      detalhe.hidden = !detalhe.textContent;
+    };
+    pintar();
+    const tique = window.setInterval(pintar, 1000);
+    mostrarRetorno(linha, detalhe, cancelar);
+    buscar.disabled = true;
+    buscar.textContent = 'Buscando…';
+
+    let tentativa = 0;
+    try {
+      for (;;) {
+        tentativa += 1;
+        const rodada = new AbortController();
+        const repassar = () => rodada.abort();
+        controle.signal.addEventListener('abort', repassar, { once: true });
+        const limite = window.setTimeout(() => rodada.abort(), LIMITE_CONSULTA_MS);
+        try {
+          const r = await consultar(URL_CONSULTA, n, rodada.signal);
+          const p = interpretar(doc, r);
+          if (!mexeuDurante) aplicarConsulta(p);
+          mostrarAchado(p, n, mexeuDurante);
+          return;
+        } catch (e) {
+          if (controle.signal.aborted) throw e;
+          const ocupado = rodada.signal.aborted || (e instanceof ErroConsulta && e.tentarDeNovo);
+          if (!ocupado) {
+            mostrarRetorno(aviso('atencao', e instanceof ErroConsulta ? e.message : 'A busca falhou.', 'Você pode preencher os campos à mão.'));
+            return;
+          }
+          if (Date.now() - inicio + ESPERA_ENTRE_TENTATIVAS_MS >= LIMITE_TOTAL_MS) {
+            mostrarRetorno(
+              aviso(
+                'atencao',
+                `Os servidores públicos do CNJ continuam cheios (${tentativa} tentativas em ${relogio(Date.now() - inicio)}).`,
+                'Tente de novo mais tarde ou preencha os campos à mão.',
+              ),
+            );
+            return;
+          }
+          texto = `Os servidores públicos do CNJ estão cheios. Vamos tentar de novo sozinhos por até ${LIMITE_TOTAL_MS / 60000} minutos; pode preencher à mão enquanto isso.`;
+          proxima = Date.now() + ESPERA_ENTRE_TENTATIVAS_MS;
+          pintar();
+          await esperar(ESPERA_ENTRE_TENTATIVAS_MS, controle.signal);
+          proxima = 0;
+          texto = `Tentativa ${tentativa + 1}: consultando a base pública do CNJ de novo.`;
+          pintar();
+        } finally {
+          window.clearTimeout(limite);
+          controle.signal.removeEventListener('abort', repassar);
+        }
+      }
+    } catch {
+      mostrarRetorno(html('p', 'consulta-espera', 'Busca cancelada.'));
+    } finally {
+      window.clearInterval(tique);
+      if (consultaAtual === controle) consultaAtual = null;
+      buscar.disabled = false;
+      buscar.textContent = 'Buscar';
+    }
+  };
+  formConsulta.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    void executarConsulta();
+  });
+  numero.controle.addEventListener('input', () => numero.erro(null));
+
   atualizar();
+  montada = true;
 
   const opcaoExiste = (s: HTMLSelectElement, v: string) => [...s.options].some((o) => o.value === v && v !== NADA);
   return {

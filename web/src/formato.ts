@@ -25,3 +25,12 @@ export function dataIso(iso: string): string {
   const [a, m, d] = iso.slice(0, 10).split('-');
   return `${d}/${m}/${a}`;
 }
+
+/** Meses completos entre a data (aaaa-mm-dd) e `hoje`; null se a data é inválida ou futura. */
+export function mesesCompletos(iso: string, hoje = new Date()): number | null {
+  const [a, m, d] = iso.slice(0, 10).split('-').map(Number);
+  if (!a || !m || !d) return null;
+  let total = (hoje.getFullYear() - a) * 12 + (hoje.getMonth() + 1 - m);
+  if (hoje.getDate() < d) total -= 1;
+  return total < 0 ? null : total;
+}

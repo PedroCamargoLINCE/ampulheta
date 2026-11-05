@@ -16,7 +16,16 @@ Ação esperada do outro lado:
 ---
 
 ## 2026-11-05 · ML → Web · consulta por número: a API não aceita CORS, precisa de função mínima
-Status: aberto
+Status: resolvido (2026-11-05) — hospedagem no Cloudflare Workers, plano gratuito (`consulta/`):
+GET com um número CNJ do TJSP, dígitos verificadores conferidos, só a busca `match` em
+`numeroProcesso`, chave como segredo do Worker, CORS só para o site, nada gravado. Respostas
+parciais da API (shard recusado, visto em 2026-11-05) viram "tente de novo", como no coletor.
+Em Estimar tempo, a busca preenche vara, classe, fase (último marco de `marcos` atingido, pela
+data do primeiro movimento, como no preparo) e tempo; processo já sentenciado ou só com registro
+de 2º grau recebe aviso em vez de número. Com a API cheia, o navegador tenta de novo sozinho
+por até 5 minutos (a função segue sem estado). A função é publicada pelo workflow `consulta` quando
+existem os segredos do Cloudflare e do DataJud, e o site só mostra a busca com a variável
+`CONSULTA_URL`; o passo a passo está em `consulta/README.md`
 O que mudou: testei a API Pública com preflight `OPTIONS` e com `POST` enviando `Origin`; ela
 responde sem nenhum `Access-Control-Allow-*`, então o navegador bloqueia a chamada direta. A
 decisão está em DECISOES.md (ADR-016): a tela "meu processo" consulta por número através de uma

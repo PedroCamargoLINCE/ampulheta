@@ -300,6 +300,70 @@ input[aria-invalid='true'] {
   outline-offset: 2px;
 }
 
+/* Consulta por número: campo e botão na mesma linha; o retorno fica logo abaixo. */
+.consulta {
+  display: grid;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-top: var(--rule-bar) solid var(--color-text);
+  background: var(--color-surface);
+}
+.consulta-linha {
+  display: flex;
+  gap: var(--space-xs);
+}
+.consulta-linha input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.consulta-linha .botao {
+  flex: 0 0 auto;
+}
+.consulta-aviso {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+/* Com a busca em andamento (ou já respondida), a mensagem dela substitui o aviso fixo. */
+.consulta:has(.consulta-retorno:not(:empty)) .consulta-aviso {
+  display: none;
+}
+.consulta-retorno:empty {
+  display: none;
+}
+.consulta-retorno {
+  display: grid;
+  gap: var(--space-2xs);
+  justify-items: start;
+  font-size: var(--text-sm);
+}
+.consulta-espera {
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.consulta-fatos {
+  display: grid;
+  gap: var(--space-2xs);
+  color: var(--color-text);
+}
+.consulta-fatos ul {
+  margin: 0;
+  padding-left: var(--space-lg);
+  color: var(--color-text);
+}
+.separador {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+.separador::before,
+.separador::after {
+  content: '';
+  flex: 1;
+  border-top: var(--rule-hair) solid var(--color-border);
+}
+
 /* Escolha entre poucas opções (fase): rádios nativos com cara de botões lado a lado. */
 .escolha {
   display: grid;

@@ -1,0 +1,53 @@
+name: consulta
+
+# Função da consulta por número (ADR-016) no Cloudflare Workers. Testa sempre; publica só
+# quando os segredos CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID e DATAJUD_API_KEY existem
+# no repositório (passo a passo em consulta/README.md).
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'consulta/**'
+      - '.github/workflows/consulta.yml'
+  pull_request:
+    paths:
+      - 'consulta/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  testar:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: consulta
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm test
+
+  publicar:
+    needs: testar
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      TEM_SEGREDOS: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' && secrets.DATAJUD_API_KEY != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sem segredos, não publica
+        if: env.TEM_SEGREDOS != 'true'
+        run: echo "::notice::Segredos do Cloudflare ou do DataJud ausentes; a função não foi publicada. Veja consulta/README.md."
+      - uses: cloudflare/wrangler-action@v3
+        if: env.TEM_SEGREDOS == 'true'
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: consulta
+          secrets: |
+            DATAJUD_API_KEY
+        env:
+          DATAJUD_API_KEY: ${{ secrets.DATAJUD_API_KEY }}
