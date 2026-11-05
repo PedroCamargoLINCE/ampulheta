@@ -5,7 +5,7 @@ sentença → trânsito em julgado…), cada uma por vara, por classe e por vara
 mensal fixa (ADR-007), com IC 95% (escala log(−log S), padrão do lifelines), variância de
 Greenwood acumulada, número em risco por ponto da grade e quantis. Escreve `models/km.json` já no formato de curva
 do contrato; `publicar.py` só acrescenta o cabeçalho. Curvas com n < 30 não são geradas.
-Camadas 2 (Cox) e 3 (boosting) virão aqui, sempre com validação temporal (ADR-004).
+Camadas 2 (Cox) e 3 (boosting) ficam em cox.py e boosting.py, com validação temporal (ADR-004).
 """
 from __future__ import annotations
 

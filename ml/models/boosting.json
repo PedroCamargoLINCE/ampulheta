@@ -1,0 +1,383 @@
+{
+ "metodo": "gradient boosting (coxph)",
+ "parametros": {
+  "loss": "coxph",
+  "n_estimators": 100,
+  "learning_rate": 0.1,
+  "max_depth": 3,
+  "subsample": 0.8,
+  "random_state": 0
+ },
+ "assuntos": [
+  7780,
+  10462,
+  11811,
+  4703,
+  7768,
+  7698,
+  9596,
+  7779,
+  9593,
+  9597,
+  6226,
+  6107,
+  7620,
+  7770,
+  9607,
+  7691,
+  5632,
+  11000,
+  10582,
+  10468,
+  14915,
+  10433,
+  11974,
+  9587,
+  11806,
+  10450,
+  7752,
+  8826,
+  7703,
+  10439
+ ],
+ "transicoes": [
+  {
+   "origem": "ajuizamento",
+   "destino": "sentenca",
+   "n": 38524,
+   "eventos": 30497,
+   "treino": {
+    "n": 20684,
+    "eventos": 18862
+   },
+   "teste": {
+    "n": 17840,
+    "eventos": 11635
+   },
+   "concordance_index": {
+    "teste": 0.5918
+   },
+   "brier_integrado": {
+    "boosting": 0.1938,
+    "kaplan_meier": 0.2038,
+    "horizonte_meses": 36
+   },
+   "calibracao": [
+    {
+     "horizonte_meses": 12,
+     "grupo": 1,
+     "n": 1787,
+     "previsto": 0.277,
+     "observado": 0.18
+    },
+    {
+     "horizonte_meses": 12,
+     "grupo": 2,
+     "n": 2668,
+     "previsto": 0.338,
+     "observado": 0.17
+    },
+    {
+     "horizonte_meses": 12,
+     "grupo": 3,
+     "n": 1033,
+     "previsto": 0.363,
+     "observado": 0.153
+    },
+    {
+     "horizonte_meses": 12,
+     "grupo": 4,
+     "n": 1746,
+     "previsto": 0.391,
+     "observado": 0.208
+    },
+    {
+     "horizonte_meses": 12,
+     "grupo": 5,
+     "n": 1755,
+     "previsto": 0.403,
+     "observado": 0.254
+    },
+    {
+     "horizonte_meses": 12,
+     "grupo": 6,
+     "n": 1763,
+     "previsto": 0.419,
+     "observado": 0.235
+    },
+    {
+     "horizonte_meses": 12,
+     "grupo": 7,
+     "n": 1769,
+     "previsto": 0.435,
+     "observado": 0.308
+    },
+    {
+     "horizonte_meses": 12,
+     "grupo": 8,
+     "n": 1789,
+     "previsto": 0.474,
+     "observado": 0.315
+    },
+    {
+     "horizonte_meses": 12,
+     "grupo": 9,
+     "n": 1754,
+     "previsto": 0.517,
+     "observado": 0.365
+    },
+    {
+     "horizonte_meses": 12,
+     "grupo": 10,
+     "n": 1776,
+     "previsto": 0.666,
+     "observado": 0.628
+    },
+    {
+     "horizonte_meses": 24,
+     "grupo": 1,
+     "n": 1787,
+     "previsto": 0.512,
+     "observado": 0.466
+    },
+    {
+     "horizonte_meses": 24,
+     "grupo": 2,
+     "n": 2668,
+     "previsto": 0.6,
+     "observado": 0.395
+    },
+    {
+     "horizonte_meses": 24,
+     "grupo": 3,
+     "n": 1033,
+     "previsto": 0.633,
+     "observado": 0.394
+    },
+    {
+     "horizonte_meses": 24,
+     "grupo": 4,
+     "n": 1746,
+     "previsto": 0.667,
+     "observado": 0.465
+    },
+    {
+     "horizonte_meses": 24,
+     "grupo": 5,
+     "n": 1755,
+     "previsto": 0.682,
+     "observado": 0.52
+    },
+    {
+     "horizonte_meses": 24,
+     "grupo": 6,
+     "n": 1763,
+     "previsto": 0.701,
+     "observado": 0.437
+    },
+    {
+     "horizonte_meses": 24,
+     "grupo": 7,
+     "n": 1769,
+     "previsto": 0.718,
+     "observado": 0.533
+    },
+    {
+     "horizonte_meses": 24,
+     "grupo": 8,
+     "n": 1789,
+     "previsto": 0.76,
+     "observado": 0.517
+    },
+    {
+     "horizonte_meses": 24,
+     "grupo": 9,
+     "n": 1754,
+     "previsto": 0.801,
+     "observado": 0.583
+    },
+    {
+     "horizonte_meses": 24,
+     "grupo": 10,
+     "n": 1776,
+     "previsto": 0.902,
+     "observado": 0.769
+    }
+   ],
+   "importancia": {
+    "vara": 0.2711,
+    "classe": 0.1897,
+    "assunto": 0.5392
+   }
+  },
+  {
+   "origem": "audiencia",
+   "destino": "sentenca",
+   "n": 2957,
+   "eventos": 2765,
+   "treino": {
+    "n": 2561,
+    "eventos": 2458
+   },
+   "teste": {
+    "n": 396,
+    "eventos": 307
+   },
+   "concordance_index": {
+    "teste": 0.5813
+   },
+   "brier_integrado": {
+    "boosting": 0.12,
+    "kaplan_meier": 0.1356,
+    "horizonte_meses": 36
+   },
+   "calibracao": [
+    {
+     "horizonte_meses": 12,
+     "grupo": 1,
+     "n": 40,
+     "previsto": 0.477,
+     "observado": 0.589
+    },
+    {
+     "horizonte_meses": 12,
+     "grupo": 2,
+     "n": 40,
+     "previsto": 0.533,
+     "observado": 0.602
+    },
+    {
+     "horizonte_meses": 12,
+     "grupo": 3,
+     "n": 39,
+     "previsto": 0.554,
+     "observado": 0.604
+    },
+    {
+     "horizonte_meses": 12,
+     "grupo": 4,
+     "n": 74,
+     "previsto": 0.587,
+     "observado": 0.694
+    },
+    {
+     "horizonte_meses": 12,
+     "grupo": 5,
+     "n": 5,
+     "previsto": 0.6,
+     "observado": 0.4
+    },
+    {
+     "horizonte_meses": 12,
+     "grupo": 6,
+     "n": 45,
+     "previsto": 0.613,
+     "observado": 0.816
+    },
+    {
+     "horizonte_meses": 12,
+     "grupo": 7,
+     "n": 34,
+     "previsto": 0.664,
+     "observado": 0.727
+    },
+    {
+     "horizonte_meses": 12,
+     "grupo": 8,
+     "n": 76,
+     "previsto": 0.775,
+     "observado": 0.854
+    },
+    {
+     "horizonte_meses": 12,
+     "grupo": 9,
+     "n": 3,
+     "previsto": 0.791,
+     "observado": 0.667
+    },
+    {
+     "horizonte_meses": 12,
+     "grupo": 10,
+     "n": 40,
+     "previsto": 0.827,
+     "observado": 0.971
+    },
+    {
+     "horizonte_meses": 24,
+     "grupo": 1,
+     "n": 40,
+     "previsto": 0.721,
+     "observado": 0.789
+    },
+    {
+     "horizonte_meses": 24,
+     "grupo": 2,
+     "n": 40,
+     "previsto": 0.777,
+     "observado": 0.697
+    },
+    {
+     "horizonte_meses": 24,
+     "grupo": 3,
+     "n": 39,
+     "previsto": 0.796,
+     "observado": 0.783
+    },
+    {
+     "horizonte_meses": 24,
+     "grupo": 4,
+     "n": 74,
+     "previsto": 0.825,
+     "observado": 0.858
+    },
+    {
+     "horizonte_meses": 24,
+     "grupo": 5,
+     "n": 5,
+     "previsto": 0.836,
+     "observado": 0.4
+    },
+    {
+     "horizonte_meses": 24,
+     "grupo": 6,
+     "n": 45,
+     "previsto": 0.846,
+     "observado": 0.89
+    },
+    {
+     "horizonte_meses": 24,
+     "grupo": 7,
+     "n": 34,
+     "previsto": 0.883,
+     "observado": 0.844
+    },
+    {
+     "horizonte_meses": 24,
+     "grupo": 8,
+     "n": 76,
+     "previsto": 0.947,
+     "observado": 0.909
+    },
+    {
+     "horizonte_meses": 24,
+     "grupo": 9,
+     "n": 3,
+     "previsto": 0.954,
+     "observado": 0.667
+    },
+    {
+     "horizonte_meses": 24,
+     "grupo": 10,
+     "n": 40,
+     "previsto": 0.967,
+     "observado": 0.971
+    }
+   ],
+   "importancia": {
+    "vara": 0.3983,
+    "classe": 0.0278,
+    "assunto": 0.5739
+   }
+  }
+ ]
+}
